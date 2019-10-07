@@ -79,7 +79,6 @@ steps:
       db.dl.password:
         from_secret: agri_db_dl_password
     commands:
-      - rm ./toolkit/build/sites/sites.php
       - ./toolkit/phing install-clone
 
   # TEST SECTION #
