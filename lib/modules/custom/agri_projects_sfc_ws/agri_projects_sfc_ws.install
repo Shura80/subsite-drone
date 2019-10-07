@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_projects_sfc_ws feature.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function agri_projects_sfc_ws_install() {
+  variable_set('agri_projects_sfc_ws_last_time', 0);
+  variable_set('queue_class_agri_projects_sfc_ws', 'AgriProjectsSfcWsSystemQueue');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function agri_projects_sfc_ws_uninstall() {
+  variable_del('agri_projects_sfc_ws_last_time');
+  variable_del('queue_class_agri_projects_sfc_ws');
+  variable_del('agri_projects_sfc_ws_enable');
+}
+
+/**
+ * Implements hook_enable().
+ */
+function agri_projects_sfc_ws_enable() {
+  drupal_set_message(t('AGRI SFC2014 SOAP web service feature is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_projects_sfc_ws_disable() {
+  drupal_set_message(t('AGRI SFC2014 SOAP web service feature is now inactive on your site.'));
+}

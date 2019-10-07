@@ -1,0 +1,380 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI Invite feature.
+ */
+
+include_once 'agri_invite.features.inc';
+
+define('AGRI_INVITE_MAIL_CONTACT_PERSON', 'fpfis-admin');
+define('AGRI_INVITE_MAIL_SUBJECT', 'Subject');
+define('AGRI_INVITE_MAIL_BODY', <<<TEXT
+Dear user,
+
+We would like to invite you to join the <b>[invite:field-invitation-group-ref:title]</b>, aimed to put in contact the participants of the event <b>[invite:field_invitation_event_title]</b> and facilitate their collaboration over time.
+
+To accept this invitation, please click on this one-time use link, valid for 30 days:
+[invite:eu-login-invite-accept-link]
+
+Please note that by clicking on the previous link you will be redirected to “EU Login”, the authentication system of the EIP-AGRI website that will allow you to register and/or authenticate to the site. After this step we can grant you access to the collaborative area of EIP-AGRI. We kindly remind you that whenever you want to access the collaborative area again, you have to be logged in your user account.
+
+If you are experiencing any problems while logging in or registering, then please get in touch with [invite:contact-user].
+
+
+Kind regards,
+EIP-AGRI Service Point
+TEXT
+);
+
+/**
+ * Implements hook_invite_sending_controller().
+ */
+function agri_invite_invite_sending_controller() {
+  return array(
+    'label' => t('AGRI invite "Collaborative area"'),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function agri_invite_permission() {
+  return array(
+    'administer agri invite' => array(
+      'title' => t('Administer AGRI invite'),
+      'description' => t('Allow users to manage default mail template of the invite'),
+      'restrict access' => TRUE,
+    ),
+    'invite people' => array(
+      'title' => t('Invite people'),
+      'description' => t('Users may invite other users to the group.'),
+      'restrict access' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_og_permission().
+ */
+function agri_invite_og_permission() {
+  $perms = array();
+  $perms['invite people'] = array(
+    'title' => t('Invite people (OG)'),
+    'description' => t('Users may invite other users to the group.'),
+    'default role' => array(OG_ADMINISTRATOR_ROLE),
+  );
+  return $perms;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function agri_invite_menu() {
+  $items = array();
+  $items['group/%/%/admin/invite_people'] = array(
+    'title' => 'Invite People',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_invite_invite_form', 1, 2),
+    'access callback' => '_agri_invite_check_access',
+    'access arguments' => array(1, 2),
+    'weight' => 4,
+    'file' => 'includes/agri_invite.pages.inc',
+  );
+  $items['admin/config/group/agri_invite'] = array(
+    'title' => 'Manage AGRI invite',
+    'description' => 'Modify invitation by mail settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_invite_settings_form'),
+    'access arguments' => array('administer agri invite'),
+    'weight' => 10,
+    'file' => 'includes/agri_invite.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function agri_invite_menu_alter(&$items) {
+  $default_callbacks = array(
+    'user/%/invites',
+    'user/%/invites/accepted',
+    'user/%/invites/pending',
+    'user/%/invites/expired',
+  );
+
+  // Disable the standard user's invite views.
+  foreach ($default_callbacks as $path) {
+    if (isset($items[$path])) {
+      $items[$path]['access callback'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function agri_invite_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'menu_alter') {
+    $temp = $implementations['agri_invite'];
+    unset($implementations['agri_invite']);
+    $implementations['agri_invite'] = $temp;
+  }
+}
+
+/**
+ * Implements hook_og_ui_get_group_admin().
+ */
+function agri_invite_og_ui_get_group_admin($group_type, $gid) {
+  $items = array();
+  if (og_user_access($group_type, $gid, 'invite people')) {
+    $items['invite_people'] = array(
+      'title' => t('Invite people'),
+      'description' => t('Invite users by email.'),
+      'href' => 'admin/invite_people',
+    );
+    $items['invite_list'] = array(
+      'title' => t('Invite list'),
+      'description' => t('Manage invites'),
+      'href' => 'admin/manage-invite',
+    );
+  }
+  return $items;
+}
+
+/**
+ * Implements hook_invite_send().
+ */
+function agri_invite_invite_send($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['agri_invite'])) {
+    global $language;
+
+    // Check if this is an existing invite.
+    $existing_invite = invite_load($invite->iid);
+    if ($existing_invite) {
+      $invite->expiry = REQUEST_TIME + (variable_get('invite_default_expiry_time', 30) * 60 * 60 * 24);
+    }
+
+    $entity = entity_metadata_wrapper('invite', $invite);
+    $params = array(
+      'invite' => $invite->iid,
+    );
+
+    $contact_user = variable_get('agri_invite_mail_contact_person', AGRI_INVITE_MAIL_CONTACT_PERSON);
+    if ($user = user_load_by_name($contact_user)) {
+      $from = $user->mail;
+    }
+    else {
+      $from = NULL;
+    }
+
+    // Send e-mail.
+    drupal_mail('agri_invite', 'invite', $entity->field_invitation_email->value(), $language, $params, $from);
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function agri_invite_mail($key, &$message, $params) {
+  if ($key == 'invite' && $message['id'] == 'agri_invite_invite') {
+    $invite = invite_load($params['invite'], TRUE);
+
+    $subject = token_replace(variable_get('agri_invite_mail_subject', AGRI_INVITE_MAIL_SUBJECT), array('invite' => $invite));
+    $message['subject'] = str_replace(array("\r", "\n"), '', trim($subject));
+
+    $email_body = token_replace(variable_get('agri_invite_mail_body', AGRI_INVITE_MAIL_BODY), array('invite' => $invite));
+    $message['body'][] = $email_body;
+
+    $message['headers']['Sender'] = $message['headers']['Return-Path'] = $message['headers']['From'];
+  }
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function agri_invite_token_info() {
+  // Tokens for the text format token type.
+  $info['tokens']['invite']['eu-login-invite-accept-link'] = array(
+    'name' => t('EU Login invite action link: accept'),
+    'description' => t("Displays EU login link for invite accepting."),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function agri_invite_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  // Custom EU Login link tokens.
+  if ($type == 'invite' && !empty($data['invite'])) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'eu-login-invite-accept-link':
+          $destination = token_replace('invite/accept/[invite:reg-code]', $data, $options);
+          $replacements[$original] = url('ecas', array(
+            'query' => array('destination' => $destination),
+            'absolute' => TRUE,
+          ));
+          break;
+
+        case 'contact-user':
+          $contact_user = variable_get('agri_invite_mail_contact_person', AGRI_INVITE_MAIL_CONTACT_PERSON);
+          if ($user = user_load_by_name($contact_user)) {
+            $url = 'user/' . $user->uid . '/contact';
+            $replacements[$original] = l($user->realname, url($url, array('absolute' => TRUE)));
+          }
+          break;
+      }
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Implements hook_invite_accept().
+ */
+function agri_invite_invite_accept($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['agri_invite'])) {
+    $user_invited = user_load($invite->invitee);
+
+    $entity = entity_metadata_wrapper('invite', $invite);
+    $og_node = $entity->field_invitation_group_ref->value();
+
+    // Add the user to the group.
+    og_group('node', $og_node->nid, array(
+      'entity type' => 'user',
+      'entity' => $user_invited,
+      'membership type' => OG_MEMBERSHIP_TYPE_DEFAULT,
+    ));
+  }
+}
+
+/**
+ * Implements hook_invite_accept_alter().
+ */
+function agri_invite_invite_accept_alter($data) {
+  $invite = $data['invite'];
+
+  if (!empty($invite->type_details()->invite_sending_controller['agri_invite'])) {
+    if (user_is_logged_in() && $data['type'] == 'status') {
+      $entity = entity_metadata_wrapper('invite', $invite);
+      $og_node = $entity->field_invitation_group_ref->value();
+
+      // Redirect to Collaborative are user that accepted the invite.
+      $data['redirect'] = 'node/' . $og_node->nid;
+    }
+  }
+}
+
+/**
+ * Invite a user in an OG group.
+ *
+ * @param int $gid
+ *   The OG group id.
+ * @param string $email
+ *   A valid e-mail address.
+ * @param string $event_title
+ *   A string that define a context of the email. Available as token.
+ *
+ * @return array
+ *   An array with the mail address and the operation (resend or send).
+ */
+function _agri_invite_invite_by_mail($gid, $email, $event_title) {
+  // Check if there is an old invite.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'invite')
+    ->entityCondition('bundle', 'agri_invite')
+    ->propertyCondition('status', INVITE_VALID)
+    ->fieldCondition('field_invitation_email', 'email', $email, '=')
+    ->fieldCondition('field_invitation_group_ref', 'target_id', $gid)
+    ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+  $result = $query->execute();
+
+  $return = array();
+  if (isset($result['invite'])) {
+    $invite = invite_load(key($result['invite']));
+    // Resend the invite.
+    if (invite_validate($invite) && $invite->sendInvite()) {
+      $return = array(
+        'email' => $email,
+        'op' => 'resend',
+      );
+    }
+  }
+  else {
+    try {
+      // Create a new invite.
+      $invite = entity_create('invite', array('type' => 'agri_invite'));
+      $entity = entity_metadata_wrapper('invite', $invite);
+      $entity->field_invitation_group_ref->set($gid);
+      $entity->field_invitation_email->set($email);
+      $entity->field_invitation_event_title->set($event_title);
+      if ($entity->save()) {
+        $return = array(
+          'email' => $email,
+          'op' => 'send',
+        );
+      }
+    }
+    catch (EntityMetadataWrapperException $exc) {
+      watchdog(
+        'agri_invite',
+        'EntityMetadataWrapper exception in %function() <pre>@trace</pre>',
+        array(
+          '%function' => __FUNCTION__,
+          '@trace' => $exc->getTraceAsString(),
+        ),
+        WATCHDOG_ERROR
+      );
+    }
+  }
+
+  return $return;
+}
+
+/**
+ * Custom access callback for AGRI Invite.
+ *
+ * @param string $group_type
+ *   The group type.
+ * @param int $gid
+ *   The id of the entity.
+ *
+ * @return bool
+ *   Boolean TRUE if the user has the global or og requested permission.
+ */
+function _agri_invite_check_access($group_type, $gid) {
+
+  // Limit access only for the "Collaborative area".
+  $entity = entity_load_single($group_type, $gid);
+  if ($entity && $entity->type == 'collaborative_area') {
+    if (user_access('invite people')) {
+      return TRUE;
+    }
+
+    return og_ui_user_access_group('invite people', $group_type, $gid);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_views_pre_view().
+ */
+function agri_invite_views_pre_view(&$view, &$display_id, &$args) {
+  if ($view->name == 'agri_invite_manage_invite' && $display_id == 'page') {
+    $args = $view->args;
+    if (!empty($args)) {
+      $gid = reset($args);
+      // Set breadcrumb of Collaborative area when on manage invite view,
+      // to allow to navigate back to the group page.
+      og_set_breadcrumb('node', $gid, array(l(t('Group'), "node/$gid/group")));
+    }
+  }
+}

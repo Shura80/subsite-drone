@@ -1,0 +1,1088 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI SFC project import feature.
+ */
+
+include_once 'agri_sfc_project_import.features.inc';
+
+// Folders constants.
+define('AGRI_SFC_PROJECT_IMPORT_PUBLIC_FOLDER', 'sfc_project_public');
+define('AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER', 'sfc_tmp_project');
+
+// Error messages constants.
+define('AGRI_SFC_PROJECT_IMPORT_NO_ZIP', t("WARNING: no zip file uploaded"));
+define('AGRI_SFC_PROJECT_IMPORT_CORRUPTED_ZIP', t("ERROR: file zip is corrupt"));
+define('AGRI_SFC_PROJECT_IMPORT_NO_EXCEL', t("WARNING: no excel file uploaded"));
+define('AGRI_SFC_PROJECT_IMPORT_INVALID_TEMPLATE', t("ERROR: attempt to upload an invalid template file."));
+define('AGRI_SFC_PROJECT_IMPORT_MISSING_FIELD', t("WARNING: one or more fields in the file are missing or not valid"));
+define('AGRI_SFC_PROJECT_IMPORT_MISSING_REQUIRED_FIELD', t("ERROR: one or more required fields in the file are missing, project will be skipped"));
+
+// Excel template fixed values.
+define('AGRI_SFC_PROJECT_IMPORT_TEMPLATE_MANDATORY_FIELD', 'Mandatory');
+
+/**
+ * Implements hook_permission().
+ */
+function agri_sfc_project_import_permission() {
+  return array(
+    'use_sfc_importer' => array(
+      'title' => t('Use SFC Projects Importer'),
+      'description' => t('Import project nodes with SFC Importer module.'),
+    ),
+    'administer_settings_sfc_importer' => array(
+      'title' => t('Administer Settings of SFC Projects Importer'),
+      'description' => t('Configure settings of SFC Importer module.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function agri_sfc_project_import_menu() {
+  $items = array();
+
+  // The menu link that points to the import form.
+  $items['sfc-projects/moderation'] = array(
+    'title' => 'Moderate SFC projects',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+
+  $items['sfc-projects/import'] = array(
+    'title' => 'Import projects',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_sfc_project_import_upload_form'),
+    'access arguments' => array('use_sfc_importer'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+
+  // The menu link that points to the logs page.
+  $items['admin/reports/sfc-importer/log'] = array(
+    'title' => 'Recent logs for SFC',
+    'description' => 'Log errors of the SFC importer operation.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_sfc_project_import_log_form'),
+    'access arguments' => array('administer_settings_sfc_importer'),
+    'weight' => -6,
+    'type' => MENU_NORMAL_ITEM | MENU_LOCAL_TASK,
+    'file' => 'includes/agri_sfc_project_import.admin.inc',
+  );
+
+  // Log details.
+  $items['admin/reports/sfc-importer/log/%'] = array(
+    'title' => 'Log details',
+    'page callback' => 'agri_sfc_project_import_log_details',
+    'page arguments' => array(4),
+    'access arguments' => array('use_sfc_importer'),
+    'file' => 'includes/agri_sfc_project_import.admin.inc',
+  );
+
+  // The menu link that points to the configuration page.
+  $items['admin/config/agri-project/sfc-project'] = array(
+    'title' => 'SFC Configuration',
+    'description' => 'Administer AGRI SFC settings.',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer_settings_sfc_importer'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  // The menu link that points to the configuration page.
+  $items['admin/config/agri-project/sfc-project/main-funding-source'] = array(
+    'title' => 'Mapping - Main funding source',
+    'description' => 'Mapping - Main funding source',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_sfc_project_config_form'),
+    'access arguments' => array('administer_settings_sfc_importer'),
+    'weight' => 1,
+    'file' => 'includes/agri_sfc_project_import.admin.inc',
+  );
+
+  return $items;
+
+}
+
+/**
+ * Implements hook_form().
+ */
+function agri_sfc_project_import_upload_form($form, &$form_state) {
+
+  $form['upload'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Upload project file'),
+  );
+
+  $form['upload']['extension'] = array(
+    '#type' => 'radios',
+    '#title' => t('Choose type'),
+    '#options' => array(
+      'zip' => t('zip file'),
+      'xls' => t('xls file'),
+    ),
+    '#description' => t('Select type of file for import.'),
+    '#required' => TRUE,
+  );
+
+  $form['upload']['file_zip'] = array(
+    '#title' => t('Projects zip file'),
+    '#type' => 'file',
+    '#description' => t('Upload a file. Allowed extensions: zip'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="extension"]' => array('value' => 'zip'),
+      ),
+    ),
+  );
+
+  $form['upload']['file_xls'] = array(
+    '#title' => t('Projects xls file'),
+    '#type' => 'file',
+    '#description' => t('Upload a file. Allowed extensions: xls'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="extension"]' => array('value' => 'xls'),
+      ),
+    ),
+  );
+
+  // Set this checkbox to true to skip warnings about empty required fields.
+  $form['upload']['skip_validation'] = array(
+    '#title' => t('Skip Excel mandatory field validation from template'),
+    '#type' => 'checkbox',
+    '#description' => t('If checked, validation information from the Excel template will be skipped.'),
+  );
+
+  // Set this checkbox to true to skip warnings about empty required fields.
+  $form['upload']['simulate'] = array(
+    '#title' => t('Simulate the process'),
+    '#type' => 'checkbox',
+    '#description' => t('If checked, projects will not be saved, it will be tested the import process only.'),
+  );
+
+  $form['upload']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import'),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_validate().
+ */
+function agri_sfc_project_import_upload_form_validate($form, &$form_state) {
+
+  global $user;
+
+  _agri_sfc_project_import_clear_temp();
+  $extension = $form_state['values']['extension'];
+
+  switch ($extension) {
+    case 'zip':
+      $file = file_save_upload('file_zip', array(
+        'file_validate_extensions' => array('zip'),
+      ));
+      if ($file) {
+        _agri_sfc_project_import_extract_zip($file);
+        // Delete archive after files extraction.
+        file_delete($file, TRUE);
+      }
+      else {
+        form_set_error('file_zip', t('No file was uploaded'));
+        _agri_sfc_project_import_add_error_log("No file selected", AGRI_SFC_PROJECT_IMPORT_NO_ZIP);
+      }
+      break;
+
+    case 'xls':
+      $destination_path = file_default_scheme() . '://' . AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER . '/' . $user->uid . '/';
+      $file = file_save_upload('file_xls', array(
+        'file_validate_extensions' => array('xls'),
+      ), $destination_path, FILE_EXISTS_REPLACE);
+      if (!$file) {
+        form_set_error('file_xls', t('No file was uploaded'));
+        _agri_sfc_project_import_add_error_log("No file selected", AGRI_SFC_PROJECT_IMPORT_NO_EXCEL);
+      }
+      break;
+  }
+
+  return $file;
+}
+
+/**
+ * Implements hook_form_submit().
+ */
+function agri_sfc_project_import_upload_form_submit($form, &$form_state) {
+  $skip_validation = $form_state['values']['skip_validation'];
+  $simulate = $form_state['values']['simulate'];
+  $batch = _agri_sfc_project_import_batch_inizialize_batch($skip_validation, $simulate);
+  batch_set($batch);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_sfc_project_import_form_project_node_form_alter(&$form, &$form_state, $form_id) {
+
+  // Show SFC group field only for the SFC imported projects.
+  $is_sfc = isset($form['#node']->field_proj_is_sfc[LANGUAGE_NONE][0]['value']) && $form['#node']->field_proj_is_sfc[LANGUAGE_NONE][0]['value'] == '1';
+
+  foreach ($form['#group_children'] as $field_name => $field_group) {
+    if ($field_group == 'group_agri_projects_sfc') {
+      $form[$field_name]['#access'] = $is_sfc;
+    }
+  }
+
+  // Hide boolean field used to mark SFC imported projects.
+  $form['field_proj_is_sfc']['#access'] = FALSE;
+
+  // Show project identification field only a specific roles.
+  $form['field_proj_sfc_identification']['#access'] = user_access('use_sfc_importer');
+
+  // Show file attachments field only a specific roles.
+  $form['field_proj_sfc_attachments']['#access'] = $is_sfc && user_access('use_sfc_importer');
+
+  if ($form['field_proj_is_sfc'][LANGUAGE_NONE]['#default_value']) {
+    drupal_set_message(t('Warning: you not allow to edit this project node.'), 'warning');
+    $form['actions']['submit']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Initialization batch.
+ *
+ * @param bool $skip_validation
+ *   The value passed to upload form to skip required fields validation.
+ * @param bool $simulate
+ *   Try only to simulate the process, don't save anything.
+ *
+ * @return array
+ *   Batch parameters.
+ */
+function _agri_sfc_project_import_batch_inizialize_batch($skip_validation, $simulate) {
+
+  global $user;
+
+  $dir = 'public://' . AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER . '/' . $user->uid;
+  $files = file_scan_directory($dir, '/.*\.(xls)$/');
+  $operation = array();
+
+  if ($files && count($files) > 0) {
+
+    foreach ($files as $value) {
+      $operation[] = array(
+        '_agri_sfc_project_import_batch_op_callback',
+        array(
+          $value,
+          $skip_validation,
+          $simulate,
+        ),
+      );
+    }
+
+    $batch = array(
+      'operations' => $operation,
+      'finished' => '_agri_sfc_project_import_batch_finished_callback',
+      'file' => drupal_get_path('module', 'agri_sfc_project_import') . '/includes/agri_sfc_project_import.batch.inc',
+    );
+
+    return $batch;
+  }
+
+  else {
+    drupal_set_message(t('No SFC template found in uploaded files'), 'warning');
+    _agri_sfc_project_import_add_error_log("WARNING: no excel file uploaded", AGRI_SFC_PROJECT_IMPORT_NO_EXCEL);
+    drupal_goto('sfc-projects/import');
+  }
+}
+
+/**
+ * Extract zip content into termporary folder.
+ *
+ * @param string $file_zip
+ *   The url of the zip archive file.
+ */
+function _agri_sfc_project_import_extract_zip($file_zip) {
+
+  global $user;
+
+  $destination_path = drupal_realpath(file_default_scheme() . '://') . '/' . AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER . '/' . $user->uid . '/';
+
+  $zip = new ZipArchive();
+  $res = $zip->open(file_directory_temp() . '/' . $file_zip->filename);
+  if ($res === TRUE) {
+    $zip->extractTo($destination_path);
+    $zip->close();
+  }
+  else {
+    drupal_set_message(t("Error. File zip is corrupt."), 'error');
+    _agri_sfc_project_import_add_error_log($file_zip->filename, AGRI_SFC_PROJECT_IMPORT_CORRUPTED_ZIP);
+    // Delete archive after files extraction.
+    file_delete($file_zip, TRUE);
+    drupal_goto('sfc-projects/import');
+  }
+}
+
+/**
+ * Insert error message into log table.
+ *
+ * @param string $filename
+ *   Filename imported.
+ * @param string $message
+ *   Log message.
+ * @param mixed $details
+ *   Data information.
+ *
+ * @return int
+ *   The id of last inserted log message.
+ */
+function _agri_sfc_project_import_add_error_log($filename, $message, $details = NULL) {
+  global $user;
+
+  $data = array(
+    'timestamp' => time(),
+    'user' => $user->name,
+    'file_name' => $filename,
+    'message' => $message,
+    'details' => serialize($details),
+  );
+
+  return db_insert('agri_sfc_project_import_log')
+    ->fields($data)
+    ->execute();
+}
+
+/**
+ * Helper function to clean temp folder.
+ */
+function _agri_sfc_project_import_clear_temp() {
+  global $user;
+
+  $dir = file_default_scheme() . '://' . AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER . '/' . $user->uid . '/';
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'file')
+    ->propertyCondition('uri', $dir, 'STARTS_WITH')
+    ->execute();
+
+  if (count($result)) {
+    // Delete managed files.
+    foreach ($result['file'] as $fid => $obj) {
+      $file = file_load($fid);
+      file_delete($file, TRUE);
+    }
+  }
+  // Delete unmanaged files.
+  file_unmanaged_delete_recursive($dir);
+  file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+}
+
+/**
+ * Helper function to map excel sheets.
+ *
+ * @param array $data
+ *   The array data returned from PHPExcel library read function.
+ *
+ * @see phpexcel_import()
+ * @see _agri_sfc_project_import_save_project()
+ *
+ * @return array
+ *   Return an array of mapped fields to use when calling save function.
+ */
+function _agri_sfc_project_import_map_fields(array $data) {
+
+  // Unset sheets that contains only info or preconfigured select lists.
+  unset($data['EIP-AGRI Common format']);
+  unset($data['INSTRUCTIONS']);
+  unset($data['Lists']);
+
+  $sheets = array(
+    'identification' => $data['IDENTIFICATION'],
+    'info' => $data['PROJECT INFORMATION'],
+    'partners' => $data['PARTNERS'],
+    'keywords' => $data['KEYWORDS'],
+    'audiovisual' => $data['AUDIOVISUAL MATERIAL'],
+    'websites' => $data['WEBSITES'],
+  );
+
+  // Some data manipulation.
+  // Keywords collect.
+  $keywords_data = array_slice($sheets['keywords'], 1);
+
+  for ($i = 0; $i < count($keywords_data); $i++) {
+    $data_keywords = $keywords_data[$i][1];
+    // Replace double o more space with single space.
+    $data_keywords = preg_replace('/(\x{00A0}|\s){2,}/u', ' ', $data_keywords);
+    // Replace all slash character with ' / '.
+    $data_keywords = preg_replace('/(\s*[\/]\s*)/', ' / ', $data_keywords);
+    $keywords[] = $data_keywords;
+  }
+
+  $keywords = array_filter($keywords);
+
+  // SFC main funding source data collect.
+  $funding = _agri_sfc_project_import_funding_match($sheets['info'][29][1]);
+
+  // PA multiple sheets data collect.
+  $practice_abstract = array();
+  for ($i = 1; $i <= 100; $i++) {
+    if (!empty($data["PA$i"][7][1]) || !empty($data["PA$i"][9][1])) {
+      $practice_abstract[$i - 1]['short_sum_title'] = $data["PA$i"][7][1];
+      $practice_abstract[$i - 1]['short_sum'] = $data["PA$i"][9][1];
+      $practice_abstract[$i - 1]['short_sum_title_eng'] = $data["PA$i"][2][1];
+      $practice_abstract[$i - 1]['short_sum_eng'] = $data["PA$i"][4][1];
+      $practice_abstract[$i - 1]['pa'] = $i;
+    }
+  }
+
+  // Pass only year in an acceptable way to date fields.
+  if (preg_match('/^2\d{3}$/', $sheets['info'][24][1])) {
+    date_default_timezone_set('UTC');
+    $date = mktime(0, 0, 0, '01', '01', $sheets['info'][24][1]);
+    $start_date = $date;
+  }
+
+  // Pass only year in an acceptable way to date fields.
+  if (preg_match('/^2\d{3}$/', $sheets['info'][25][1])) {
+    date_default_timezone_set('UTC');
+    $date = mktime(0, 0, 0, '01', '01', $sheets['info'][25][1]);
+    $end_date = $date;
+  }
+
+  // Audiovisual multiple values.
+  $sheets['audiovisual'] = array_slice($sheets['audiovisual'], 2);
+  $audiovisual = array();
+
+  for ($i = 0; $i < count($sheets['audiovisual']); $i++) {
+    if (filter_var($sheets['audiovisual'][$i][1], FILTER_VALIDATE_URL) !== FALSE) {
+      $audiovisual['title'][] = $sheets['audiovisual'][$i][0];
+      $audiovisual['url'][] = $sheets['audiovisual'][$i][1];
+    }
+  }
+
+  // Count rows in audiovisual valid urls array.
+  $field_proj_audiovisual_material = array();
+  if (isset($audiovisual['url'])) {
+    for ($i = 0; $i < count($audiovisual['url']); $i++) {
+      if (filter_var($audiovisual['url'][$i], FILTER_VALIDATE_URL) !== FALSE) {
+        $field_proj_audiovisual_material[] = array(
+          'title' => $audiovisual['title'][$i],
+          'url' => $audiovisual['url'][$i],
+        );
+      }
+    }
+  }
+
+  // Website.
+  $field_proj_website = array();
+  if (filter_var($sheets['websites'][2][1], FILTER_VALIDATE_URL) !== FALSE) {
+    $website_title = $sheets['websites'][2][0];
+    $website_url = $sheets['websites'][2][1];
+
+    $field_proj_website = array(
+      'title' => $website_title,
+      'url' => $website_url,
+    );
+  }
+
+  // Other Websites.
+  $sheets['websites'] = array_slice($sheets['websites'], 6);
+  $other_websites = array();
+
+  for ($i = 0; $i < count($sheets['websites']); $i++) {
+    if (filter_var($sheets['websites'][$i][1], FILTER_VALIDATE_URL) !== FALSE) {
+      $other_websites['title'][] = $sheets['websites'][$i][0];
+      $other_websites['url'][] = $sheets['websites'][$i][1];
+    }
+  }
+
+  // Count rows in valid urls array.
+  $field_proj_other_websites = array();
+  if (isset($other_websites['url'])) {
+    for ($i = 0; $i < count($other_websites['url']); $i++) {
+      $field_proj_other_websites[] = array(
+        'title' => $other_websites['title'][$i],
+        'url' => $other_websites['url'][$i],
+      );
+    }
+  }
+
+  // Coordinator.
+  $field_collection_coordinator = array();
+  $email = $sheets['info'][20][1];
+  if (isset($email) && filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE) {
+    $field_collection_coordinator = array(
+      'name' => $sheets['info'][18][1],
+      'address' => $sheets['info'][19][1],
+      'email' => $email,
+      'phone' => $sheets['info'][21][1],
+      'partner_type' => _agri_projects_user_type_mapping($sheets['partners'][2][5], FALSE),
+    );
+  }
+
+  // Other partners.
+  $sheets['other_partners'] = array_slice($sheets['partners'], 2);
+
+  $sheets['other_partners'][0][1] = $sheets['info'][18][1];
+  $sheets['other_partners'][0][2] = $sheets['info'][19][1];
+  $sheets['other_partners'][0][3] = $sheets['info'][20][1];
+  $sheets['other_partners'][0][4] = $sheets['info'][21][1];
+  $sheets['other_partners'][0][5] = $sheets['partners'][2][5];
+
+  $other_partners = array();
+
+  for ($i = 0; $i < count($sheets['other_partners']); $i++) {
+    if (filter_var($sheets['other_partners'][$i][3], FILTER_VALIDATE_EMAIL) !== FALSE) {
+      $other_partners['name'][] = $sheets['other_partners'][$i][1];
+      $other_partners['address'][] = $sheets['other_partners'][$i][2];
+      $other_partners['email'][] = $sheets['other_partners'][$i][3];
+      $other_partners['phone'][] = $sheets['other_partners'][$i][4];
+      $other_partners['partner_type'][] = $sheets['other_partners'][$i][5];
+    }
+  }
+
+  // Count rows in valid urls array.
+  $field_collection_other_partners = array();
+  if (isset($other_partners['email'])) {
+    for ($i = 0; $i < count($other_partners['email']); $i++) {
+      $field_collection_other_partners[] = array(
+        'name' => $other_partners['name'][$i],
+        'address' => $other_partners['address'][$i],
+        'email' => $other_partners['email'][$i],
+        'phone' => $other_partners['phone'][$i],
+        'partner_type' => _agri_projects_user_type_mapping($other_partners['partner_type'][$i], FALSE),
+      );
+    }
+  }
+
+  // Detect if puid exists to perform insert or update.
+  $op = _agri_sfc_project_import_get_existing_entity($sheets['info'][2][1]) ? 'update' : 'insert';
+
+  // Geographical location.
+  $country = _agri_sfc_project_import_get_country_from_nust_code($sheets['info'][9][1]);
+  $nuts_main = _agri_sfc_project_import_get_nuts_from_code($sheets['info'][11][1]);
+
+  $puid = preg_replace('/(\s|(_))(v{1})(.*)/i', '', $sheets['info'][2][1]);
+
+  // Map fields.
+  $project = array(
+    'is_sfc' => 1,
+    'op' => $op,
+    'puid' => $puid,
+    'identification' => str_replace(' ', '-', drupal_strtolower($sheets['identification'][2][1])),
+    'title' => $sheets['info'][4][1],
+    'title_en' => $sheets['info'][6][1],
+    'country' => $country,
+    'nuts_main' => $nuts_main,
+    'editor' => $sheets['info'][15][1],
+    'coordinator' => $field_collection_coordinator,
+    'other_partners' => $field_collection_other_partners,
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'proj_status' => $sheets['info'][27][1],
+    'keywords' => $keywords,
+    'funding' => $funding,
+    'budget' => $sheets['info'][31][1],
+    'objective_en' => $sheets['info'][33][1],
+    'objective' => $sheets['info'][35][1],
+    'desc_en' => $sheets['info'][37][1],
+    'desc' => $sheets['info'][39][1],
+    'context' => $sheets['info'][41][1],
+    'info' => $sheets['info'][43][1],
+    'comments' => $sheets['info'][45][1],
+    'website' => $field_proj_website,
+    'other_websites' => $field_proj_other_websites,
+    'audiovisual' => $field_proj_audiovisual_material,
+    'practice_abstract' => $practice_abstract,
+  );
+
+  return $project;
+}
+
+/**
+ * Helper function to save project entities.
+ *
+ * @param array $project
+ *   The project's fields array.
+ * @param bool $simulate
+ *   If true node will not be saved.
+ * @param array|null $missing_fields
+ *   An array with previous error details.
+ *
+ * @return bool
+ *   The outcome of the operation/simulation without blocking issues.
+ */
+function _agri_sfc_project_import_save_project(array $project, $simulate = FALSE, $missing_fields = array()) {
+
+  global $user;
+
+  // Set existing published node to unpublished before create new revision.
+  // This ensures that no revision is published when updating existing nodes.
+  $project['status'] = 0;
+  $project['revision'] = 1;
+
+  // Set custom log message.
+  $file_link = l($project['file']->filename, file_create_url($project['file']->uri));
+
+  $project['log'] = ($project['op'] == 'insert') ?
+    "Created on " . format_date(time(), 'custom', 'd/m/Y H:i:s', date_default_timezone()) . " with attached file: " . $file_link :
+    "Updated on " . format_date(time(), 'custom', 'd/m/Y H:i:s', date_default_timezone()) . " with attached file: " . $file_link;
+
+  $nid = _agri_sfc_project_import_get_existing_entity($project['puid']);
+
+  // Check if puid exists and in case load the relative existing node.
+  if ($nid === FALSE || ($entity = node_load($nid)) === FALSE) {
+    // Otherwise init a new node.
+    $entity = entity_create('node', array('type' => 'project'));
+    $entity->uid = $user->uid;
+  }
+
+  // Add wrapper to save common data.
+  $sfc = entity_metadata_wrapper('node', $entity);
+
+  $mapping = array(
+    'title' => 'title',
+    'field_project_puid' => 'puid',
+    'field_proj_sfc_identification' => 'identification',
+    'field_proj_og_project_status' => 'proj_status',
+    'field_proj_starting_date' => 'start_date',
+    'field_proj_end_date' => 'end_date',
+    'field_proj_title_eng' => 'title_en',
+    'status' => 'status',
+    'revision' => 'revision',
+    'log' => 'log',
+    'field_proj_is_sfc' => 'is_sfc',
+    'field_proj_geographical_area' => 'country',
+    'nuts_region' => 'nuts_main',
+    'field_proj_editor_of_text' => 'editor',
+    'field_core_keywords' => 'keywords',
+    'field_proj_funding_source_list' => 'funding',
+    'field_proj_og_budget' => 'budget',
+    'field_proj_problems' => 'objective',
+    'field_proj_problems_eng' => 'objective_en',
+    'field_proj_desc' => 'desc',
+    'field_proj_desc_eng' => 'desc_en',
+    'field_proj_desc_context' => 'context',
+    'field_proj_additional_info' => 'info',
+    'field_proj_additional_comments' => 'comments',
+    'field_proj_website' => 'website',
+    'field_proj_other_websites' => 'other_websites',
+    'field_proj_audiovisual_material' => 'audiovisual',
+    'field_proj_sfc_attachments' => 'file',
+  );
+
+  $error_field = array();
+  foreach ($mapping as $entity_field => $project_field) {
+    _agri_sfc_project_import_set_field_value($sfc, $entity_field, $project[$project_field], $error_field);
+  }
+
+  if (!empty($error_field)) {
+    array_unshift($error_field, array(
+      array('data' => t('Field'), 'header' => TRUE),
+      array('data' => t('Exception'), 'header' => TRUE),
+      array('data' => t('Data'), 'header' => TRUE),
+    ));
+  }
+
+  $absolutely_needed = array(
+    'title',
+    'field_proj_sfc_identification',
+    'field_proj_og_project_status',
+    'field_project_puid',
+    'start_date',
+    'end_date',
+  );
+
+  $fatal = !empty(array_intersect_key(drupal_map_assoc($absolutely_needed), $error_field));
+
+  $details = array_merge($error_field, $missing_fields);
+  if (!empty($details)) {
+    $message = $fatal ? AGRI_SFC_PROJECT_IMPORT_MISSING_REQUIRED_FIELD : AGRI_SFC_PROJECT_IMPORT_MISSING_FIELD;
+
+    $log_id = _agri_sfc_project_import_add_error_log($project['original_filename'], $message, $details);
+    drupal_set_message(t('One or more fields caused errors during import process. See the !details page.', array('!details' => l(t('details'), "admin/reports/sfc-importer/log/$log_id"))), $fatal ? 'error' : 'warning');
+  }
+
+  // Don't save nothing if it's only a simulation.
+  if (!$simulate && !$fatal) {
+    try {
+
+      $mapping_fc = array(
+        'field_proj_coordinator_fc' => 'coordinator',
+        'field_proj_partner_fc' => 'other_partners',
+        'field_sfc_proj_summary' => 'practice_abstract',
+      );
+      $mapping_fc_fields = array(
+        'field_proj_coordinator_fc' => array(
+          'field_proj_coord_contact_person' => 'name',
+          'field_proj_coord_address' => 'address',
+          'field_proj_coord_email' => 'email',
+          'field_proj_coord_phone' => 'phone',
+          'field_proj_coord_category' => 'partner_type',
+        ),
+        'field_proj_partner_fc' => array(
+          'field_proj_prtnr_contact_person' => 'name',
+          'field_proj_prtnr_address' => 'address',
+          'field_proj_prtnr_email' => 'email',
+          'field_proj_prtnr_phone' => 'phone',
+          'field_proj_prtnr_category' => 'partner_type',
+        ),
+        'field_sfc_proj_summary' => array(
+          'field_sfc_proj_results_title' => 'short_sum_title',
+          'field_sfc_proj_results' => 'short_sum',
+          'field_sfc_proj_results_title_eng' => 'short_sum_title_eng',
+          'field_sfc_proj_results_eng' => 'short_sum_eng',
+          'field_sfc_proj_sheet_pa' => 'pa',
+        ),
+      );
+
+      foreach ($mapping_fc as $field_collection => $project_field) {
+        $property_info = $sfc->getPropertyInfo($field_collection);
+
+        // For the field collection with cardinality multiple.
+        if ($property_info['type'] === 'field_collection_item') {
+          $sfc->{$field_collection}->set(NULL);
+        }
+
+        // For the field collection with cardinality not multiple.
+        if ($property_info['type'] === 'list<field_collection_item>') {
+          foreach ($sfc->{$field_collection}->getIterator() as $delta => $item) {
+            $sfc->{$field_collection}[$delta]->set(NULL);
+          }
+        }
+      }
+
+      // Save the EMW.
+      $sfc->save();
+
+      $nid = $sfc->getIdentifier();
+      $entity = node_load($nid);
+
+      foreach ($mapping_fc as $field_collection => $project_field) {
+        $property_info = $sfc->getPropertyInfo($field_collection);
+
+        switch ($property_info['type']) {
+          // For the field collection with cardinality multiple.
+          case 'field_collection_item':
+            $fc_entity = entity_create('field_collection_item',
+              array('field_name' => $field_collection)
+            );
+
+            $fc_entity->setHostEntity('node', $entity);
+            $fc_wrapper = entity_metadata_wrapper('field_collection_item', $fc_entity);
+
+            foreach ($mapping_fc_fields[$field_collection] as $entity_field => $fc_project_field) {
+              _agri_sfc_project_import_set_field_value($fc_wrapper, $entity_field, $project[$project_field][$fc_project_field], $error_field);
+            }
+
+            $fc_wrapper->save($project['op'] == 'update');
+            break;
+
+          // For the field collection with cardinality not multiple.
+          case 'list<field_collection_item>':
+            if (count($project[$project_field]) > 0) {
+              for ($i = 0; $i < count($project[$project_field]); $i++) {
+                $fc_entity = entity_create('field_collection_item',
+                  array('field_name' => $field_collection)
+                );
+
+                $fc_entity->setHostEntity('node', $entity);
+                $fc_wrapper = entity_metadata_wrapper('field_collection_item', $fc_entity);
+
+                foreach ($mapping_fc_fields[$field_collection] as $entity_field => $fc_project_field) {
+                  _agri_sfc_project_import_set_field_value($fc_wrapper, $entity_field, $project[$project_field][$i][$fc_project_field], $error_field);
+                }
+
+                $fc_wrapper->save($project['op'] == 'update');
+              }
+            }
+            break;
+        }
+      }
+
+      // Finally set workflow state to "Needs review".
+      workbench_moderation_moderate($entity, 'needs_review');
+      return TRUE;
+    }
+    catch (Exception $e) {
+      _agri_sfc_project_import_add_error_log($project['file']->filename, $e->getMessage());
+      return FALSE;
+    }
+  }
+
+  return !$fatal;
+}
+
+/**
+ * Helper function that returns the nid of node to update.
+ *
+ * @param string $puid
+ *   The alphanumeric unique id to check.
+ *
+ * @return bool|mixed
+ *   False or the nid of the node
+ */
+function _agri_sfc_project_import_get_existing_entity($puid) {
+
+  $query = new EntityFieldQuery();
+
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'project')
+    ->fieldCondition('field_project_puid', 'value', $puid)
+    ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
+    ->execute();
+
+  return empty($result['node']) ? FALSE : key($result['node']);
+}
+
+/**
+ * Defines SFC Main funding source list options.
+ *
+ * @return array
+ *   Term names.
+ */
+function _agri_sfc_project_import_get_default_funding_list() {
+  return array(
+    "Rural_development_programme" => "Rural development programme",
+    "H2020" => "H2020",
+    "other_EU" => "other EU",
+    "national_regional" => "national/regional",
+    "private_funds" => "private funds",
+  );
+}
+
+/**
+ * Get value for "Main funding source" field.
+ *
+ * @param string $funding
+ *   Real value from SFC.
+ *
+ * @return mixed
+ *   The key option of the field "field_proj_funding_source_list".
+ */
+function _agri_sfc_project_import_funding_match($funding) {
+  $funding_source_list = _agri_sfc_project_import_get_default_funding_list();
+  $field_match = variable_get('agri_sfc_project_funding_source_map', array());
+
+  foreach ($funding_source_list as $key => $value) {
+    if ($value == $funding) {
+      return $field_match[$key];
+    }
+  }
+}
+
+/**
+ * Get taxonomy term "nuts_regions" by nuts_code.
+ *
+ * @param string $nuts_value
+ *   The ISO nuts code.
+ *
+ * @return string
+ *   The term name if exists or empty string.
+ */
+function _agri_sfc_project_import_get_nuts_from_code($nuts_value) {
+
+  if (!empty($nuts_value)) {
+    $nuts_value = drupal_substr($nuts_value, 0, 5);
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'taxonomy_term')
+      ->entityCondition('bundle', 'nuts_regions')
+      ->fieldCondition('nuts_code', 'value', $nuts_value, '=');
+
+    $result = $query->execute();
+    if (!empty($result) && isset($result['taxonomy_term'])) {
+      $term_tid = key($result['taxonomy_term']);
+      $term = taxonomy_term_load($term_tid);
+      return $term->name;
+    }
+  }
+
+  return '';
+}
+
+/**
+ * Get taxonomy term "core_geographical_area" by nuts_code.
+ *
+ * @param string $iso_code
+ *   The ISO nuts code.
+ *
+ * @return string
+ *   The term name if exists or empty string.
+ */
+function _agri_sfc_project_import_get_country_from_nust_code($iso_code) {
+
+  if (!empty($iso_code)) {
+
+    if ($iso_code == 'UK') {
+      $iso_code = 'GB';
+    }
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'taxonomy_term')
+      ->entityCondition('bundle', 'core_geographical_area')
+      ->fieldCondition('field_core_iso_code_alpha2', 'value', $iso_code, '=');
+
+    $result = $query->execute();
+    if (!empty($result) && isset($result['taxonomy_term'])) {
+      $term_tid = key($result['taxonomy_term']);
+      $term = taxonomy_term_load($term_tid);
+      return $term->name;
+    }
+  }
+
+  return '';
+}
+
+/**
+ * Function to fill the entity wrapper fields passed as an argument.
+ *
+ * @param object $wrapper
+ *   The reference to the entity metadata wrapper.
+ * @param string $entity_field
+ *   The name of the field to fill.
+ * @param string $project_field
+ *   The value of the field.
+ * @param array $error_field
+ *   The reference array for error handling.
+ */
+function _agri_sfc_project_import_set_field_value(&$wrapper, $entity_field, $project_field, array &$error_field) {
+  try {
+    // Get properties of the field.
+    $property_info = $wrapper->getPropertyInfo($entity_field);
+
+    // Multiple value fields are 'list<type>' type.
+    $multiple_value = drupal_substr($property_info['type'], 0, 5) === "list<";
+    // field_item_link will be set always as single value.
+    $multiple_value = $multiple_value && $property_info['type'] != 'list<field_item_link>';
+
+    switch ($property_info['type']) {
+      case 'field_item_file':
+        // File.
+        $wrapper->$entity_field->file->set($project_field);
+        break;
+
+      case 'taxonomy_term':
+      case 'list<taxonomy_term>':
+
+        if (!is_array($project_field)) {
+          $terms_name = array($project_field);
+        }
+        else {
+          $terms_name = $project_field;
+        }
+
+        $terms_tid = array();
+        foreach ($terms_name as $term_name) {
+          if (!empty($term_name)) {
+            $tid = key(taxonomy_get_term_by_name($term_name, $property_info['bundle']));
+            if ($tid) {
+              $terms_tid[] = $tid;
+            }
+            else {
+              $error_field[] = array(
+                check_plain($property_info['label']),
+                t('Invalid term value.'),
+                check_plain($term_name),
+              );
+            }
+          }
+        }
+
+        if ($multiple_value) {
+          $project_field = $terms_tid;
+        }
+        else {
+          if (empty($terms_tid)) {
+            $project_field = '';
+          }
+          else {
+            $project_field = reset($terms_tid);
+          }
+        }
+
+      default:
+        // Single value.
+        if (!$multiple_value) {
+          // Validate and set the new value.
+          if (isset($property_info['required']) && $property_info['required'] == TRUE && trim($project_field) == '') {
+            $error_field[$entity_field] = array(
+              check_plain($property_info['label']),
+              t('Required data value.'),
+              check_plain($project_field),
+            );
+          }
+          else {
+            if ($property_info['type'] == 'text_formatted' && trim($project_field) != '') {
+              $value = $project_field;
+              $project_field = array(
+                'value' => $value,
+                'format' => 'plain_text',
+              );
+            }
+            if ($wrapper->$entity_field->validate($project_field)) {
+              if (empty($project_field) && !is_numeric($project_field)) {
+                $wrapper->$entity_field->set(NULL);
+              }
+              else {
+                $wrapper->$entity_field->set($project_field);
+              }
+            }
+            else {
+              $error_field[$entity_field] = array(
+                check_plain($property_info['label']),
+                t('Invalid or empty data value.'),
+                check_plain($project_field),
+              );
+            }
+          }
+        }
+        // Multiple values.
+        else {
+
+          // Validate and set all the new values.
+          if ($wrapper->$entity_field->validate($project_field)) {
+            foreach ($project_field as $key => $value) {
+              $wrapper->$entity_field->offsetSet($key, $value);
+            }
+          }
+          else {
+            $value = is_array($project_field) ?
+              implode('<br />', array_map('check_plain', $project_field)) :
+              check_plain($project_field);
+
+            $error_field[$entity_field] = array(
+              check_plain($property_info['label']),
+              t('Invalid data value.'),
+              check_plain($value),
+            );
+          }
+        }
+        break;
+    }
+  }
+  catch (Exception $e) {
+    $value = is_array($project_field) ?
+      implode('<br />', array_map('check_plain', $project_field)) :
+      check_plain($project_field);
+    $field = isset($property_info['label']) ? check_plain($property_info['label']) : check_plain($entity_field);
+
+    $error_field[$entity_field] = array(
+      $field,
+      $e->getMessage(),
+      $value,
+    );
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_sfc_project_import_form_views_exposed_form_alter(&$form, $form_state) {
+  if ($form['#id'] == 'views-exposed-form-agri-sfc-import-moderation-sfc') {
+    // Attach js to render flag links as checkboxes in "SFC Projects".
+    $form['#attached']['js'][] = drupal_get_path('module', 'agri_projects') . '/js/agri_projects.js';
+  }
+}

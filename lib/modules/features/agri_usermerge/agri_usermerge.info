@@ -1,0 +1,16 @@
+name = AGRI user merge ECAS
+description = Merge drupal accounts with correspondent ECAS accounts
+core = 7.x
+php = 5.6
+package = AGRI
+dependencies[] = features
+dependencies[] = usermerge
+dependencies[] = views
+configure = admin/config/people/agri_usermerge
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[user_permission][] = administer usermerge settings
+features[user_permission][] = administer_agri_usermerge
+features[user_permission][] = merge accounts
+features[views_view][] = agri_usermerge_drupal_account
+multisite_version = 2.5

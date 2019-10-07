@@ -1,0 +1,743 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI projects ws module.
+ */
+
+define('AGRI_PROJECTS_SFC_WS_EIP_SERVICE', 'EuropeanInnovationPartnershipService');
+define('AGRI_PROJECTS_SFC_WS_DIRECTORY_SERVICE', 'DirectoryService');
+define('AGRI_PROJECTS_SFC_WS_SEARCH_PROJECT_QUERY', <<<XML
+<query>
+  <criteria>
+     <status>SNT</status>
+     <currentNode>EC</currentNode>
+  </criteria>
+</query>
+XML
+);
+
+/**
+ * Implements hook_permission().
+ */
+function agri_projects_sfc_ws_permission() {
+  return array(
+    'administer_settings_sfc_importer_soap' => array(
+      'title' => t('Administer agri projects SOAP service'),
+      'description' => t('Administer settings of the importer SOAP service.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function agri_projects_sfc_ws_menu() {
+  // The menu link that points to the configuration page.
+  $items['admin/config/agri-project/sfc-project/sfc2014-ws'] = array(
+    'title' => 'SFC Project SOAP services',
+    'description' => 'Configuration page for SFC importer SOAP services.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_projects_sfc_ws_config_form'),
+    'access arguments' => array('administer_settings_sfc_importer_soap'),
+    'file' => 'includes/agri_projects_sfc_ws.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/agri-project/sfc-project/sfc2014-ws/general'] = array(
+    'title' => 'General',
+    'access arguments' => array('administer_settings_sfc_importer_soap'),
+    'weight' => 1,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/agri-project/sfc-project/sfc2014-ws/test'] = array(
+    'title' => 'Test SOAP service',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_projects_sfc_ws_test_form'),
+    'access arguments' => array('administer_settings_sfc_importer_soap'),
+    'weight' => 2,
+    'file' => 'includes/agri_projects_sfc_ws.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/config/agri-project/sfc-project/sfc2014-ws/manual-import'] = array(
+    'title' => 'Manual SFC Project import',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('agri_projects_sfc_ws_manual_import_form'),
+    'access arguments' => array('administer_settings_sfc_importer_soap'),
+    'weight' => 3,
+    'file' => 'includes/agri_projects_sfc_ws.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function agri_projects_sfc_ws_cron() {
+
+  // Check if the importer from WS is active.
+  if (!variable_get('agri_projects_sfc_ws_enable', FALSE)) {
+    return;
+  }
+
+  // Fill queue.
+  _agri_projects_sfc_ws_fill_queue();
+
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function agri_projects_sfc_ws_cron_queue_info() {
+  $queues['agri_projects_sfc_ws'] = array(
+    'worker callback' => '_agri_projects_sfc_ws_callback',
+    'time' => 120,
+  );
+
+  return $queues;
+}
+
+/**
+ * Fill queue "agri_projects_sfc_ws".
+ */
+function _agri_projects_sfc_ws_fill_queue() {
+  // Check if the settings is available.
+  $settings = variable_get('sfc_soap_ws', array());
+  if (empty($settings)) {
+    watchdog('agri_projects_sfc_ws', 'No settings available.', array(), WATCHDOG_WARNING);
+    return;
+  }
+
+  $cci_projects = array();
+  $wsdl = $settings['host'] . AGRI_PROJECTS_SFC_WS_EIP_SERVICE . '?wsdl';
+
+  try {
+    // Get projects from web service.
+    $wrapper_eip_service = new AgriProjectsSfcWs($wsdl, array());
+
+    // Added custom criteria to the search query retrieving EIP SFC projects.
+    $default_search_project_query = variable_get('agri_projects_sfc_ws_search_project_query', AGRI_PROJECTS_SFC_WS_SEARCH_PROJECT_QUERY);
+    $query = drupal_json_decode(drupal_json_encode((array) simplexml_load_string($default_search_project_query)));
+
+    $project_ids = $wrapper_eip_service->searchProject($query);
+
+    foreach ($project_ids as $cci) {
+      $cci_projects[] = $cci;
+    }
+
+    // Add the projects in a queue.
+    if (!empty($cci_projects)) {
+      $queue = DrupalQueue::get('agri_projects_sfc_ws');
+      foreach ($cci_projects as $cci_project) {
+        $queue->createItem($cci_project);
+      }
+    }
+
+    variable_set('agri_projects_sfc_ws_last_time', time());
+  }
+  catch (Exception $e) {
+    watchdog_exception('agri_projects_sfc_ws', $e);
+  }
+}
+
+/**
+ * Callback for a single queue item.
+ */
+function _agri_projects_sfc_ws_callback($cci) {
+  // Retrieve the ws settings.
+  $settings = variable_get('sfc_soap_ws', array());
+  $wsdl = $settings['host'] . AGRI_PROJECTS_SFC_WS_EIP_SERVICE . '?wsdl';
+
+  try {
+    // Call the read method and get a single SFC project.
+    $wrapper_eip_service = new AgriProjectsSfcWs($wsdl, array());
+    $param = array(
+      'cci' => $cci,
+    );
+    $sfc_project = $wrapper_eip_service->readProject($param);
+
+    // Map and save project.
+    $project = _agri_projects_sfc_ws_map_fields($sfc_project->return);
+    _agri_projects_sfc_ws_save_project($project);
+  }
+  catch (Exception $e) {
+    watchdog('agri_projects_sfc_ws', 'Error during project import %cci', array('%cci' => implode('', $cci)), WATCHDOG_ERROR);
+    throw $e;
+  }
+
+}
+
+/**
+ * Helper function to map project fields.
+ *
+ * @param object $data
+ *   The object data returned from SOAP SFC2014 service read function.
+ *
+ * @see AgriProjectsSfcWs::readProject()
+ * @see _agri_projects_sfc_ws_save_project()
+ *
+ * @return array
+ *   Return an array of mapped fields to use when calling save function.
+ */
+function _agri_projects_sfc_ws_map_fields($data) {
+
+  // Detect if puid exists to perform insert or update.
+  $puid = _agri_projects_sfc_ws_get_puid($data->s0->s0_ver->cci);
+  $op = _agri_sfc_project_import_get_existing_entity($puid) ? 'update' : 'insert';
+
+  $sfc_modification_date = strtotime($data->s0->s0_ver->modificationDate);
+
+  // Pass only year in an acceptable way to date fields.
+  if (preg_match('/^2\d{3}$/', $data->s0->s0_ver->startDate)) {
+    date_default_timezone_set('UTC');
+    $date = mktime(0, 0, 0, '01', '01', $data->s0->s0_ver->startDate);
+    $start_date = $date;
+  }
+
+  // Pass only year in an acceptable way to date fields.
+  if (preg_match('/^2\d{3}$/', $data->s0->s0_ver->endDate)) {
+    date_default_timezone_set('UTC');
+    $date = mktime(0, 0, 0, '01', '01', $data->s0->s0_ver->endDate);
+    $end_date = $date;
+  }
+
+  if ($data->s0->s0_ver->isCompleted) {
+    $proj_status = 'completed';
+  }
+  else {
+    $proj_status = 'ongoing';
+  }
+
+  // Map fields.
+  $project = array(
+    'sfc_modification_date' => $sfc_modification_date,
+    'is_sfc' => 1,
+    'op' => $op,
+    'type' => 'Operational group',
+    'puid' => $puid,
+    'title' => $data->s0->s0_ver->titleInNativeLanguage,
+    'title_en' => $data->s0->s0_ver->titleInEnglishLanguage,
+    'country' => _agri_sfc_project_import_get_country_from_nust_code($data->s0->s0_ver->cci->targetArea),
+    'rdp' => $data->s0->s0_ver->mainReferring,
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'proj_status' => $proj_status,
+  );
+
+  // Block s1.
+  if (property_exists($data, 's1')) {
+
+    $data_s1 = $data->s1;
+
+    // NUTS Region.
+    if (property_exists($data_s1, 's1_1')) {
+      $data_s1_1 = $data_s1->s1_1;
+      if (property_exists($data_s1_1, 'mainRegion')) {
+        $project['nuts_main'] = _agri_sfc_project_import_get_nuts_from_code($data_s1_1->mainRegion);
+      }
+      if (property_exists($data_s1_1, 'region1')) {
+        $project['nuts_option_1'] = _agri_sfc_project_import_get_nuts_from_code($data_s1_1->region1);
+      }
+      if (property_exists($data_s1_1, 'region2')) {
+        $project['nuts_option_2'] = _agri_sfc_project_import_get_nuts_from_code($data_s1_1->region2);
+      }
+    }
+
+    // Coordinator and editor.
+    if (property_exists($data_s1, 's1_2')) {
+      $data_s1_2 = $data_s1->s1_2;
+      if (property_exists($data_s1_2, 'name')) {
+        $project['coordinator']['name'] = $data_s1_2->name;
+      }
+      if (property_exists($data_s1_2, 'address')) {
+        $project['coordinator']['address'] = $data_s1_2->address;
+      }
+      if (property_exists($data_s1_2, 'phone')) {
+        $project['coordinator']['phone'] = $data_s1_2->phone;
+      }
+      if (property_exists($data_s1_2, 'email')) {
+        if (filter_var($data_s1_2->email, FILTER_VALIDATE_EMAIL) !== FALSE) {
+          $project['coordinator']['email'] = $data_s1_2->email;
+        }
+      }
+      if (property_exists($data_s1_2, 'eipAgriPartnerType')) {
+        $main_partner_type = _agri_projects_user_type_mapping(_agri_projects_sfc_ws_get_dictionary('EipAgriPartnerType', $data_s1_2->eipAgriPartnerType), FALSE);
+        $project['coordinator']['partner_type'] = $main_partner_type;
+      }
+      if (property_exists($data_s1_2, 'editorOfTheText')) {
+        $project['editor'] = $data_s1_2->editorOfTheText;
+      }
+    }
+
+    // Funding source and Budget.
+    if (property_exists($data_s1, 's1_3')) {
+      $data_s1_3 = $data_s1->s1_3;
+      if (property_exists($data_s1_3, 'eipAgriFundingSource')) {
+        $funding = _agri_projects_sfc_ws_get_dictionary('EipAgriFundingSource', $data_s1_3->eipAgriFundingSource);
+        $project['funding'] = _agri_sfc_project_import_funding_match($funding);
+      }
+      if (property_exists($data_s1_3, 'totalBudgetOfTheProject')) {
+        $project['budget'] = $data_s1_3->totalBudgetOfTheProject;
+      }
+    }
+
+    // Objective.
+    if (property_exists($data_s1, 's1_4')) {
+      if (property_exists($data_s1->s1_4, 'objectiveOfTheProjectEN')) {
+        $objective_en = filter_xss(html_entity_decode($data_s1->s1_4->objectiveOfTheProjectEN, ENT_QUOTES, 'UTF-8'), array());
+        $project['objective_en'] = $objective_en;
+      }
+      if (property_exists($data_s1->s1_4, 'objectiveOfTheProject')) {
+        $objective = filter_xss(html_entity_decode($data_s1->s1_4->objectiveOfTheProject, ENT_QUOTES, 'UTF-8'), array());
+        $project['objective'] = $objective;
+      }
+    }
+
+    // Description of activities.
+    if (property_exists($data_s1, 's1_5')) {
+      if (property_exists($data_s1->s1_5, 'activitiesOfTheProjectEN')) {
+        $desc_en = filter_xss(html_entity_decode($data_s1->s1_5->activitiesOfTheProjectEN, ENT_QUOTES, 'UTF-8'), array());
+        $project['desc_en'] = $desc_en;
+      }
+      if (property_exists($data_s1->s1_5, 'activitiesOfTheProject')) {
+        $desc = filter_xss(html_entity_decode($data_s1->s1_5->activitiesOfTheProject, ENT_QUOTES, 'UTF-8'), array());
+        $project['desc'] = $desc;
+      }
+    }
+
+    // Description of the context.
+    if (property_exists($data_s1, 's1_6')) {
+      $project['context'] = filter_xss(html_entity_decode($data_s1->s1_6->contextOfTheProject, ENT_QUOTES, 'UTF-8'), array());
+    }
+
+    // Additional information.
+    if (property_exists($data_s1, 's1_7')) {
+      $project['info'] = filter_xss(html_entity_decode($data_s1->s1_7->additionalInformation, ENT_QUOTES, 'UTF-8'), array());
+    }
+
+    // Additional comments.
+    if (property_exists($data_s1, 's1_8')) {
+      $project['comments'] = filter_xss(html_entity_decode($data_s1->s1_8->additionalComments, ENT_QUOTES, 'UTF-8'), array());
+    }
+  }
+
+  // Block s2_list: other partners.
+  if (property_exists($data, 's2_list')) {
+    $data_s2_list = $data->s2_list;
+    if (property_exists($data_s2_list, 's2')) {
+
+      $list_partners = array();
+      if (is_array($data_s2_list->s2)) {
+        foreach ($data_s2_list->s2 as $s2) {
+          $list_partners[] = $s2;
+        }
+      }
+      else {
+        $list_partners[] = $data_s2_list->s2;
+      }
+
+      foreach ($list_partners as $partner) {
+        // Skip the lead of the project.
+        if (property_exists($partner, 'isLead') && $partner->isLead === TRUE) {
+          continue;
+        }
+
+        if (property_exists($partner, 'email')) {
+          if (filter_var($partner->email, FILTER_VALIDATE_EMAIL) !== FALSE) {
+            $field_collection_other_partners = array(
+              'name' => property_exists($partner, 'name') ? $partner->name : '',
+              'address' => property_exists($partner, 'address') ? $partner->address : '',
+              'phone' => property_exists($partner, 'phone') ? $partner->phone : '',
+              'email' => $partner->email,
+              'partner_type' => _agri_projects_user_type_mapping(_agri_projects_sfc_ws_get_dictionary('EipAgriPartnerType', $partner->eipAgriPartnerType), FALSE),
+            );
+            $project['other_partners'][] = $field_collection_other_partners;
+          }
+        }
+      }
+    }
+  }
+
+  // Block s3_list: Keywords.
+  if (property_exists($data, 's3_list')) {
+    $data_s3_list = $data->s3_list;
+    if (property_exists($data_s3_list, 's3')) {
+
+      $list_keywords = array();
+      if (is_array($data_s3_list->s3)) {
+        foreach ($data_s3_list->s3 as $s3) {
+          $list_keywords[] = $s3;
+        }
+      }
+      else {
+        $list_keywords[] = $data_s3_list->s3;
+      }
+
+      foreach ($list_keywords as $id_keyword) {
+        $project['keywords'][] = _agri_projects_sfc_ws_get_dictionary('EipAgriKeyword', $id_keyword->eipAgriKeyword);
+      }
+    }
+  }
+
+  // Block s4_list: Audiovisual links.
+  if (property_exists($data, 's4_list')) {
+    $data_s4_list = $data->s4_list;
+    if (property_exists($data_s4_list, 's4')) {
+
+      $audiovisual_links = array();
+      if (is_array($data_s4_list->s4)) {
+        foreach ($data_s4_list->s4 as $s4) {
+          $audiovisual_links[] = $s4;
+        }
+      }
+      else {
+        $audiovisual_links[] = $data_s4_list->s4;
+      }
+
+      foreach ($audiovisual_links as $audiovisual_link) {
+        if (filter_var($audiovisual_link->url, FILTER_VALIDATE_URL) !== FALSE) {
+          $project['audiovisual'][] = array(
+            'title' => property_exists($audiovisual_link, 'titleEN') ? $audiovisual_link->titleEN : $audiovisual_link->url,
+            'url' => $audiovisual_link->url,
+          );
+        }
+      }
+    }
+  }
+
+  // Block s5_list: website links.
+  if (property_exists($data, 's5_list')) {
+    $data_s5_list = $data->s5_list;
+    if (property_exists($data_s5_list, 's5')) {
+
+      $website_links = array();
+      if (is_array($data_s5_list->s5)) {
+        foreach ($data_s5_list->s5 as $s5) {
+          $website_links[] = $s5;
+        }
+      }
+      else {
+        $website_links[] = $data_s5_list->s5;
+      }
+
+      foreach ($website_links as $website_link) {
+        if (filter_var($website_link->url, FILTER_VALIDATE_URL) !== FALSE) {
+          $title = property_exists($website_link, 'titleEN') ? $website_link->titleEN : $website_link->url;
+          // Website.
+          if (property_exists($website_link, 'isWebsiteOfTheProject') && $website_link->isWebsiteOfTheProject == TRUE) {
+            $project['website'] = array(
+              'title' => $title,
+              'url' => $website_link->url,
+            );
+          }
+          // Other websites.
+          else {
+            $project['other_websites'][] = array(
+              'title' => $title,
+              'url' => $website_link->url,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  // Block s6_list: practice abstract.
+  if (property_exists($data, 's6_list')) {
+    $data_s6_list = $data->s6_list;
+    if (property_exists($data_s6_list, 's6')) {
+
+      $practice_abstract_arr = array();
+      if (is_array($data_s6_list->s6)) {
+        foreach ($data_s6_list->s6 as $s6) {
+          $practice_abstract_arr[] = $s6;
+        }
+      }
+      else {
+        $practice_abstract_arr[] = $data_s6_list->s6;
+      }
+
+      foreach ($practice_abstract_arr as $key => $practice_abstract) {
+        if (property_exists($practice_abstract, 'practiceAbstract') || property_exists($practice_abstract, 'practiceAbstractEN')) {
+          $project['practice_abstract'][$key] = array(
+            'short_sum' => property_exists($practice_abstract, 'practiceAbstract') ? strip_tags(html_entity_decode($practice_abstract->practiceAbstract, ENT_QUOTES, 'UTF-8')) : '',
+            'short_sum_eng' => property_exists($practice_abstract, 'practiceAbstractEN') ? strip_tags(html_entity_decode($practice_abstract->practiceAbstractEN, ENT_QUOTES, 'UTF-8')) : '',
+            'pa' => $practice_abstract->code,
+          );
+        }
+      }
+    }
+  }
+
+  return $project;
+}
+
+/**
+ * Helper function to save project entities.
+ *
+ * @param array $project
+ *   The project's fields array.
+ */
+function _agri_projects_sfc_ws_save_project(array $project) {
+
+  global $user;
+
+  // Set existing published node to unpublished before create new revision.
+  // This ensures that no revision is published when updating existing nodes.
+  $project['status'] = 0;
+  $project['revision'] = 1;
+
+  $project['log'] = ($project['op'] == 'insert') ?
+    "SFC Project created on " . format_date(time(), 'custom', 'd/m/Y H:i:s', date_default_timezone()) :
+    "SFC Project updated on " . format_date(time(), 'custom', 'd/m/Y H:i:s', date_default_timezone());
+
+  $nid = _agri_sfc_project_import_get_existing_entity($project['puid']);
+
+  // Check if puid exists and in case load the relative existing node.
+  if ($nid === FALSE || ($entity = node_load($nid)) === FALSE) {
+    // Otherwise init a new node.
+    $entity = entity_create('node', array('type' => 'project'));
+    $entity->uid = $user->uid;
+  }
+
+  // Add wrapper to save common data.
+  $sfc = entity_metadata_wrapper('node', $entity);
+
+  $mapping = array(
+    'title' => 'title',
+    'field_project_puid' => 'puid',
+    'field_proj_og_project_status' => 'proj_status',
+    'field_proj_starting_date' => 'start_date',
+    'field_proj_end_date' => 'end_date',
+    'field_proj_title_eng' => 'title_en',
+    'status' => 'status',
+    'revision' => 'revision',
+    'log' => 'log',
+    'field_proj_is_sfc' => 'is_sfc',
+    'field_proj_geographical_area' => 'country',
+    'field_proj_rdp' => 'rdp',
+    'nuts_region' => 'nuts_main',
+    'field_proj_nuts_region_other_1' => 'nuts_option_1',
+    'field_proj_nuts_region_other_2' => 'nuts_option_2',
+    'field_proj_editor_of_text' => 'editor',
+    'field_core_keywords' => 'keywords',
+    'field_proj_funding_source_list' => 'funding',
+    'field_proj_og_budget' => 'budget',
+    'field_proj_problems' => 'objective',
+    'field_proj_problems_eng' => 'objective_en',
+    'field_proj_desc' => 'desc',
+    'field_proj_desc_eng' => 'desc_en',
+    'field_proj_desc_context' => 'context',
+    'field_proj_additional_info' => 'info',
+    'field_proj_additional_comments' => 'comments',
+    'field_proj_website' => 'website',
+    'field_proj_other_websites' => 'other_websites',
+    'field_proj_audiovisual_material' => 'audiovisual',
+    'field_proj_sfc_modification_date' => 'sfc_modification_date',
+  );
+
+  $error_field = array();
+  foreach ($mapping as $entity_field => $project_field) {
+    if (isset($project[$project_field])) {
+      _agri_sfc_project_import_set_field_value($sfc, $entity_field, $project[$project_field], $error_field);
+    }
+  }
+
+  $absolutely_needed = array(
+    'title',
+    'field_proj_og_project_status',
+    'field_project_puid',
+    'start_date',
+    'end_date',
+  );
+
+  $fatal = !empty(array_intersect_key(drupal_map_assoc($absolutely_needed), $error_field));
+  if (!$fatal) {
+
+    try {
+
+      $mapping_fc = array(
+        'field_proj_coordinator_fc' => 'coordinator',
+        'field_proj_partner_fc' => 'other_partners',
+        'field_sfc_proj_summary' => 'practice_abstract',
+      );
+      $mapping_fc_fields = array(
+        'field_proj_coordinator_fc' => array(
+          'field_proj_coord_contact_person' => 'name',
+          'field_proj_coord_address' => 'address',
+          'field_proj_coord_email' => 'email',
+          'field_proj_coord_phone' => 'phone',
+          'field_proj_coord_category' => 'partner_type',
+        ),
+        'field_proj_partner_fc' => array(
+          'field_proj_prtnr_contact_person' => 'name',
+          'field_proj_prtnr_address' => 'address',
+          'field_proj_prtnr_email' => 'email',
+          'field_proj_prtnr_phone' => 'phone',
+          'field_proj_prtnr_category' => 'partner_type',
+        ),
+        'field_sfc_proj_summary' => array(
+          'field_sfc_proj_results' => 'short_sum',
+          'field_sfc_proj_results_eng' => 'short_sum_eng',
+          'field_sfc_proj_sheet_pa' => 'pa',
+        ),
+      );
+
+      foreach ($mapping_fc as $field_collection => $project_field) {
+        $property_info = $sfc->getPropertyInfo($field_collection);
+
+        // For the field collection with cardinality multiple.
+        if ($property_info['type'] === 'field_collection_item') {
+          $sfc->{$field_collection}->set(NULL);
+        }
+
+        // For the field collection with cardinality not multiple.
+        if ($property_info['type'] === 'list<field_collection_item>') {
+          foreach ($sfc->{$field_collection}->getIterator() as $delta => $item) {
+            $sfc->{$field_collection}[$delta]->set(NULL);
+          }
+        }
+      }
+
+      // Save the EMW.
+      $sfc->save();
+
+      $nid = $sfc->getIdentifier();
+      $entity = node_load($nid);
+
+      foreach ($mapping_fc as $field_collection => $project_field) {
+        if (isset($project[$project_field])) {
+          $property_info = $sfc->getPropertyInfo($field_collection);
+
+          switch ($property_info['type']) {
+            // For the field collection with cardinality multiple.
+            case 'field_collection_item':
+              $fc_entity = entity_create('field_collection_item',
+                array('field_name' => $field_collection)
+              );
+
+              $fc_entity->setHostEntity('node', $entity);
+              $fc_wrapper = entity_metadata_wrapper('field_collection_item', $fc_entity);
+
+              foreach ($mapping_fc_fields[$field_collection] as $entity_field => $fc_project_field) {
+                _agri_sfc_project_import_set_field_value($fc_wrapper, $entity_field, $project[$project_field][$fc_project_field], $error_field);
+              }
+
+              $fc_wrapper->save($project['op'] == 'update');
+              break;
+
+            // For the field collection with cardinality not multiple.
+            case 'list<field_collection_item>':
+
+              for ($i = 0; $i < count($project[$project_field]); $i++) {
+                $fc_entity = entity_create('field_collection_item',
+                  array('field_name' => $field_collection)
+                );
+
+                $fc_entity->setHostEntity('node', $entity);
+                $fc_wrapper = entity_metadata_wrapper('field_collection_item', $fc_entity);
+
+                foreach ($mapping_fc_fields[$field_collection] as $entity_field => $fc_project_field) {
+                  _agri_sfc_project_import_set_field_value($fc_wrapper, $entity_field, $project[$project_field][$i][$fc_project_field], $error_field);
+                }
+
+                $fc_wrapper->save($project['op'] == 'update');
+              }
+              break;
+          }
+        }
+      }
+
+      // Finally set workflow state to "Needs review".
+      workbench_moderation_moderate($entity, 'needs_review');
+
+      watchdog('agri_projects_sfc_ws', '%log: %puid', array(
+        '%log' => $project['log'],
+        '%puid' => $project['puid'],
+      ), WATCHDOG_INFO);
+    }
+    catch (Exception $e) {
+      watchdog('agri_projects_sfc_ws', '%puid: %log', array(
+        '%puid' => $project['puid'],
+        '%log' => $e->getMessage(),
+      ), WATCHDOG_ERROR);
+    }
+  }
+}
+
+/**
+ * Helper function to convert complex element cci in a string (puid).
+ *
+ * @param object $cci
+ *   Complex element returned from SOAP service.
+ *
+ * @return string
+ *   The puid in string format.
+ */
+function _agri_projects_sfc_ws_get_puid($cci) {
+  $puid = $cci->year . $cci->targetArea . $cci->leadDg . $cci->budgetSource . $cci->objectSubType . $cci->sequence;
+  return $puid;
+}
+
+/**
+ * Helper function to convert the puid in a cci.
+ *
+ * @param string $puid
+ *   The puid.
+ *
+ * @return mixed
+ *   The cci in array format.
+ */
+function _agri_projects_sfc_ws_get_cci_from_puid($puid) {
+
+  $pattern = '/(?P<year>\d{4})(?P<targetArea>[A-Za-z]{2})(?P<leadDg>\d{2})(?P<budgetSource>[A-Za-z]{2})(?P<objectSubType>[A-Za-z]{2})(?P<sequence>\d{3})/';
+
+  $cci_projects_keys = array(
+    'year',
+    'targetArea',
+    'leadDg',
+    'budgetSource',
+    'objectSubType',
+    'sequence',
+  );
+
+  $match = array();
+  if (preg_match($pattern, $puid, $match)) {
+    $cci_projects = array_intersect_key($match, drupal_map_assoc($cci_projects_keys));
+    return $cci_projects;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Wrapper function to retrieve the dictionaries from drupal statics or WS.
+ *
+ * @param string $name
+ *   The name of the dictionary.
+ * @param int $id
+ *   The id of the term.
+ *
+ * @see AgriProjectsSfcWs::getDictionary
+ *
+ * @return mixed
+ *   A string name of the term.
+ */
+function _agri_projects_sfc_ws_get_dictionary($name, $id) {
+  $dictionary = &drupal_static('agri_projects_sfc_ws_dictionary');
+  if (!isset($dictionary[$name][$id])) {
+    $settings = variable_get('sfc_soap_ws', array());
+    $wsdl = $settings['host'] . AGRI_PROJECTS_SFC_WS_DIRECTORY_SERVICE . '?wsdl';
+    $wrapper_directory_service = new AgriProjectsSfcWs($wsdl, array());
+
+    foreach ($wrapper_directory_service->getDictionary($name) as $value) {
+      $dictionary[$name][$value->code] = $value->description;
+    }
+  }
+
+  return $dictionary[$name][$id];
+}

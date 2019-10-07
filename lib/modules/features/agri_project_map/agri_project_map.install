@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_project_map feature.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function agri_project_map_enable() {
+  drupal_set_message(t('AGRI Project Map feature is now active on your site.'));
+}
+
+/**
+ * Implements hook_install().
+ */
+function agri_project_map_install() {
+  variable_set('agri_project_map_smartloader_prurl', '//europa.eu/webtools/load.js');
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_project_map_disable() {
+  drupal_set_message(t('AGRI Project Map feature is now inactive on your site.'));
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function agri_project_map_requirements($phase) {
+  $requirements = array();
+  if ($phase == 'runtime') {
+    $t = get_t();
+    $smartloader_prurl = variable_get('agri_project_map_smartloader_prurl', '');
+    if ($smartloader_prurl == '') {
+      $requirements['webtools_smartloader_prurl'] = array(
+        'description' => $t('Javascript not found. Define the webtools_smartloader_prurl at: !url', array(
+          '!url' => l($t('admin/config/services/agri-project-map'), 'admin/config/services/agri-project-map'),
+        )),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('Not found'),
+        'title' => $t('AGRI Project Map - Webtools smartloader'),
+      );
+    }
+    else {
+      $requirements['webtools_smartloader_prurl'] = array(
+        'description' => $t('Javascript defined at !url', array(
+          '!url' => l($smartloader_prurl, $smartloader_prurl),
+        )),
+        'severity' => REQUIREMENT_OK,
+        'value' => $t('Defined'),
+        'title' => $t('AGRI Project Map - Webtools smartloader'),
+      );
+    }
+  }
+  return $requirements;
+}

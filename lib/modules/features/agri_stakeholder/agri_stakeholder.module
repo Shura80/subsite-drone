@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI Stakeholder area feature.
+ */
+
+include_once 'agri_stakeholder.features.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function agri_stakeholder_menu() {
+  $items = array();
+
+  $items['eip-agri-projects'] = array(
+    'title' => 'EIP-AGRI Projects',
+    'page callback' => 'agri_core_callback_empty_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'main-menu',
+    'expanded' => 1,
+    'weight' => -48,
+  );
+
+  // Force redirect on "eip-agri-projects" for old path "my-eip-agri".
+  $items['my-eip-agri'] = array(
+    'title' => 'My EIP Agri',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array('eip-agri-projects', array(), '301'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}

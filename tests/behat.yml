@@ -1,0 +1,72 @@
+default:
+  suites:
+    default:
+      contexts:
+        - FeatureContext
+        - Drupal\agri\Context\DrupalContext
+        - Drupal\agri\Context\EmailNotificationsContext
+        - Drupal\agri\Context\SolrContext
+        - Drupal\agri\Context\SearchApiContext
+        - Drupal\agri\Context\FieldCollectionContext
+        - Drupal\DrupalExtension\Context\MinkContext
+        - Drupal\DrupalExtension\Context\DrushContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\BatchContext
+        - Drupal\DrupalExtension\Context\MarkupContext
+      filters:
+        tags: "~@wip"
+  extensions:
+    Behat\MinkExtension:
+      goutte: ~
+      javascript_session: 'selenium2'
+      browser_name: 'chrome'
+      selenium2:
+        browser: 'chrome'
+        wd_host: 'http://localhost:8643/wd/hub'
+        capabilities:
+          chrome:
+            switches:
+              - "--headless"
+              - "--disable-gpu"
+              - "--window-size=1280,800"
+      base-url: 'http://eip-agri.clone'
+      files_path: '/Users/alessiodepisi/Sites/agri-eip_clone/tests/resources'
+    Drupal\DrupalExtension:
+      api_driver: 'drupal'
+      blackbox: ~
+      drupal:
+        drupal_root: '/Users/alessiodepisi/Sites/agri-eip_clone/build'
+      region_map:
+        header: "#layout-header"
+        header_top: ".region-header-top"
+        header_right: ".region.region-header-right"
+        featured: ".region.region-featured"
+        tools: ".region.region-tools"
+        sidebar_left: ".region.region-sidebar-left"
+        sidebar_right: ".region.region-sidebar-right"
+        help: ".region.region-help"
+        content_top: ".region.region-content-top"
+        content_top_left: ".region.region-content-top-left"
+        content_top_right: ".region.region-content-top-right"
+        content: ".region.region-content"
+        content_right: ".region.region-content-right"
+        content_first: ".region.region-content-first"
+        content_second: ".region.region-content-second"
+        content_third: ".region.region-content-third"
+        content_bottom: ".region.region-content-bottom"
+        main_bottom: ".region.region-main-bottom"
+        footer: ".region.region-footer"
+      selectors:
+        message_selector: '.messages'
+        error_message_selector: '.messages.error'
+        success_message_selector: '.messages.status'
+        warning_message_selector: '.messages.warning'
+      subcontexts:
+        paths:
+          - '/Users/alessiodepisi/Sites/agri-eip_clone/build/sites/default'
+          - '/Users/alessiodepisi/Sites/agri-eip_clone/build'
+      drush:
+        root: '/Users/alessiodepisi/Sites/agri-eip_clone/build'
+        binary: '/Users/alessiodepisi/Sites/agri-eip_clone/vendor/ec-europa/toolkit/bin/drush'
+  formatters:
+    progress: ~

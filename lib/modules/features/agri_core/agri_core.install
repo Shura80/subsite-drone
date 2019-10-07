@@ -1,0 +1,2589 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_core feature.
+ *
+ * This is a sort of controller and timeline for the installation process.
+ */
+
+include_once 'agri_core.install.inc';
+
+/**
+ * Implements hook_install().
+ */
+function agri_core_install() {
+
+  // Remove default Multisite tags.
+  $term = reset(taxonomy_get_term_by_name('sport', 'tags'));
+  taxonomy_term_delete($term->tid);
+  $term = reset(taxonomy_get_term_by_name('economic', 'tags'));
+  taxonomy_term_delete($term->tid);
+
+  // Remove first node, created by Multisite deployment script.
+  node_delete(1);
+
+  if (module_exists('dashboard')) {
+    module_disable(array('dashboard'));
+  }
+
+  // See ticket NEXTEUROPA-3659.
+  $environments = &drupal_static('apachesolr_load_all_environments');
+  $environments = array();
+  global $conf;
+  $conf['apachesolr_multisitesearch_last_metadata_fetch'] = REQUEST_TIME;
+  $conf['apachesolr_multisitesearch_last_metadata_update'] = REQUEST_TIME;
+  variable_set('apachesolr_delay_removals', 1);
+
+  // Deploy DB Search API server as soft configuration.
+  $server = array(
+    "name" => "Core Database",
+    "machine_name" => "core_database",
+    "description" => "",
+    "class" => "search_api_db_service",
+    "options" => array(
+      "database" => "default:default",
+      "min_chars" => "2",
+    ),
+    "enabled" => "1",
+  );
+  search_api_server_insert($server);
+
+  // Enable EIP-AGRI features.
+  module_enable(array(
+    'agri_administrations',
+    'agri_events',
+    'agri_news',
+    'agri_pages',
+    'agri_publications',
+    'agri_press',
+    'agri_projects',
+    'agri_sfc_project_import',
+    'agri_projects_sfc_ws',
+    'agri_project_map',
+    'agri_usermerge',
+    'agri_digitization_toolbox',
+    'agri_stakeholder',
+  ));
+
+  // Enable AGRI Invite in a second step.
+  module_enable(array(
+    'invite',
+    'agri_invite',
+  ));
+
+  // Revert sensitive AGRI components.
+  features_revert(array(
+    'agri_core' => array('taxonomy', 'variable', 'user_permission'),
+    'agri_events' => array('user_permission'),
+    'agri_news' => array('user_permission'),
+    'agri_pages' => array('user_permission'),
+    'agri_publications' => array('user_permission'),
+    'agri_press' => array('user_permission'),
+    'agri_projects' => array('user_permission'),
+  ));
+
+  // Setting EIP-AGRI variables.
+  variable_set('site_name', 'EIP-AGRI');
+  variable_set('classification', '01000');
+  variable_set('meta_configuration', '01000');
+  variable_set('og_features_ignore_og_fields', TRUE);
+
+  // Enable custom theme and remove blocks in header_top region.
+  theme_enable(array('agri_theme'));
+  variable_set('theme_default', 'agri_theme');
+
+  // Import default terms.
+  foreach (_agri_core_get_default_field_of_activity_terms() as $name) {
+    _agri_core_api_create_term('field_of_activity', $name);
+  }
+
+  foreach (_agri_core_get_default_core_geographical_area_terms() as $key => $value) {
+    _agri_core_api_create_term('core_geographical_area', $key);
+
+    if (is_array($value)) {
+      foreach ($value as $country) {
+        _agri_core_api_create_term('core_geographical_area', $country, $key);
+      }
+    }
+  }
+
+  $other = taxonomy_get_term_by_name('Other', 'core_geographical_area');
+  if (!empty($other)) {
+    $term = reset($other);
+    $term->weight = '10';
+    taxonomy_term_save($term);
+  }
+
+  foreach (_agri_core_get_default_core_user_type_terms() as $weight => $name) {
+    _agri_core_api_create_term('core_user_type', $name, NULL, $weight);
+  }
+
+  // Create Agricultural sectors.
+  // Starting weight.
+  $weight = -20;
+  // Import default main_funding_source terms.
+  foreach (agri_projects_get_default_agricultural_sectors() as $name) {
+    _agri_core_api_create_term('agricultural_sectors', $name, NULL, $weight);
+    $weight++;
+  }
+
+  // Revert field features cce_basic_config.
+  features_revert(array('cce_basic_config' => array('field')));
+
+  // Disable Multisite "homepage" context.
+  $context = context_load('homepage');
+  ctools_export_set_object_status($context);
+
+  // Disable Multisite "site_wide" context.
+  $context = context_load('site_wide');
+  ctools_export_set_object_status($context);
+
+  // Disable Multisite "communities" context.
+  $context = context_load('communities');
+  ctools_export_set_object_status($context);
+
+  // Disable Multisite "workbench_moderate_all" context.
+  $context = context_load('workbench_moderate_all');
+  ctools_export_set_object_status($context);
+
+  // Rebuild access permissions.
+  node_access_rebuild();
+
+  // Create generic default image for EIP-AGRI project.
+  // See agri_news_field_default_fields_alter() for more.
+  $default_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => '',
+    'source_path' => drupal_get_path('module', 'agri_core') . '/images/' . 'agri-default-image.png',
+    'file_name' => 'agri-default-image.png',
+    'variable' => 'agri_core_default_image_fid',
+  );
+  _agri_core_create_default_image($default_image);
+
+  // Create user default avatar.
+  $default_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => '',
+    'source_path' => drupal_get_path('module', 'agri_core') . '/images/' . 'default-avatar.png',
+    'file_name' => 'default-avatar.png',
+    'variable' => 'profile_default_image_fid',
+  );
+  _agri_core_create_default_image($default_image);
+
+  // Adding links to the footer menu - see agri_core.module.
+  _agri_core_footer_menu_links();
+
+  // Adding the administer menu link.
+  _agri_core_add_user_menu_link();
+
+  // Enabling forum module and adding OG field to forum taxonomy.
+  module_enable(array('forum'));
+  variable_set('pathauto_forum_pattern', 'forum/[term:tid]');
+  drupal_static_reset('og_fields_info');
+  og_create_field(OG_AUDIENCE_FIELD, 'taxonomy_term', 'forums');
+  og_create_field(OG_AUDIENCE_FIELD, 'node', 'forum');
+  og_create_field(OG_CONTENT_ACCESS_FIELD, 'node', 'forum');
+
+  // Add terms to core_stakeholders vocabulary.
+  $vocabulary_name = "core_stakeholders";
+
+  $check = taxonomy_vocabulary_machine_name_load($vocabulary_name);
+
+  if ($check !== FALSE) {
+    $weight = 0;
+
+    foreach (_agri_core_get_default_core_stakeholder_terms() as $term) {
+      _agri_core_api_create_term($vocabulary_name, $term, NULL, $weight);
+      watchdog("agri_pages", 'Created new term: %term',
+        array('%term' => $term));
+      $weight++;
+    }
+  }
+
+  // Integrate needed updates in .install.
+  // Make sure that all exported vocabularies are present on current
+  // installation.
+  features_revert(array('agri_core' => array('taxonomy')));
+
+  // Import following default terms.
+  foreach (_agri_core_get_default_core_geographical_area_terms() as $key => $value) {
+    _agri_core_api_create_term('core_geographical_area', $key);
+
+    if (is_array($value)) {
+      foreach ($value as $country) {
+        _agri_core_api_create_term('core_geographical_area', $country, $key);
+      }
+    }
+  }
+
+  // Set countries ISO code to vocabulary 'core_geographical_area'.
+  _agri_core_set_isocode_geographical_area('core_geographical_area', 'field_core_iso_code_alpha2');
+
+  _agri_core_import_default_menu_items();
+
+  // Menu link attributes to serialize.
+  $register_login_options = array(
+    'alter' => 1,
+    'attributes' => array(
+      'data-display-title' => 1,
+      'class' => array(
+        0 => 'menu-link-user-register',
+      ),
+    ),
+    'data-remove-class' => 0,
+  );
+
+  // Update menu link data.
+  db_update('menu_links')
+    ->fields(array(
+      'options' => serialize($register_login_options),
+      'hidden' => 0,
+    ))
+    ->condition('link_title', 'Register or login to "EIP-AGRI"')
+    ->condition('menu_name', 'menu-core-quicklinks')
+    ->execute();
+
+  // Update My EIP-AGRI Home block menu link data.
+  $my_eipagri = array(
+    'alter' => 1,
+    'attributes' => array(
+      'data-display-title' => 1,
+      'class' => array(
+        0 => 'menu-link-my-eip-agri',
+      ),
+      'title' => 'Connect to your own EIP-AGRI dashboard and
+      follow the information and people you are interested in',
+    ),
+    'data-remove-class' => 0,
+  );
+
+  db_update('menu_links')
+    ->fields(array(
+      'options' => serialize($my_eipagri),
+      'hidden' => 0,
+    ))
+    ->condition('link_title', 'My Account')
+    ->condition('menu_name', 'menu-core-search-find')
+    ->execute();
+
+  menu_cache_clear('menu-core-search-find');
+
+  db_update('menu_links')
+    ->fields(array(
+      'hidden' => 1,
+    ))
+    ->condition('menu_name', 'menu-service-tools')
+    ->condition('link_title', 'Search on Europa')
+    ->execute();
+
+  // Disable Search  link on main menu.
+  db_update('menu_links')
+    ->fields(array(
+      'hidden' => 1,
+    ))
+    ->condition('link_title', 'Search')
+    ->condition('menu_name', 'main-menu')
+    ->condition('plid', 0)
+    ->execute();
+
+  // Delete link "contact support" from main-menu.
+  $links = menu_load_links('main-menu');
+  foreach ($links as $link) {
+    if (in_array('contact', $link)) {
+      menu_link_delete($link['mlid']);
+    }
+  }
+
+  variable_set("search_active_modules", array(
+    'apachesolr_search' => 'apachesolr_search',
+    'node' => 0,
+    'user' => 0,
+    'advanced_help' => 0,
+    'file_entity' => 0,
+  ));
+
+  // Starting weight.
+  $weight = -20;
+
+  // Import default main_funding_source terms.
+  foreach (agri_projects_get_default_agricultural_sectors() as $name) {
+    _agri_core_api_create_term('agricultural_sectors', $name, NULL, $weight);
+    $weight++;
+  }
+
+  module_enable(
+    array(
+      'nuts_regions',
+      'multisite_business_indicators_community',
+      'og_menu_default_links',
+    )
+  );
+
+  // Fix EU Commission breadcrumb weight.
+  db_update('menu_links')
+    ->fields(array('weight' => -50))
+    ->condition('menu_name', 'menu-breadcrumb-menu')
+    ->condition('link_title', 'European Commission')
+    ->execute();
+
+  menu_rebuild();
+  menu_cache_clear_all();
+
+  // Call the agri_core wrapper for apachesolr mlt blocks creation/update.
+  _agri_core_create_apachesolr_mlt_blocks();
+
+  // Call override_multisite_components hook.
+  _agri_core_overrides_all();
+
+  search_api_index_delete('default_node_index');
+  features_revert(array(
+    'agri_core' => array(
+      'search_api_index',
+      'search_api_server',
+      'apachesolr_search_page',
+    ),
+  ));
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function agri_core_enable() {
+  $t = get_t();
+  drupal_set_message($t('Agri Core feature is now active on your site.'));
+  _agri_core_enable_dependencies();
+
+  // Adding Organic Group fields.
+  drupal_static_reset('og_fields_info');
+  og_create_field('group_group', 'node', 'collaborative_area');
+  og_create_field('group_access', 'node', 'collaborative_area');
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_core_disable() {
+  $t = get_t();
+  drupal_set_message($t('Agri Core feature is now inactive on your site.'));
+}
+
+/**
+ * Disable sweaver.
+ */
+function agri_core_update_7001() {
+  module_disable(array('sweaver'));
+}
+
+/**
+ * Enable ds, ds_ui, coffee.
+ */
+function agri_core_update_7002() {
+  module_enable(array('ds', 'ds_ui', 'coffee'));
+}
+
+/**
+ * Enable agri_news, agri_pages.
+ */
+function agri_core_update_7003() {
+  module_enable(array('agri_news', 'agri_pages'));
+}
+
+/**
+ * Enable custom theme and remove blocks in header_top region.
+ */
+function agri_core_update_7004() {
+
+  theme_enable(array('agri_theme'));
+  variable_set('theme_default', 'agri_theme');
+  db_delete('block')
+    ->condition('theme', 'agri_theme')
+    ->condition('region', 'header_top')
+    ->execute();
+}
+
+/**
+ * Adding default "EIP Areas" terms.
+ */
+function agri_core_update_7005() {
+
+  // Make sure that all exported vocabularies are present on current
+  // installation.
+  features_revert(array('agri_core' => array('taxonomy')));
+
+  // Import following default terms.
+  foreach (_agri_core_get_default_core_themes_terms() as $name) {
+    _agri_core_api_create_term('core_themes', $name);
+  }
+}
+
+/**
+ * Adding default "Geographical area" terms.
+ */
+function agri_core_update_7006() {
+
+  // Make sure that all exported vocabularies are present on current
+  // installation.
+  features_revert(array('agri_core' => array('taxonomy')));
+
+  // Import following default terms.
+  foreach (_agri_core_get_default_core_geographical_area_terms() as $key => $value) {
+    _agri_core_api_create_term('core_geographical_area', $key);
+
+    if (is_array($value)) {
+      foreach ($value as $country) {
+        _agri_core_api_create_term('core_geographical_area', $country, $key);
+      }
+    }
+  }
+
+  $other = taxonomy_get_term_by_name('Other (specify)');
+  if (!empty($other)) {
+    foreach ($other as $term) {
+      $term->weight = '10';
+    }
+    taxonomy_term_save($term);
+  }
+
+  // Set the drupal error reporting to none.
+  variable_set('error_level', 0);
+}
+
+/**
+ * Adding default "User type" terms.
+ */
+function agri_core_update_7007() {
+
+  // Make sure that all exported vocabularies are present on current
+  // installation.
+  features_revert(array('agri_core' => array('taxonomy')));
+
+  // Import following default terms.
+  foreach (_agri_core_get_default_core_user_type_terms() as $name) {
+    _agri_core_api_create_term('core_user_type', $name);
+  }
+}
+
+/**
+ * Enable Shiny theme as administrative theme.
+ */
+function agri_core_update_7009() {
+  theme_enable(array('shiny'));
+}
+
+/**
+ * Enable chosen.
+ */
+function agri_core_update_7010() {
+  module_enable(array('chosen'));
+}
+
+/**
+ * Setting default site name.
+ */
+function agri_core_update_7011() {
+  variable_set('site_name', 'EIP-AGRI');
+}
+
+/**
+ * Enable agri_events feature.
+ */
+function agri_core_update_7012() {
+  module_enable(array('agri_events'));
+}
+
+/**
+ * Adding links to the home page custom menus.
+ *
+ * @see agri_core.module
+ */
+function agri_core_update_7013() {
+  _agri_core_import_default_menu_items();
+}
+
+/**
+ * Enable modules views_slideshow, flexslider_views_slideshow and flexslider.
+ */
+function agri_core_update_7014() {
+  module_enable(array(
+    'views_slideshow',
+    'flexslider_views_slideshow',
+    'flexslider',
+  ));
+}
+
+/**
+ * Disable home page context.
+ */
+function agri_core_update_7015() {
+  $context = context_load('homepage');
+  ctools_export_set_object_status($context);
+}
+
+/**
+ * Enable multisite sitemap feature.
+ */
+function agri_core_update_7016() {
+  module_enable(array('sitemap'));
+  features_revert(array('agri_core' => array('variable')));
+}
+
+/**
+ * Enable smart trim module.
+ */
+function agri_core_update_7017() {
+  module_enable(array('smart_trim'));
+}
+
+/**
+ * Disable site-wide context.
+ */
+function agri_core_update_7018() {
+  $context = context_load('site_wide');
+  ctools_export_set_object_status($context);
+  features_revert(array('agri_core' => array('context')));
+}
+
+/**
+ * Disable solr_config, apachesolr, apachesolr_attachments, apachesolr_search.
+ */
+function agri_core_update_7019() {
+  module_disable(array(
+    'solr_config',
+    'apachesolr',
+    'apachesolr_attachments',
+    'apachesolr_search',
+    'apachesolr_multisitesearch',
+  ));
+}
+
+/**
+ * Enable agri_publications.
+ */
+function agri_core_update_7020() {
+  module_enable(array('agri_publications'));
+}
+
+/**
+ * Delete obsolete fields.
+ */
+function agri_core_update_7021() {
+  $fields = array(
+    'node' => array(
+      'event' => array(
+        'field_event_themes',
+        'field_event_geographical_scope',
+      ),
+      'news' => array(
+        'field_news_keywords',
+        'field_news_geographical_scope',
+        'field_news_themes',
+      ),
+      'page' => array(
+        'field_page_themes',
+      ),
+    ),
+    'user' => array(
+      'user' => array(
+        'field_user_interests',
+        'field_user_geographical_area',
+        'field_user_keywords',
+      ),
+    ),
+  );
+
+  foreach ($fields as $entity_type => $bundles) {
+    foreach ($bundles as $bundle => $field_names) {
+      foreach ($field_names as $field_name) {
+        if (($instance = field_info_instance($entity_type, $field_name, $bundle))) {
+          field_delete_instance($instance);
+        }
+      }
+    }
+  }
+  cache_clear_all();
+}
+
+/**
+ * Enable ds_forms module.
+ */
+function agri_core_update_7022() {
+  module_enable(array('ds_forms'));
+}
+
+/**
+ * Enable search_api, search_api_facetapi, search_api_views modules.
+ */
+function agri_core_update_7024() {
+  module_enable(array('search_api', 'search_api_facetapi', 'search_api_views'));
+}
+
+/**
+ * Enable search_api_db module.
+ */
+function agri_core_update_7025() {
+  module_enable(array('search_api_db'));
+}
+
+/**
+ * Enable context_menu_block feature.
+ */
+function agri_core_update_7027() {
+  module_enable(array('context_menu_block'));
+}
+
+/**
+ * Revoke permission "access workbench" to authenticated user.
+ */
+function agri_core_update_7028() {
+  user_role_revoke_permissions(2, array('access workbench'));
+}
+
+/**
+ * Grant permission "access workbench" to editor.
+ */
+function agri_core_update_7029() {
+  $editor = user_role_load_by_name('editor');
+  user_role_grant_permissions($editor->rid, array('access workbench'));
+}
+
+/**
+ * Revoke article related permissions.
+ */
+function agri_core_update_7030() {
+
+  // Revoke permissions to "Contributor" role.
+  $role = user_role_load_by_name('contributor');
+  user_role_revoke_permissions($role->rid, array(
+    'create article content',
+    'edit own article content',
+    'edit any article content',
+    'delete own article content',
+    'delete any article content',
+  ));
+
+  // Revoke permissions to "Editor" role.
+  $role = user_role_load_by_name('editor');
+  user_role_revoke_permissions($role->rid, array(
+    'create article content',
+    'edit own article content',
+    'edit any article content',
+    'delete own article content',
+    'delete any article content',
+  ));
+
+  // Revoke permissions to "Administrator" role.
+  $role = user_role_load_by_name('administrator');
+  user_role_revoke_permissions($role->rid, array(
+    'create article content',
+    'edit own article content',
+    'edit any article content',
+    'delete own article content',
+    'delete any article content',
+  ));
+}
+
+/**
+ * Grant admin toolbar access. Void after passing to 1.6.
+ */
+function agri_core_update_7031() {
+
+}
+
+/**
+ * Grant bypass workbench moderation permission to editor role.
+ */
+function agri_core_update_7032() {
+
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'bypass workbench moderation',
+  ));
+}
+
+/**
+ * Create generic default image for EIP-AGRI project.
+ */
+function agri_core_update_7033() {
+
+  $default_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => '',
+    'source_path' => drupal_get_path('module', 'agri_core') . '/images/' . 'agri-default-image.png',
+    'file_name' => 'agri-default-image.png',
+    'variable' => 'agri_core_default_image_fid',
+  );
+  _agri_core_create_default_image($default_image);
+}
+
+/**
+ * Revoke permissions to "Contributor" role on news and events.
+ */
+function agri_core_update_7034() {
+
+  $role = user_role_load_by_name('contributor');
+  user_role_revoke_permissions($role->rid, array(
+    'edit any news content',
+    'delete any news content',
+    'edit any event content',
+    'delete any event content',
+  ));
+}
+
+/**
+ * Enable agri_press feature.
+ */
+function agri_core_update_7035() {
+  module_enable(array('agri_press'));
+}
+
+/**
+ * Adding links to the home footer menu - see agri_core.module.
+ */
+function agri_core_update_7039() {
+  if (!module_exists('menu_attributes')) {
+    module_enable(array('menu_attributes'));
+  }
+  _agri_core_footer_menu_links();
+}
+
+/**
+ * Updating search api node index.
+ */
+function agri_core_update_7040() {
+  features_revert(array('agri_core' => array('facetapi', 'dependencies')));
+}
+
+/**
+ * Code to ensure that overridden configurations overcome the default ones.
+ */
+function agri_core_update_7042() {
+  if (module_exists('agri_overrides')) {
+    module_disable(array('agri_overrides'));
+  }
+  _agri_core_restore_overrides();
+}
+
+/**
+ * Adding an item to the user menu if not already created.
+ */
+function agri_core_update_7043() {
+  $links = menu_load_links('user-menu');
+
+  if ($links) {
+    foreach ($links as $link) {
+      if ($link['link_path'] == 'admin/stucture/menu') {
+        return;
+      }
+    }
+
+    _agri_core_add_user_menu_link();
+    features_revert(array('agri_core' => array('context')));
+  }
+}
+
+/**
+ * Grant permissions to "Editor" and "Administrator" roles.
+ */
+function agri_core_update_7044() {
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'administer agri taxonomies',
+  ));
+
+  $role = user_role_load_by_name('administrator');
+  user_role_grant_permissions($role->rid, array(
+    'administer agri taxonomies',
+  ));
+}
+
+/**
+ * Set custom permissions.
+ */
+function agri_core_update_7045() {
+  _agri_core_set_vocabulary_permissions();
+}
+
+/**
+ * Enable agri_projects feature.
+ */
+function agri_core_update_7046() {
+  module_enable(array('agri_projects'));
+  // Revert sensitive AGRI core components.
+  features_revert(array(
+    'agri_projects' => array('field'),
+  ));
+}
+
+/**
+ * Add default avatar picture.
+ */
+function agri_core_update_7047() {
+  // Create user default avatar.
+  $default_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => '',
+    'source_path' => drupal_get_path('module', 'agri_core') . '/images/' . 'default-avatar.png',
+    'file_name' => 'default-avatar.png',
+    'variable' => 'profile_default_image_fid',
+  );
+  _agri_core_create_default_image($default_image);
+}
+
+/**
+ * Some changes in field istances.
+ */
+function agri_core_update_7048() {
+  _agri_core_restore_overrides();
+  // Revert sensitive AGRI news components.
+  features_revert(array(
+    'agri_news' => array('field'),
+  ));
+}
+
+/**
+ * Some changes in field istances.
+ */
+function agri_core_update_7049() {
+  // Import default terms.
+  foreach (_agri_core_get_default_field_of_activity_terms() as $name) {
+    _agri_core_api_create_term('field_of_activity', $name);
+  }
+}
+
+/**
+ * Enable webform.
+ */
+function agri_core_update_7050() {
+  module_enable(array('webform'));
+}
+
+/**
+ * Grant collaborative area permissions to administrator and editor.
+ */
+function agri_core_update_7051() {
+  features_revert(array('agri_core' => array('node', 'variable')));
+
+  // Gant permissions to the "Administrator" role.
+  $role = user_role_load_by_name('administrator');
+  user_role_grant_permissions($role->rid, array(
+    'create collaborative_area content',
+    'delete any collaborative_area content',
+    'edit any collaborative_area content',
+    'access all webform results',
+    'edit all webform submissions',
+    'delete all webform submissions',
+  ));
+
+  // Grant permissions to "Editor" role.
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'create collaborative_area content',
+    'delete any collaborative_area content',
+    'edit any collaborative_area content',
+    'access all webform results',
+    'edit all webform submissions',
+    'delete all webform submissions',
+  ));
+}
+
+/**
+ * Adding Organic Group fields.
+ */
+function agri_core_update_7052() {
+
+  drupal_static_reset('og_fields_info');
+  og_create_field('og_group_ref', 'node', 'page');
+  og_create_field('group_content_access', 'node', 'page');
+  og_create_field('og_group_ref', 'node', 'event');
+  og_create_field('group_content_access', 'node', 'event');
+  og_create_field('group_group', 'node', 'collaborative_area');
+  og_create_field('group_access', 'node', 'collaborative_area');
+  variable_set('og_features_ignore_og_fields', TRUE);
+}
+
+/**
+ * Adding authenticated user webform permissions.
+ */
+function agri_core_update_7053() {
+  // Grant permissions to "Authenticated user" role.
+  $role = user_role_load_by_name('authenticated user');
+  user_role_grant_permissions($role->rid, array(
+    'access own webform results',
+    'edit own webform submissions',
+    'delete own webform submissions',
+  ));
+}
+
+/**
+ * Enabling field_collection_table.
+ */
+function agri_core_update_7055() {
+  module_enable(array('field_collection_table'));
+}
+
+/**
+ * Override groups permissions.
+ */
+function agri_core_update_7056() {
+  _agri_core_set_og_permission();
+}
+
+/**
+ * Revert views component to add the find people one.
+ */
+function agri_core_update_7057() {
+  features_revert(array('agri_core' => array('views')));
+}
+
+/**
+ * Revert views and context component to add the find people one.
+ */
+function agri_core_update_7058() {
+  features_revert(array('agri_core' => array('views', 'context')));
+}
+
+/**
+ * Disable Multisite "communities" context.
+ */
+function agri_core_update_7059() {
+  $context = context_load('communities');
+  ctools_export_set_object_status($context);
+}
+
+/**
+ * Grant access contextual links to editors and contributor.
+ */
+function agri_core_update_7060() {
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'access contextual links',
+  ));
+
+  $role = user_role_load_by_name('contributor');
+  user_role_grant_permissions($role->rid, array(
+    'access contextual links',
+  ));
+}
+
+/**
+ * Manually set field_bundle_settings_node after upgrading to Multisite 1.6.
+ */
+function agri_core_update_7061() {
+  _agri_core_set_default_bundle_settings();
+}
+
+/**
+ * Reset User Menu attributes after upgrading to Multisite 1.6.
+ */
+function agri_core_update_7062() {
+  _agri_core_reset_menu_attributes();
+}
+
+/**
+ * Revert views component, we updated some configs.
+ */
+function agri_core_update_7063() {
+  features_revert(array('agri_core' => array('views')));
+}
+
+/**
+ * EIPAGRI-160: Create User quicklinks menu links.
+ */
+function agri_core_update_7064() {
+  features_revert(array('agri_core' => array('menu_custom')));
+  cache_clear_all();
+
+  $user_quicklinks = array(
+    array(
+      'title' => 'Publish an innovative action',
+      'path' => 'node/add/innovative-action',
+    ),
+    array(
+      'title' => 'Share your needs for research from practice',
+      'path' => 'node/add/needs-for-research-from-practice',
+    ),
+    array(
+      'title' => 'Share your project ideas',
+      'path' => 'node/add/project-ideas',
+    ),
+  );
+
+  $i = 0;
+  foreach ($user_quicklinks as $user_quicklink) {
+    $item = array(
+      'menu_name' => 'menu-core-user-quicklinks',
+      'module' => 'menu',
+      'customized' => 1,
+      'link_path' => $user_quicklink['path'],
+      'link_title' => $user_quicklink['title'],
+      'weight' => $i,
+    );
+    $i++;
+    menu_link_save($item);
+  }
+}
+
+/**
+ * EIPAGRI-165: Enabling views_data_export for user management view.
+ */
+function agri_core_update_7065() {
+  module_enable(array('views_data_export'));
+}
+
+/**
+ * EIPAGRI-159: Moving menu items.
+ */
+function agri_core_update_7066() {
+  $links = array(
+    'admin/structure/taxonomy',
+    'admin/structure/menu',
+  );
+
+  db_update('menu_links')
+    ->fields(array('menu_name' => 'menu-core-action-menu', 'weight' => 8))
+    ->condition('link_path', $links)
+    ->condition('menu_name', 'user-menu')
+    ->execute();
+  menu_rebuild();
+}
+
+/**
+ * EIPAGRI-158: Enable newsletters feature.
+ */
+function agri_core_update_7067() {
+  module_enable(array('newsletters'));
+  _agri_core_set_vocabulary_permissions();
+  db_update('node_type')
+    ->fields(array('name' => 'Newsletter item'))
+    ->condition('type', 'simplenews', '=')
+    ->execute();
+  node_type_cache_reset();
+  features_revert(array('agri_core' => array('field')));
+}
+
+/**
+ * EIPAGRI-158: Change field label.
+ */
+function agri_core_update_7068() {
+  features_revert(array('agri_core' => array('field')));
+}
+
+/**
+ * EIPAGRI-185: Adding "My account" link to service links.
+ */
+function agri_core_update_7070() {
+  $item = array(
+    'menu_name' => 'menu-service-tools',
+    'module' => 'menu',
+    'customized' => 1,
+    'link_path' => 'user',
+    'link_title' => 'My account',
+    'weight' => 100,
+  );
+  menu_link_save($item);
+}
+
+/**
+ * EIPAGRI-158: Field language in the newsletter item ct.
+ */
+function agri_core_update_7071() {
+  features_revert(array('agri_core' => array('node')));
+}
+
+/**
+ * EIPAGRI-177: Adding field_user_language_spoken to the user form.
+ */
+function agri_core_update_7072() {
+  features_revert(array(
+    'agri_core' => array(
+      'fields',
+      'ds',
+    ),
+  ));
+}
+
+/**
+ * EIPAGRI-207: Fix missing editors management permissions on AGRI vocabularies.
+ */
+function agri_core_update_7073() {
+  $voc = taxonomy_vocabulary_machine_name_load('core_user_type');
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'delete terms in ' . $voc->vid,
+    'edit terms in ' . $voc->vid,
+  ));
+}
+
+/**
+ * EIPAGRI-185: Enabling poll.
+ */
+function agri_core_update_7074() {
+  module_enable(array('poll'));
+}
+
+/**
+ * EIPAGRI-177: Fix label and cardinality of Languages select.
+ */
+function agri_core_update_7075() {
+  features_revert(array('agri_core' => array('field')));
+}
+
+/**
+ * EIPAGRI-235: Removing duplicated terms.
+ */
+function agri_core_update_7076() {
+  $voc = taxonomy_vocabulary_machine_name_load('tags');
+  $vid = $voc->vid;
+  $terms = taxonomy_get_tree($vid, 0, 1, FALSE);
+  foreach ($terms as $term) {
+    $simple[] = $term->name;
+  }
+  $num = array_count_values($simple);
+  foreach ($num as $name => $count) {
+    if ($count == 2) {
+      $matches = taxonomy_get_term_by_name($name);
+      $last = end($matches);
+      $branch = taxonomy_get_tree($vid, $last->tid, NULL, FALSE);
+      foreach ($branch as $remterm) {
+        taxonomy_term_delete($remterm->tid);
+      }
+      taxonomy_term_delete($last->tid);
+    }
+  }
+}
+
+/**
+ * EIPAGRI-189: Enable search_api_saved_searches modules.
+ */
+function agri_core_update_7077() {
+  module_enable(array(
+    'search_api_saved_searches_i18n',
+    'search_api_saved_searches',
+  ));
+
+  $role = user_role_load_by_name('anonymous user');
+  user_role_grant_permissions($role->rid, array('use search_api_saved_searches'));
+
+  $role = user_role_load_by_name('authenticated user');
+  user_role_grant_permissions($role->rid, array('use search_api_saved_searches'));
+}
+
+/**
+ * EIPAGRI-196: Removing fields from the oganization field_collection.
+ */
+function agri_core_update_7078() {
+  $fields = array(
+    'field_core_geographical_area',
+    'field_core_other_location',
+  );
+
+  $entity_type = 'field_collection_item';
+  $bundle = 'field_organization_collection';
+  foreach ($fields as $field_name) {
+    $instance = field_read_instance($entity_type, $field_name, $bundle);
+    field_delete_instance($instance);
+  }
+  features_revert(array('agri_core' => array('field')));
+}
+
+/**
+ * EIPAGRI-156: Enabling forum module and adding OG field to forum taxonomy.
+ *
+ * Set forum related permissions.
+ */
+function agri_core_update_7080() {
+
+  module_enable(array('forum'));
+  variable_set('pathauto_forum_pattern', 'forum/[term:tid]');
+  drupal_static_reset('og_fields_info');
+  og_create_field(OG_AUDIENCE_FIELD, 'taxonomy_term', 'forums');
+  og_create_field(OG_AUDIENCE_FIELD, 'node', 'forum');
+  og_create_field(OG_CONTENT_ACCESS_FIELD, 'node', 'forum');
+
+  node_types_rebuild();
+
+  // Gant permissions to the "Administrator" role.
+  $role = user_role_load_by_name('administrator');
+  user_role_grant_permissions($role->rid, array(
+    'create forum content',
+    'delete any forum content',
+    'edit any forum content',
+  ));
+
+  // Grant permissions to "Authenticated user" role.
+  $role = user_role_load_by_name('authenticated user');
+  user_role_grant_permissions($role->rid, array(
+    'create forum content',
+    'edit own forum content',
+    'delete own forum content',
+  ));
+
+  // Grant permissions to "Editor" role.
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array(
+    'create forum content',
+    'delete any forum content',
+    'edit any forum content',
+  ));
+
+  $vocs[] = taxonomy_vocabulary_machine_name_load('forums');
+  $roles[] = user_role_load_by_name('editor');
+  $roles[] = user_role_load_by_name('administrator');
+  foreach ($vocs as $voc) {
+    foreach ($roles as $role) {
+      user_role_grant_permissions($role->rid, array(
+        'delete terms in ' . $voc->vid,
+        'edit terms in ' . $voc->vid,
+      ));
+    }
+  }
+}
+
+/**
+ * EIPAGRI-214: Enable connector, http_client, oauth, oauthconnector.
+ */
+function agri_core_update_7081() {
+  module_enable(array(
+    'connector',
+    'http_client',
+    'oauth_common',
+    'oauthconnector',
+  ));
+}
+
+/**
+ * EIPAGRI-179: Enable twitter_post.
+ */
+function agri_core_update_7082() {
+  module_enable(array('twitter_post'));
+
+  drupal_static_reset('module_implements');
+
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array('post to twitter'));
+}
+
+/**
+ * EIPAGRI-162: Enable multisite_notifications_core.
+ */
+function agri_core_update_7083() {
+  module_enable(array('multisite_notifications_core'));
+  variable_set('subscriptions_form_in_block', 1);
+}
+
+/**
+ * EIPAGRI-214: Enable ecas_env.
+ */
+function agri_core_update_7084() {
+  module_enable(array('ecas_env'));
+}
+
+/**
+ * Reapply custom bundle settings and User Menu attributes for Multisite 1.7.
+ *
+ * Restore overrides.
+ */
+function agri_core_update_7086() {
+
+  _agri_core_set_default_bundle_settings();
+  _agri_core_reset_menu_attributes();
+  _agri_core_restore_overrides();
+
+}
+
+/**
+ * EIPAGRI-269: Disable "Search on Europa" link, override search variables.
+ *
+ * Reindex site.
+ */
+function agri_core_update_7087() {
+
+  db_update('menu_links')
+    ->fields(array(
+      'hidden' => 1,
+    ))
+    ->condition('menu_name', 'menu-service-tools')
+    ->condition('link_title', 'Search on Europa')
+    ->execute();
+
+  menu_cache_clear_all();
+
+  variable_set("search_active_modules", array(
+    'node' => "node",
+    'user' => 0,
+    'advanced_help' => 0,
+    'file_entity' => 0,
+  ));
+
+  variable_set("search_default_module", "node");
+
+}
+
+/**
+ * Enable jquery_update.
+ */
+function agri_core_update_7088() {
+  module_enable(array('jquery_update'));
+}
+
+/**
+ * EIPAGRI-291: Change the text of the button "My account" with "My EIP-AGRI".
+ */
+function agri_core_update_7089() {
+
+  db_update('menu_links')
+    ->fields(array(
+      'link_title' => 'My EIP-AGRI',
+    ))
+    ->condition('link_title', 'My account')
+    ->execute();
+
+  menu_rebuild();
+
+  menu_cache_clear_all();
+
+}
+
+/**
+ * EIPAGRI-305: Import default terms in "Agricultural Sectors".
+ */
+function agri_core_update_7090() {
+
+  // Starting weight.
+  $weight = -20;
+
+  // Import default main_funding_source terms.
+  foreach (agri_projects_get_default_agricultural_sectors() as $name) {
+    _agri_core_api_create_term('agricultural_sectors', $name, NULL, $weight);
+    $weight++;
+  }
+}
+
+/**
+ * EIPAGRI-294: Enable Webform Scheduler Module and set permissions.
+ */
+function agri_core_update_7091() {
+  module_enable(array('webform_scheduler'));
+
+  drupal_static_reset('module_implements');
+
+  $role = user_role_load_by_name('editor');
+  user_role_grant_permissions($role->rid, array('schedule webforms'));
+
+}
+
+/**
+ * EIPAGRI-298: Enable Register Login link in quicklinks.
+ */
+function agri_core_update_7092() {
+
+  // Menu link attributes to serialize.
+  $register_login_options = array(
+    'alter' => 1,
+    'attributes' => array(
+      'data-display-title' => 1,
+      'class' => array(
+        0 => 'menu-link-user-register',
+      ),
+    ),
+    'data-remove-class' => 0,
+  );
+
+  // Update menu link data.
+  db_update('menu_links')
+    ->fields(array(
+      'options' => serialize($register_login_options),
+      'hidden' => 0,
+    ))
+    ->condition('link_title', 'Register or login to "MY-EIP AGRI"')
+    ->condition('menu_name', 'menu-core-quicklinks')
+    ->execute();
+
+  // Disable Register Login link on main menu.
+  db_update('menu_links')
+    ->fields(array(
+      'hidden' => 1,
+    ))
+    ->condition('link_title', 'Register/Login')
+    ->condition('menu_name', 'main-menu')
+    ->condition('plid', 0)
+    ->execute();
+}
+
+/**
+ * EIPAGRI-337: Update user registration fields allowed values.
+ */
+function agri_core_update_7093() {
+
+  /*
+   * Update field 'field_user_involved'.
+   */
+  $field_to_update = 'field_user_involved';
+
+  // Get the field info.
+  $info = field_info_field($field_to_update);
+
+  // Get a reference to the values.
+  $values = &$info['settings']['allowed_values'];
+
+  // Add new allowed value.
+  $values['Not applicable'] = 'Not applicable';
+
+  // Save the field.
+  field_update_field($info);
+
+  /*
+   * Update field 'field_user_language_spoken'.
+   */
+  $field_to_update = 'field_user_language_spoken';
+
+  // Get the field info.
+  $info = field_info_field($field_to_update);
+
+  // Get a reference to the values.
+  $values = &$info['settings']['allowed_values'];
+
+  // Add new allowed value.
+  $values['other'] = 'Other';
+
+  // Save the field.
+  field_update_field($info);
+
+}
+
+/**
+ * EIPAGRI-305: Update of Core themes terms.
+ */
+function agri_core_update_7094() {
+
+  // Get tid of term to rename.
+  $tid = db_select('taxonomy_term_data', 'ttd')
+    ->fields('ttd', array('tid'))
+    ->condition('name', 'Innovative products and services in the value chain')
+    ->execute()->fetchField();
+
+  // Update term name.
+  $term_obj = taxonomy_term_load($tid);
+  $term_new_name = 'Innovative products and services for the integrated supply chain';
+  $term_obj->name = $term_new_name;
+  taxonomy_term_save($term_obj);
+
+  // Get tid of term to delete.
+  $tid_to_del = db_select('taxonomy_term_data', 'ttd')
+    ->fields('ttd', array('tid'))
+    ->condition('name', 'Integrated supply chains: innovative approaches')
+    ->execute()->fetchField();
+
+  // Get list (unpaged) of all nodes tagged with tid of term to delete.
+  $nodes = taxonomy_select_nodes($tid_to_del, FALSE);
+
+  foreach ($nodes as $nid) {
+    $node = node_load($nid);
+    foreach ($node->field_core_themes[LANGUAGE_NONE] as $field_id => $field_tid) {
+      if ($field_tid['tid'] == $tid_to_del) {
+        unset($node->field_core_themes[LANGUAGE_NONE][$field_id]['tid']);
+        field_attach_presave('node', $node);
+        field_attach_update('node', $node);
+      }
+    }
+  }
+
+  if ($term = taxonomy_term_load($tid_to_del)) {
+    db_delete('taxonomy_term_data')
+      ->condition('tid', $tid_to_del)
+      ->execute();
+
+    db_delete('taxonomy_term_hierarchy')
+      ->condition('tid', $tid_to_del)
+      ->execute();
+
+    field_attach_delete('taxonomy_term', $term);
+    module_invoke_all('entity_delete', $term, 'taxonomy_term');
+    taxonomy_terms_static_reset();
+  }
+
+  // Clean taxonomy_index table.
+  db_delete('taxonomy_index')
+    ->condition('tid', $tid_to_del)
+    ->execute();
+
+}
+
+/**
+ * Enable Multisite Maxlength feature to check projects fields length on insert.
+ */
+function agri_core_update_7095() {
+  module_enable(array('multisite_maxlength'));
+}
+
+/**
+ * EIPAGRI-243: update LinkedIn icon class and contacts block.
+ */
+function agri_core_update_7096() {
+  $linkedin_button = array(
+    'attributes' => array(
+      'class' => array('linkedin-icon'),
+    ),
+  );
+
+  db_update('menu_links')
+    ->fields(array('options' => serialize($linkedin_button)))
+    ->condition('menu_name', 'menu-social-footer')
+    ->condition('link_title', 'LinkedIn')
+    ->execute();
+
+  watchdog('agri_core', 'Added class linkedin-icon to LinkedIn icon');
+
+  menu_cache_clear_all();
+
+}
+
+/**
+ * Copy user address field value into field organization collection.
+ */
+function agri_core_update_7097() {
+  // Select only users that has data into field.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('field_user_address', 'value', '', '!=')
+    ->fieldCondition('field_user_address', 'value', 'NULL', '!=');
+
+  $result = $query->execute();
+
+  if (isset($result['user'])) {
+    $ids = array_keys($result['user']);
+    $users_data = entity_load('user', $ids);
+
+    $i = 0;
+
+    foreach ($users_data as $data) {
+      $user_field_organization_address = $data->field_user_address[LANGUAGE_NONE][0]['value'];
+      $field_collection_id = $data->field_organization_collection[LANGUAGE_NONE][0]['value'];
+      $user_field_collection_organization = field_collection_item_load($field_collection_id);
+      $user_field_collection_organization->field_organization_address[LANGUAGE_NONE][0]['value'] = $user_field_organization_address;
+      $user_field_collection_organization->save(TRUE);
+
+      $i++;
+    }
+
+    watchdog('agri_core',
+      'Copied user address field into organization info for a total of %i users.',
+      array('%i' => $i), WATCHDOG_INFO);
+  }
+}
+
+/**
+ * Copy user phone field value into field organization collection.
+ */
+function agri_core_update_7098() {
+  // Select only users that has data into field.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('field_user_phone', 'value', '', '!=')
+    ->fieldCondition('field_user_phone', 'value', 'NULL', '!=');
+
+  $result = $query->execute();
+
+  if (isset($result['user'])) {
+    $ids = array_keys($result['user']);
+    $users_data = entity_load('user', $ids);
+
+    $i = 0;
+
+    foreach ($users_data as $data) {
+      $user_field_organization_phone = $data->field_user_phone[LANGUAGE_NONE][0]['value'];
+      $field_collection_id = $data->field_organization_collection[LANGUAGE_NONE][0]['value'];
+      $user_field_collection_organization = field_collection_item_load($field_collection_id);
+      $user_field_collection_organization->field_user_phone[LANGUAGE_NONE][0]['value'] = $user_field_organization_phone;
+      $user_field_collection_organization->save(TRUE);
+
+      $i++;
+    }
+
+    watchdog('agri_core',
+      'Copied user phone field organization info for a total of %i users.',
+      array('%i' => $i), WATCHDOG_INFO);
+  }
+}
+
+/**
+ * Copy user city field value into field organization collection.
+ */
+function agri_core_update_7099() {
+  // Select only users that has data into field.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('field_user_city', 'value', '', '!=')
+    ->fieldCondition('field_user_city', 'value', 'NULL', '!=');
+
+  $result = $query->execute();
+
+  if (isset($result['user'])) {
+    $ids = array_keys($result['user']);
+    $users_data = entity_load('user', $ids);
+
+    $i = 0;
+
+    foreach ($users_data as $data) {
+      $user_field_organization_city = $data->field_user_city[LANGUAGE_NONE][0]['value'];
+      $field_collection_id = $data->field_organization_collection[LANGUAGE_NONE][0]['value'];
+      $user_field_collection_organization = field_collection_item_load($field_collection_id);
+      $user_field_collection_organization->field_organization_city[LANGUAGE_NONE][0]['value'] = $user_field_organization_city;
+      $user_field_collection_organization->save(TRUE);
+
+      $i++;
+    }
+
+    watchdog('agri_core',
+      'Copied user city field value into organization info for a total of %i users.',
+      array('%i' => $i), WATCHDOG_INFO);
+  }
+}
+
+/**
+ * Copy user country field value into field organization collection.
+ */
+function agri_core_update_7100() {
+  // Select only users that has data into field.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('field_core_geographical_area', 'tid', '', '!=')
+    ->fieldCondition('field_core_geographical_area', 'tid', 'NULL', '!=');
+
+  $result = $query->execute();
+
+  if (isset($result['user'])) {
+    $ids = array_keys($result['user']);
+    $users_data = entity_load('user', $ids);
+
+    $i = 0;
+
+    foreach ($users_data as $data) {
+
+      foreach ($data->field_core_geographical_area[LANGUAGE_NONE] as $countries_tids) {
+
+        $user_field_organization_country = $countries_tids['tid'];
+        $field_collection_id = $data->field_organization_collection[LANGUAGE_NONE][0]['value'];
+        $user_field_collection_organization = field_collection_item_load($field_collection_id);
+        $user_field_collection_organization->field_core_geographical_area[LANGUAGE_NONE][$i]['tid'] = $user_field_organization_country;
+        $user_field_collection_organization->save(TRUE);
+
+      }
+      $i++;
+
+    }
+    watchdog('agri_core',
+      'Copied user country field into organization info for a total of %i users.',
+      array('%i' => $i), WATCHDOG_INFO);
+  }
+}
+
+/**
+ * Reapply custom bundle settings and User Menu attributes for Multisite 2.0.
+ *
+ * Restore overrides.
+ */
+function agri_core_update_7101() {
+
+  _agri_core_set_default_bundle_settings();
+  _agri_core_reset_menu_attributes();
+  _agri_core_restore_overrides();
+
+}
+
+/**
+ * EIPAGRI-365: Modify permissions for editor and administrators.
+ */
+function agri_core_update_7102() {
+
+  // Clean workbench_moderation_transitions table.
+  db_delete('workbench_moderation_transitions')
+    ->condition('name', NULL)
+    ->execute();
+
+  $role = user_role_load_by_name('editor');
+  user_role_revoke_permissions($role->rid, array(
+    'moderate content from needs_review to published',
+    'moderate content from validated to published',
+    'moderate content from published to archived',
+  ));
+
+}
+
+/**
+ * EIPAGRI-367: Enable My EIP-AGRI link in the One-Stop-Shop menu.
+ */
+function agri_core_update_7103() {
+  $my_eipagri = array(
+    'alter' => 1,
+    'attributes' => array(
+      'data-display-title' => 1,
+      'class' => array(
+        0 => 'menu-link-my-eip-agri',
+      ),
+      'title' => 'Connect to your own EIP-AGRI dashboard and
+      follow the information and people you are interested in',
+    ),
+    'data-remove-class' => 0,
+  );
+
+  // Update menu link data.
+  db_update('menu_links')
+    ->fields(array(
+      'options' => serialize($my_eipagri),
+      'hidden' => 0,
+    ))
+    ->condition('link_title', 'My EIP-AGRI')
+    ->condition('menu_name', 'menu-core-search-find')
+    ->execute();
+
+  menu_cache_clear('menu-core-search-find');
+
+}
+
+/**
+ * EIPAGRI-376: Eliminate drop-down menu in main bar for Focus Groups.
+ */
+function agri_core_update_7104() {
+  db_update('menu_links')
+    ->fields(array('expanded' => 0))
+    ->condition('menu_name', 'main-menu')
+    ->condition('link_title', 'Focus groups')
+    ->execute();
+
+  menu_cache_clear('main-menu');
+}
+
+/**
+ * Add new workbench moderation transitions.
+ */
+function agri_core_update_7105() {
+
+  $published_validated = (object) array(
+    'name' => 'published-validated',
+    'from_name' => 'published',
+    'to_name' => 'validated',
+  );
+
+  $validated_needs_review = (object) array(
+    'name' => 'validated-needs_review	',
+    'from_name' => 'validated',
+    'to_name' => 'needs_review',
+  );
+
+  workbench_moderation_transition_save($published_validated);
+  workbench_moderation_transition_save($validated_needs_review);
+
+}
+
+/**
+ * Set new transitions permissions for user's roles.
+ */
+function agri_core_update_7106() {
+
+  // Grant permissions to "Authenticated user" role.
+  $role = user_role_load_by_name('administrator');
+
+  user_role_grant_permissions($role->rid, array(
+    'moderate content from published to validated',
+    'moderate content from validated to needs_review',
+  ));
+}
+
+/**
+ * EIPAGRI-243: Update Twitter Link in social footer menu.
+ */
+function agri_core_update_7107() {
+
+  // Menu link attributes to serialize.
+  $twitter_options = array(
+    'alter' => 1,
+    'attributes' => array(
+      'data-display-title' => 1,
+      'class' => array(
+        0 => 'twitter-icon',
+      ),
+      'data-remove-class' => 0,
+      'target' => '_blank',
+    ),
+  );
+
+  db_update('menu_links')
+    ->fields(array(
+      'link_path' => 'https://twitter.com/eipagri_sp',
+      'options' => serialize($twitter_options),
+    ))
+    ->condition('menu_name', 'menu-social-footer')
+    ->condition('link_title', 'Twitter')
+    ->execute();
+
+  watchdog('agri_core', 'Updated Twitter link in social menu footer.');
+
+  menu_cache_clear_all();
+
+}
+
+/**
+ * EIPAGRI-324: Enable customerroralt contrib submodule.
+ */
+function agri_core_update_7200() {
+  module_enable(array('customerroralt'));
+}
+
+/**
+ * EIPAGRI-345: Enable Node Clone (clone) contrib module.
+ */
+function agri_core_update_7201() {
+  module_enable(array('clone'));
+}
+
+/**
+ * EIPAGRI-344: Rename Advisor in User type taxonomy.
+ */
+function agri_core_update_7202() {
+
+  // Get tid of term to rename.
+  $tid = db_select('taxonomy_term_data', 'ttd')
+    ->fields('ttd', array('tid'))
+    ->condition('name', 'Advisor, including innovation support services')
+    ->execute()->fetchField();
+
+  // Update term name.
+  $term_obj = taxonomy_term_load($tid);
+  $term_new_name = 'Adviser';
+  $term_obj->name = $term_new_name;
+
+  taxonomy_term_save($term_obj);
+}
+
+/**
+ * EIPAGRI-339: Rename an EIPAGRI Areas taxonomy term.
+ */
+function agri_core_update_7203() {
+
+  // Get tid of term to rename.
+  $tid = db_select('taxonomy_term_data', 'ttd')
+    ->fields('ttd', array('tid'))
+    ->condition('name', 'Innovative products and services for the integrated supply chain')
+    ->execute()->fetchField();
+
+  // Update term name.
+  $term_obj = taxonomy_term_load($tid);
+  $term_new_name = 'Innovative products and services in the value chain';
+  $term_obj->name = $term_new_name;
+
+  taxonomy_term_save($term_obj);
+}
+
+/**
+ * Fix breadcrumb weight: site name and EU Commission are sorted alphabetically.
+ */
+function agri_core_update_7204() {
+
+  db_update('menu_links')
+    ->fields(array('weight' => -50))
+    ->condition('menu_name', 'menu-breadcrumb-menu')
+    ->condition('link_title', 'European Commission')
+    ->execute();
+
+  menu_cache_clear('menu-breadcrumb-menu');
+}
+
+/**
+ * Enable term_merge module.
+ */
+function agri_core_update_7205() {
+  module_enable(array('term_merge'));
+}
+
+/**
+ * Enable googleanalytics module.
+ */
+function agri_core_update_7206() {
+  module_enable(array('googleanalytics'));
+}
+
+/**
+ * Add a default image for user profiles.
+ */
+function agri_core_update_7207() {
+  // Create user default avatar.
+  $default_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => '',
+    'source_path' => drupal_get_path('module', 'agri_core') . '/images/' . 'default-avatar.png',
+    'file_name' => 'default-avatar.png',
+    'variable' => 'profile_default_image_fid',
+  );
+  _agri_core_create_default_image($default_image);
+}
+
+/**
+ * Fix "search_active_modules" variable.
+ */
+function agri_core_update_7208() {
+  variable_set("search_active_modules", array(
+    'node' => 'node',
+    'user' => 0,
+    'advanced_help' => 0,
+    'apachesolr_earch' => 0,
+    'file_entity' => 0,
+  ));
+}
+
+/**
+ * Enable search_api_exclude module to allow  exclusions from search results.
+ */
+function agri_core_update_7209() {
+  module_enable(array('search_api_exclude'));
+}
+
+/**
+ * Delete core_themes vocabulary.
+ */
+function agri_core_update_7210() {
+  $voc = taxonomy_vocabulary_machine_name_load('core_themes');
+  $vid = $voc->vid;
+
+  taxonomy_vocabulary_delete($vid);
+}
+
+/**
+ * Add a new user type "Innovation agent".
+ *
+ * Remove "innovation agent" value in field_user_spec_advisor_type_value field.
+ */
+function agri_core_update_7211() {
+
+  // Add the new term (weight set to 3 is to show it under "Advisor").
+  $new_user_type = 'Innovation support agent';
+  _agri_core_api_create_term('core_user_type', $new_user_type, NULL, 3);
+
+  // Get the new term tid to add it to users.
+  $new_term_tid = key(taxonomy_get_term_by_name($new_user_type));
+
+  // Get all users with the value "innovation agent" set.
+  $query = db_select('field_data_field_user_spec_advisor_type', 'f')
+    ->fields('f', array('entity_id'))
+    ->condition('field_user_spec_advisor_type_value', 'innovation agent')
+    ->execute();
+
+  while ($result = $query->fetchAssoc()) {
+    $uids[] = $result['entity_id'];
+  }
+
+  $users = 1;
+
+  foreach ($uids as $uid) {
+
+    // Loads users and remove old values set in simple text field.
+    // Then add to users with old values the new term tid.
+    $account = user_load($uid);
+    unset($account->field_user_spec_advisor_type[LANGUAGE_NONE]);
+    $account->field_user_type[LANGUAGE_NONE][]['tid'] = $new_term_tid;
+
+    // Save the updated account.
+    user_save($account);
+    $total = count($uids);
+    $status = $users . "/" . $total;
+
+    watchdog('agri_core', "Updated user $account->name ($status)");
+
+    $users++;
+  }
+
+  watchdog('agri_core',
+    "Updated a total of $total users with $new_user_type term.");
+
+  // Now remove the old value from field "field_user_spec_advisor_type".
+  // Get the field info.
+  $info = field_info_field('field_user_spec_advisor_type');
+
+  // Get a reference to the values.
+  $values = &$info['settings']['allowed_values'];
+
+  // Remove unneeded value from allowed ones.
+  unset($values['innovation agent']);
+
+  // Save the updated field.
+  field_update_field($info);
+
+}
+
+/**
+ * Update default permissions for a group member.
+ *
+ * @see og_role_grant_permissions()
+ */
+function agri_core_update_7212() {
+  $rid = db_select('og_role', 'og')
+    ->fields('og', array('rid'))
+    ->condition('og.name', 'member')
+    ->condition('og.group_bundle', 'collaborative_area')
+    ->execute()
+    ->fetchAssoc();
+
+  $types = array('event', 'page', 'article', 'forum');
+  $permission = '';
+
+  foreach ($types as $nodetype) {
+    $permission .= 'create ' . $nodetype . ' content,';
+    $permission .= 'update any ' . $nodetype . ' content,';
+    $permission .= 'delete own ' . $nodetype . ' content,';
+  }
+  $permissions = explode(',', drupal_substr($permission, 0, -1));
+  $rid = reset($rid);
+
+  og_role_grant_permissions($rid, $permissions);
+}
+
+/**
+ * Enable AGRI Administrations feature.
+ */
+function agri_core_update_7213() {
+  module_enable(array('agri_administrations'));
+}
+
+/**
+ * Enable Content Lock module and Content Lock Timeout submodule.
+ */
+function agri_core_update_7214() {
+  module_enable(array('content_lock', 'content_lock_timeout'));
+}
+
+/**
+ * EIPAGRI-440: enable Webform Validation to use rule for character count.
+ */
+function agri_core_update_7215() {
+  module_enable(array('webform_validation'));
+}
+
+/**
+ * EIPAGRI-466: Enable text_collapse to add collapsible text to CKEditor.
+ */
+function agri_core_update_7216() {
+  module_enable(array('collapse_text', 'text_collapse'));
+}
+
+/**
+ * Add an administrator user for generic purposes.
+ */
+function agri_core_update_7217() {
+  _agri_core_create_agri_admin_user();
+}
+
+/**
+ * Restore AGRI custom settings after upgrade to Multisite 2.1.
+ */
+function agri_core_update_7218() {
+  // Restore overrides.
+  _agri_core_restore_overrides();
+}
+
+/**
+ * Rebuild Taxonomy Node Index for every node.
+ */
+function agri_core_update_7219() {
+
+  variable_set('taxonomy_maintain_index_table', TRUE);
+
+  $nodes = entity_load('node');
+
+  // Rebuild taxonomy index for every node.
+  foreach ($nodes as $node) {
+    taxonomy_build_node_index($node);
+  }
+
+}
+
+/**
+ * Enable NUTS regions taxonomy to use in SFC projects import.
+ *
+ * Once enabled, migrate data/nuts.csv content with "drush mi --group=geos".
+ */
+function agri_core_update_7220() {
+  module_enable(array('nuts_regions'));
+}
+
+/**
+ * Enable OG contrib modules: Context OG, Og Menu, Og Menu Default Links.
+ */
+function agri_core_update_7221() {
+  module_enable(array('context_og', 'og_menu', 'og_menu_default_links'));
+}
+
+/**
+ * Restore "My account" link instead of My EIP-AGRI.
+ *
+ * Restore workbench status and transitions.
+ */
+function agri_core_update_7222() {
+
+  // Update "My EIP-AGRI" menu links to "My Account" (or EIP-AGRI in one case).
+  db_update('menu_links')
+    ->fields(array(
+      'link_title' => 'My Account',
+    ))
+    ->condition('link_title', 'My EIP-AGRI')
+    ->condition('menu_name', 'main-menu', '<>')
+    ->execute();
+
+  db_update('menu_links')
+    ->fields(array(
+      'link_title' => 'Register or login to "EIP-AGRI"',
+    ))
+    ->condition('link_title', 'Register or login to "MY-EIP AGRI"')
+    ->execute();
+
+  menu_rebuild();
+
+  menu_cache_clear_all();
+
+  // Clean Workbench Moderation transitions list.
+  $transitions = workbench_moderation_transitions();
+  foreach ($transitions as $transition) {
+    workbench_moderation_transition_delete($transition);
+  }
+
+  // Restore default transitions of workbench_moderation.
+  $transitions = array(
+    array(
+      'name' => 'Submit for Review',
+      'from' => 'draft',
+      'to' => 'needs_review',
+    ),
+    array(
+      'name' => 'Reject',
+      'from' => 'needs_review',
+      'to' => 'draft',
+    ),
+    array(
+      'name' => 'Publish',
+      'from' => 'needs_review',
+      'to' => 'published',
+    ),
+  );
+  foreach ($transitions as $transition) {
+    multisite_config_service('workbench_moderation')->createModerationStateTransition($transition['to'], $transition['from'], $transition['name']);
+  }
+}
+
+/**
+ * Hide workbench information block.
+ *
+ * Add new term inside vocabulary "User type".
+ *
+ * Remove old data on taxonomy system table.
+ */
+function agri_core_update_7223() {
+
+  // Hide 'Workbench information' block.
+  db_update('block')
+    ->fields(array('status' => 0))
+    ->condition('module', 'workbench')
+    ->condition('delta', 'block')
+    ->execute();
+
+  $menu_info = db_select('menu_links', 'ml')
+    ->condition('ml.menu_name', 'menu-service-tools')
+    ->condition('ml.link_title', 'My Account')
+    ->fields('ml', array('mlid'))
+    ->execute()
+    ->fetchAll();
+
+  foreach ($menu_info as $key => $value) {
+    menu_link_delete($value->mlid);
+  }
+
+  // Add new term inside vocabulary "User type".
+  $vocabulary = "core_user_type";
+  $new_term = "SME";
+
+  _agri_core_api_create_term($vocabulary, $new_term);
+  _agri_core_reset_taxonomy_default_order($vocabulary, "_agri_core_get_default_core_user_type_terms");
+
+  // Remove old data on taxonomy system table.
+  $terms = array();
+  $tids_to_remove = array();
+
+  $query = db_select('taxonomy_term_data', 'ttd')
+    ->fields('ttd', array('tid', 'name'))
+    ->condition('vid', 2, '=');
+  $results = $query->execute();
+  foreach ($results as $row) {
+    $terms[$row->tid] = $row->name;
+  }
+
+  foreach ($terms as $tid => $name) {
+    $matching_terms = taxonomy_get_term_by_name($name, 'tags');
+    foreach ($matching_terms as $matching_term) {
+      if ($matching_term->tid != $tid && $matching_term->name == $name) {
+        $tids_to_remove[$tid] = $name;
+      }
+    }
+  }
+
+  foreach ($tids_to_remove as $key => $value) {
+    $query = db_select('taxonomy_index', 'ti')
+      ->fields('ti', array('nid'))
+      ->condition('tid', $key, '=')
+      ->execute();
+
+    if ($query->rowCount() == 0) {
+      taxonomy_term_delete($key);
+    }
+  }
+
+  $query = db_select('taxonomy_term_hierarchy', 'th')
+    ->fields('th', array('tid', 'parent'));
+  $query->leftJoin('taxonomy_term_data', 'td', 'th.parent = td.tid');
+  $query->condition('th.parent', '0', '<>')
+    ->isNull('td.tid');
+
+  $result = $query->execute();
+  foreach ($result as $record) {
+    $tids_to_remove[] = $record->tid;
+    $parent = $record->parent;
+  }
+
+  if (!empty($tids_to_remove) && !empty($parent)) {
+    db_delete('taxonomy_term_hierarchy')
+      ->condition('tid', $tids_to_remove, 'IN')
+      ->condition('parent', $parent)
+      ->execute();
+  }
+
+  // Set countries ISO code to vocabulary 'core_geographical_area'.
+  features_revert(array(
+    'agri_core' => array('field_base', 'field_instance'),
+  ));
+  _agri_core_set_isocode_geographical_area('core_geographical_area', 'field_core_iso_code_alpha2');
+
+}
+
+/**
+ * MULTISITE-17995.
+ */
+function agri_core_update_7225() {
+  $modules = array('googleanalytics');
+  module_disable($modules);
+  drupal_uninstall_modules($modules);
+}
+
+/**
+ * Enable 'agri_projects_sfc_ws' feature.
+ */
+function agri_core_update_7226() {
+  module_enable(array(
+    'agri_projects_sfc_ws',
+  ));
+}
+
+/**
+ * Add new format date.
+ */
+function agri_core_update_7227() {
+  variable_set('date_format_eip_agri_long', 'l, j F, Y');
+  variable_set('date_format_eip_agri_medium', 'D, d/m/Y');
+  variable_set('date_format_eip_agri_short', 'd/m/Y');
+}
+
+/**
+ * Enable 'agri_project_map' feature.
+ */
+function agri_core_update_7228() {
+  module_enable(array(
+    'agri_project_map',
+  ));
+}
+
+/**
+ * EIPAGRI-522, EIPAGRI-523, EIPAGRI-168.
+ */
+function agri_core_update_7229() {
+  // Enable 'agri_usermerge' feature (EIPAGRI-522).
+  module_enable(array(
+    'agri_usermerge',
+  ));
+
+  // Disable unsecure or unsupported modules (EIPAGRI-523).
+  $modules = [
+    'oauthconnector',
+    'connector',
+    'http_client_oauth',
+    'http_client',
+  ];
+  module_disable($modules);
+  drupal_uninstall_modules($modules);
+
+  // Enable plugin "spell checker help message" for CKEditor.
+  _agri_core_overrides_wysiwyg_profile();
+}
+
+/**
+ * EIPAGRI-523, EIPAGRI-483.
+ */
+function agri_core_update_7230() {
+  // Disable unsecure or unsupported modules (EIPAGRI-523).
+  $modules = ['oauth2_common'];
+
+  module_disable($modules);
+  $success = drupal_uninstall_modules($modules);
+  watchdog('agri_core', '@module uninstall @outcome.', array(
+    '@module' => reset($modules),
+    '@outcome' => $success ? 'completed' : 'failed',
+  ));
+
+  // Clean dependencies based upon specific fields.
+  // Bundles to check.
+  $bundles = array(
+    'event',
+    'funding_opportunities',
+    'needs_for_research_from_practice',
+    'news',
+    'project_ideas',
+    'publication',
+  );
+
+  $dependencies = array();
+
+  // Build a list of dependencies.
+  foreach ($bundles as $bundle) {
+    $dependencies[] = conditional_fields_load_dependencies('node', $bundle);
+  }
+
+  // List of fields that fires dependencies.
+  $dependee_fields = array(
+    'field_core_geographical_area',
+    'field_news_geographical_area',
+    'field_event_type',
+    'field_projects_language',
+  );
+
+  $to_delete = array();
+
+  foreach ($dependencies as $dependency) {
+    foreach ($dependee_fields as $dependee_field) {
+      // If fields names are found in dependencies, build an array of ids.
+      if (in_array($dependee_field, array_keys($dependency['dependees']))) {
+        $to_delete[] = key($dependency['dependees'][$dependee_field]);
+      }
+    }
+  }
+
+  // Pass the id list to delete function.
+  if (count($to_delete)) {
+    conditional_fields_dependency_delete($to_delete);
+  }
+
+}
+
+/**
+ * Enable 'agri_invite' feature, fix Other User type term name.
+ */
+function agri_core_update_7231() {
+  // Enable Agri Invite feature.
+  module_enable(array(
+    'agri_invite',
+  ));
+
+  // Edit term name "Other (specify)" for "User type" taxonomy.
+  $term = taxonomy_get_term_by_name('Other (specify)', 'core_user_type');
+  if (!empty($term)) {
+    $term_obj = reset($term);
+    $term_obj->name = 'Other';
+
+    taxonomy_term_save($term_obj);
+  }
+}
+
+/**
+ * Enable 'AGRI Digitization Toolbox' feature.
+ */
+function agri_core_update_7232() {
+  module_enable(array(
+    'agri_digitization_toolbox',
+  ));
+}
+
+/**
+ * Create Apache Solr related content blocks ("More like this").
+ */
+function agri_core_update_7233() {
+  _agri_core_create_apachesolr_mlt_blocks();
+}
+
+/**
+ * Enable Quicktab tabstyle module.
+ */
+function agri_core_update_7234() {
+  module_enable(array(
+    'quicktabs_tabstyles',
+  ));
+}
+
+/**
+ * Uninstall Multisite Business Indicators modules.
+ */
+function agri_core_update_7235() {
+  $modules = array(
+    'multisite_business_indicators_core',
+    'multisite_business_indicators_community',
+  );
+  module_disable($modules, TRUE);
+  drupal_uninstall_modules($modules, TRUE);
+}
+
+/**
+ * Enable ec_embedded_video feature.
+ */
+function agri_core_update_7236() {
+  module_enable(array(
+    'ec_embedded_video',
+  ));
+}
+
+/**
+ * EIPAGRI-606, EIPAGRI-628, EIPAGRI-541.
+ */
+function agri_core_update_7237() {
+
+  // Delete variable used to enable CCK globally.
+  variable_del('agri_core_enable_cck');
+
+  // Set hide-children property on "Focus groups" main menu item.
+  $result = db_select('menu_links', 'ml')
+    ->fields('ml', array('options'))
+    ->condition('link_title', 'Focus groups')
+    ->condition('menu_name', 'main-menu')
+    ->execute()->fetchField();
+
+  // Unserialize current menu link attributes and set hide-children property.
+  $options = unserialize($result);
+  $options['attributes']['data-hide-children'] = 1;
+
+  // Update menu link options.
+  db_update('menu_links')
+    ->fields(array('options' => serialize($options)))
+    ->condition('link_title', 'Focus groups')
+    ->condition('menu_name', 'main-menu')
+    ->execute();
+
+  menu_cache_clear('main-menu');
+
+  // Remove old splash page "My EIP-AGRI".
+  $internal_path = drupal_get_normal_path('my-eip-agri');
+  $arg = explode('/', $internal_path);
+  if (isset($arg[1]) && $arg[0] == 'node') {
+    node_delete($arg[1]);
+  }
+
+  // Remove old view not exported in configuration.
+  $name = 'agri_stakeholders_content';
+  if ($view = views_get_view($name)) {
+    views_delete_view($view);
+  }
+
+  // Manually remove a corrupt menu item.
+  db_delete('menu_links')
+    ->condition('link_path', 'my-eip-agri')
+    ->execute();
+
+  // Enable "AGRI Stakeholder area" features.
+  module_enable(array(
+    'agri_stakeholder',
+  ));
+
+  // Revert components.
+  features_revert(array(
+    'agri_core' => array(
+      'variable',
+      'views_view',
+    ),
+    'agri_events' => array(
+      'field_instance',
+    ),
+    'agri_news' => array(
+      'field_instance',
+      'views_view',
+    ),
+    'agri_pages' => array(
+      'field_instance',
+    ),
+    'agri_press' => array(
+      'field_instance',
+      'views_view',
+    ),
+    'agri_projects' => array(
+      'field_instance',
+    ),
+    'agri_publications' => array(
+      'views_view',
+    ),
+  ));
+
+  // Override field instances to apply core_small_teaser settings.
+  _agri_core_restore_overrides();
+
+  // Delete current "People" item.
+  $item = ['People' => 'https://ec.europa.eu/eip/agriculture/en/find-people'];
+  _agri_core_manage_menu_items('main-menu', 'delete', $item);
+
+  // Items to reset.
+  $items = [
+    'Meeting point' => 'find-connect',
+    'Projects' => 'find-connect/projects',
+    'Research projects' => 'find-connect/research-projects',
+    'Innovative actions' => 'find-connect/innovative-actions',
+    'Operational Groups' => 'find-connect/operational-groups',
+    'Funding' => 'find-connect/funding-opportunities',
+    'Research needs' => 'find-connect/needs-for-research',
+    'Project Ideas' => 'find-connect/project-ideas',
+    'Online resources' => 'find-connect/online-resources',
+    'Publications' => 'publications',
+  ];
+
+  _agri_core_manage_menu_items('main-menu', 'reset', $items);
+
+  // Manually remove corrupted items.
+  db_delete('menu_links')
+    ->condition('link_path', 'find-connect')
+    ->condition('link_title', 'Find')
+    ->condition('menu_name', 'main-menu')
+    ->execute();
+
+  // Manually remove corrupted items.
+  db_delete('menu_links')
+    ->condition('link_title', 'Interesting links')
+    ->condition('menu_name', 'main-menu')
+    ->condition('hidden', 1)
+    ->execute();
+
+  // Manually remove corrupted items.
+  db_delete('menu_links')
+    ->condition('link_path', 'news-events')
+    ->condition('link_title', 'News')
+    ->condition('menu_name', 'main-menu')
+    ->condition('hidden', 1)
+    ->execute();
+
+  $items = [
+    'News' => 'news-events',
+    'Search news' => 'news-events/news',
+    'Press' => 'news-events/press-media',
+  ];
+
+  _agri_core_manage_menu_items('main-menu', 'reset', $items);
+
+  // Manually remove corrupted items.
+  db_delete('menu_links')
+    ->condition('link_path', 'news-events')
+    ->condition('link_title', 'News')
+    ->condition('menu_name', 'main-menu')
+    ->condition('has_children', 0)
+    ->execute();
+
+  menu_cache_clear('main-menu');
+}

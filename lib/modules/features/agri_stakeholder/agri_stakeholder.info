@@ -1,0 +1,17 @@
+name = AGRI Stakeholder area
+description = EIP-AGRI projects section in the "Stakeholder area"
+core = 7.x
+php = 5.6
+package = AGRI
+dependencies[] = context
+dependencies[] = ctools
+dependencies[] = views
+features[context][] = agri-stakeholders-area
+features[ctools][] = context:context:3
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[views_view][] = agri_stakeholder_list_page
+features[views_view][] = agri_stakeholder_projects_blocks
+features[views_view][] = agri_stakeholder_projects_page
+features[views_view][] = agri_stakeholder_publication
+multisite_version = 2.5

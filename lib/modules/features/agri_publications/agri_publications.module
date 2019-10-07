@@ -1,0 +1,73 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI Publications feature.
+ */
+
+include_once 'agri_publications.features.inc';
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add a description to the the publication title field.
+ */
+function agri_publications_form_node_form_alter(&$form, &$form_state) {
+  if ($form['type']['#value'] == 'publication') {
+    $form['title']['#description'] = t('Title in the original language of the publication.');
+    $form['body']['#access'] = FALSE;
+
+    // Conditional field "Other location".
+    $other_location = _agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area');
+    $settings = array(
+      'agri_publications' => array(
+        'other_location' => $other_location,
+      ),
+    );
+
+    $form['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
+    $form['#attached']['js'][] = drupal_get_path('module', 'agri_publications') . '/js/agri_publications.js';
+
+    // Custom conditional fields validation.
+    $form['field_core_other_location']['#element_validate'] = array('_agri_publications_other_location_validate');
+  }
+}
+
+/**
+ * Implements hook_node_submit().
+ */
+function agri_publications_node_submit($node, $form, &$form_state) {
+  if ($node->type == 'publication') {
+    if (isset($node->field_publication_date[LANGUAGE_NONE][0]['show_todate'])) {
+      $year = $node->field_publication_date[LANGUAGE_NONE][0]['value'];
+      if (drupal_strlen($year) === 4) {
+        date_default_timezone_set('UTC');
+        $date = mktime(0, 0, 0, '01', '01', $year);
+        $node->field_publication_date[LANGUAGE_NONE][0]['value'] = $date;
+      }
+    }
+  }
+}
+
+/**
+ * Custom field_core_other_location validation.
+ *
+ * @param mixed $element
+ *   The field array.
+ * @param mixed $form_state
+ *   The form_state array.
+ * @param mixed $form
+ *   The form array.
+ */
+function _agri_publications_other_location_validate($element, &$form_state, $form) {
+
+  $other_location = array_column($form_state['values']['field_core_geographical_area'][LANGUAGE_NONE], 'tid');
+
+  if (in_array(_agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area'), $other_location)
+    && empty($element[LANGUAGE_NONE][0]['value']['#value'])) {
+    $element['#required'] = TRUE;
+    form_error($element, t('@label field is required.',
+        array('@label' => $element[LANGUAGE_NONE]['#title']))
+    );
+  }
+}

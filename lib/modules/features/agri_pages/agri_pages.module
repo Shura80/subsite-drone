@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI Pages feature.
+ */
+
+include_once 'agri_pages.features.inc';
+
+/**
+ * Implements hook_menu_block_blocks().
+ */
+function agri_pages_menu_block_blocks() {
+  // Export block to Menu Block module.
+  // The array key is the block delta used by Menu Block.
+  // Block is themed in agri_theme_menu_tree__menu_block__agri_pages_side_menu()
+  return array(
+    'agri_pages_side_menu' => array(
+      'menu_name'   => 'main-menu',
+      'parent_mlid' => 0,
+      'title_link'  => FALSE,
+      'admin_title' => 'Main menu - 2nd level side menu',
+      'level'       => 2,
+      'follow'      => 1,
+      'depth'       => 1,
+      'expanded'    => TRUE,
+      'sort'        => FALSE,
+    ),
+  );
+}

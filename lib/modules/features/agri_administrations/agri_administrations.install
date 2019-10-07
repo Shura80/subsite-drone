@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_administrations feature.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function agri_administrations_enable() {
+  $path = drupal_get_path('module', 'agri_administrations') . '/agri_administrations.info';
+  $info = drupal_parse_info_file($path);
+  drupal_set_message(t('Agri Administrations %v feature is now active on your
+  site.', array('%v' => $info['version'])));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_administrations_disable() {
+  $path = drupal_get_path('module', 'agri_administrations') . '/agri_administrations.info';
+  $info = drupal_parse_info_file($path);
+  drupal_set_message(t('Agri Administrations %v feature is now inactive on your
+  site.', array('%v' => $info['version'])));
+}

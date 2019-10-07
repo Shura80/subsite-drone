@@ -1,0 +1,576 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI Digitization Toolbox feature.
+ */
+
+include_once 'agri_digitization_toolbox.features.inc';
+
+// Digitization Toolbox views machine names.
+define('AGRI_DIGITIZATION_TOOLBOX_CONTENT_VIEW', 'agri_digitization_toolbox_content');
+define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_VIEW', 'agri_digitization_toolbox_projects');
+
+// VBO forms ids.
+define('AGRI_DIGITIZATION_TOOLBOX_CONTENT_VBO_FORM_ID', 'views_form_agri_digitization_toolbox_content_digitization_toolbox_content');
+define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_VBO_FORM_ID', 'views_form_agri_digitization_toolbox_projects_digitization_toolbox_projects');
+
+// Exposed forms ids.
+define('AGRI_DIGITIZATION_TOOLBOX_CONTENT_EXPOSED_FORM_ID', 'views-exposed-form-agri-digitization-toolbox-content-digitization-toolbox-content');
+define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_EXPOSED_FORM_ID', 'views-exposed-form-agri-digitization-toolbox-projects-digitization-toolbox-projects');
+
+// Digitisation path.
+define('AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH', 'digitising-agriculture');
+define('AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE', t('Digitising Agriculture'));
+
+/**
+ * Implements hook_menu().
+ */
+function agri_digitization_toolbox_menu() {
+
+  // Fake default tab for digitization toolbox all content list.
+  $items['admin/content/digitisation-toolbox/all'] = [
+    'title' => 'Other content',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 20,
+  ];
+
+  $items[AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH] = [
+    'title' => 'Digitising Agriculture',
+    'page callback' => 'agri_digitization_toolbox_return_landing_page',
+    'access arguments' => ['access content'],
+    'type' => MENU_CALLBACK,
+  ];
+
+  return $items;
+}
+
+/**
+ * Returns empty page to use as Digitisation landing page context container.
+ */
+function agri_digitization_toolbox_return_landing_page() {
+  // Custom empty menu callback to use as digitisation contexts entry point.
+  return '';
+}
+
+/**
+ * Implements hook_permission().
+ */
+function agri_digitization_toolbox_permission() {
+  // Define the permission to access Digitisation backend views.
+  return [
+    'access digitization toolbox views' => [
+      'title' => t('Access Digitisation Toolbox Views'),
+      'description' => t('Allow to add or remove contents to/from Digitisation toolbox.'),
+      'restrict access' => FALSE,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function agri_digitization_toolbox_block_info() {
+  // Define the Digitisation EIPAGRI homepage entry point block.
+  $blocks['agri_digitization_entry_point'] = [
+    'info' => t('Digitisation Toolbox Homepage block'),
+    'description' => t('This block is placed on homepage to reach Digitisation toolbox section.'),
+  ];
+
+  return $blocks;
+}
+
+/**
+ * Helper function for default values for block.
+ *
+ * @return array
+ *   An array with value/format keys.
+ */
+function _agri_digitization_toolbox_home_block_defaults() {
+  // Prepare path to get img from theme folder.
+  $theme_path = base_path() . path_to_theme();
+  $img_link = url(AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH);
+  $text_url = base_path() . AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH;
+
+  return [
+    'value' => <<<HTML
+<a href="$img_link" title="Open Digitising Agriculture section">
+<img class="img-responsive digitisation" src="$theme_path/images/digitisation/SEM-multilevelstrategies-digitisation_home.jpg" />
+</a>
+<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Digital technologies can increase profitability, improve working conditions for farmers and reduce the environmental impacts of agriculture.</a></p>
+<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Get inspired by existing digital technologies, projects and the agricultural community already working with them.</a></p>
+<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Find out how to improve digital skills and knowledge and be part of the agricultural digital (r)evolution.</a></p>
+<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Let’s get digital!</a></p>
+HTML
+    ,
+    'format' => 'full_html',
+  ];
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function agri_digitization_toolbox_block_view($delta = '') {
+  $block = [];
+
+  if ($delta == 'agri_digitization_entry_point') {
+    // Use defaults block values if not overridden in configure block form.
+    $content = variable_get('agri_digitization_block_data', _agri_digitization_toolbox_home_block_defaults());
+
+    // Default title block if not set from configure form.
+    $block['subject'] = AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE;
+    $block['content'] = check_markup($content['value'], $content['format']);
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function agri_digitization_toolbox_block_configure($delta = '') {
+  $form = [];
+
+  if ($delta == 'agri_digitization_entry_point') {
+    $default_block = variable_get('agri_digitization_block_data', _agri_digitization_toolbox_home_block_defaults());
+
+    $form['agri_digitization_block_data'] = [
+      '#type' => 'text_format',
+      '#title' => t('Add an image and a description text for Digitisation section.'),
+      '#default_value' => $default_block['value'],
+      '#format' => $default_block['format'],
+    ];
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function agri_digitization_toolbox_block_save($delta = '', $edit = []) {
+  if ($delta == 'agri_digitization_entry_point') {
+    variable_set('agri_digitization_block_data', $edit['agri_digitization_block_data']);
+    drupal_flush_all_caches();
+  }
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function agri_digitization_toolbox_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+
+  // List of Digitisation Toolbox backend views.
+  $digitization_toolbox_views = [
+    AGRI_DIGITIZATION_TOOLBOX_CONTENT_VIEW,
+    AGRI_DIGITIZATION_TOOLBOX_PROJECTS_VIEW,
+  ];
+
+  // Manage custom VBO fieldsets if we are in digitizion toolbox backend form.
+  if (in_array($vbo->view->name, $digitization_toolbox_views)) {
+    _agri_digitization_toolbox_manage_vbo_fieldsets($form, $form_state);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_digitization_toolbox_form_views_exposed_form_alter(&$form, &$form_state) {
+
+  // List of AGRI Digitisation Toolbox exposed forms.
+  $digitization_forms = [
+    AGRI_DIGITIZATION_TOOLBOX_CONTENT_EXPOSED_FORM_ID,
+    AGRI_DIGITIZATION_TOOLBOX_PROJECTS_EXPOSED_FORM_ID,
+  ];
+
+  // Acts only on digitization toolbox views.
+  if (in_array($form['#id'], $digitization_forms)) {
+    // Rename default "True/False" options for Digitisation flag status.
+    $form['flagged']['#options'][0] = "Not included";
+    $form['flagged']['#options'][1] = "Included";
+  }
+}
+
+/**
+ * Helper function to reindex (search_api/apachesolr) on flagging/unflagging.
+ *
+ * @param object $flag
+ *   The flag object that executes the action on entity.
+ * @param int $entity_id
+ *   The id of the entity flagged by loaded flag.
+ */
+function _agri_digitization_toolbox_reindex_item($flag, $entity_id) {
+  // Acts only on Digitisation flag.
+  if ($flag->name == 'agri_digitization_toolbox') {
+    $node = entity_load_single('node', $entity_id);
+    // Flagged/unflagged indexed nodes needs to be reindexed to appear in views.
+    if ($node->type == 'project' || $node->type == 'publication') {
+      // Immediate reindex the flagged node.
+      search_api_track_item_change('node', [$entity_id]);
+    }
+    // Reindex page nodes for digitisation related content block.
+    elseif ($node->type == 'page') {
+      // Mark single node for reindex.
+      apachesolr_mark_entity('node', $entity_id);
+    }
+  }
+}
+
+/**
+ * Implements hook_flag_flag().
+ */
+function agri_digitization_toolbox_flag_flag($flag, $entity_id, $account, $flagging) {
+  // Callback to reindex search_api/solr items when flagging/unflagging node.
+  _agri_digitization_toolbox_reindex_item($flag, $entity_id);
+}
+
+/**
+ * Implements hook_flag_unflag().
+ */
+function agri_digitization_toolbox_flag_unflag($flag, $entity_id, $account, $flagging) {
+  // Callback to reindex search_api/solr items when flagging/unflagging node.
+  _agri_digitization_toolbox_reindex_item($flag, $entity_id);
+}
+
+/**
+ * Helper function to wrap VBO actions in separate fieldsets.
+ *
+ * @param array $form
+ *   The form to modify.
+ *
+ * @return array
+ *   Returns the edited form array.
+ */
+function _agri_digitization_toolbox_add_custom_vbo_operations_fieldsets(array &$form) {
+
+  // Create Digitization operations array.
+  $digit_actions_operations = array(
+    'select' => array(
+      'rules_component::rules_agri_digitization_toolbox_add_item' => $form['select']['rules_component::rules_agri_digitization_toolbox_add_item'],
+      'rules_component::rules_agri_digitization_toolbox_remove_item' => $form['select']['rules_component::rules_agri_digitization_toolbox_remove_item'],
+    ),
+  );
+
+  // Create Edit values operations array.
+  $entities_edit_actions_operations = array(
+    'select' => array(
+      'action::views_bulk_operations_modify_action' => $form['select']['action::views_bulk_operations_modify_action'],
+    ),
+  );
+
+  // Create a fieldset for Digitization Toolbox operations.
+  _agri_core_custom_vbo_operations_fieldset($form, 'digitization_actions', 'fieldset', t('Digitisation toolbox'), TRUE, array(), $digit_actions_operations);
+  // Create a fieldset for entity values edit operations.
+  _agri_core_custom_vbo_operations_fieldset($form, 'entities_edit_actions', 'fieldset', t('Edit values'), TRUE, array(), $entities_edit_actions_operations);
+
+  $form['digitization_actions']['operations']['select']['rules_component::rules_agri_digitization_toolbox_add_item']['#value'] = t('Add items');
+  $form['digitization_actions']['operations']['select']['rules_component::rules_agri_digitization_toolbox_remove_item']['#value'] = t('Remove items');
+
+  // Hide default form components.
+  $form['select']['rules_component::rules_agri_digitization_toolbox_add_item']['#access'] = FALSE;
+  $form['select']['rules_component::rules_agri_digitization_toolbox_remove_item']['#access'] = FALSE;
+  $form['select']['action::views_bulk_operations_modify_action']['#access'] = FALSE;
+
+  // Remove default VBO "Operations" fieldset.
+  if (isset($form['select']) && $form['select']['#title'] == 'Operations') {
+    $form['select']['#access'] = FALSE;
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_menu_block_blocks().
+ */
+function agri_digitization_toolbox_menu_block_blocks() {
+  // Digitisation navigation menu used on sub-pages.
+  $blocks = [
+    'agri-digitization-toolbox-menu' => [
+      'menu_name' => 'menu-digitization-toolbox',
+      'parent_mlid' => 0,
+      'title_link' => FALSE,
+      'admin_title' => 'Agri Digitisation Toolbox navigation menu',
+      'level' => 0,
+      'follow' => 0,
+      'depth' => 0,
+      'expanded' => FALSE,
+      'sort' => FALSE,
+    ],
+  ];
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function agri_digitization_toolbox_override_multisite_components() {
+  // Enable the Digitisation querystring filter for links in textareas.
+  _agri_digitization_toolbox_override_filter();
+  watchdog('agri_digitization_toolbox', 'Override multisite components');
+}
+
+/**
+ * Implements hook_filter_info().
+ */
+function agri_digitization_toolbox_filter_info() {
+  $filters['agri_filter_querystring'] = [
+    'title' => t('Digitisation toolbox country filter'),
+    'description' => t('Use it to append country querystring (if exists) to link urls.'),
+    'process callback' => '_agri_digitization_toolbox_querystring_filter',
+    'tips callback' => '_agri_digitization_toolbox_querystring_filter_tips',
+  ];
+
+  return $filters;
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_node().
+ */
+function agri_digitization_toolbox_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
+  // Acts only on page nodes.
+  if ($entity->type == 'page') {
+    // If node is flagged as Digitisation Toolbox, add a field to Solr index.
+    if ($flagging = flag_get_entity_flags('node', $entity->nid)) {
+      if ($flag = flag_get_flag('agri_digitization_toolbox', reset($flagging[0])->fid)) {
+        $document->setField('bs_flag_' . $flag->name . '_flagged', TRUE);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_query_alter().
+ */
+function agri_digitization_toolbox_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
+  // Names of searches for digitisation related content (search type/block id).
+  $apache_mlt_search = 'apachesolr_search_mlt';
+  $digitisation_block_id = 'agri-mlt-digitisation_toolbox';
+
+  // Get context of the query to see it has to be altered.
+  $context = $query->getContext();
+
+  if ($context['search_type'] == $apache_mlt_search && $context['block_id'] == $digitisation_block_id) {
+
+    // Add a subquery to modify filters operator.
+    $subquery = apachesolr_drupal_query('agri_custom');
+    // Exclude Focus Groups. Filter name seems truncated but it's ok.
+    $subquery->addFilter("-(bs_field_agri_pages_is_focus_gro", ' 1 ');
+    // Exclude items not flagged with Digitisation Toolbox flag.
+    $subquery->addFilter('bs_flag_agri_digitization_toolbox_flagged', " 1) ");
+    // Use the 'AND' operator.
+    $subquery->operator = 'AND';
+    // Finally add the subquery to the query.
+    $query->addFilterSubQuery($subquery);
+
+    // Check for query parameter to add more filters.
+    $params = drupal_get_query_parameters();
+
+    // Check if country querystring is already set, to add tids filter.
+    if ($params && !empty($params['country'])) {
+      $query->addFilter('tid', '(' . implode(' OR ', $params['country']) . ')');
+    }
+  }
+}
+
+/**
+ * Filter tips callback function for Twitter links.
+ */
+function _agri_digitization_toolbox_querystring_filter_tips($filter, $format, $long = FALSE) {
+  if ($long) {
+    return t('Links in Digitisation Toolbox text areas are updated with country querystring, if exists.');
+  }
+  else {
+    return t('Digitisation Toolbox links contains querystring if already in the url.');
+  }
+}
+
+/**
+ * Callback for agri_digitization_toolbox querystring filter.
+ *
+ * @param string $text
+ *   A string with HTML on which aplly the filter.
+ * @param mixed $filter
+ *   Filter type machine name.
+ *
+ * @return string
+ *   Returns the modified HTML string.
+ */
+function _agri_digitization_toolbox_querystring_filter($text, $filter) {
+
+  // Get querystring array.
+  $params = drupal_get_query_parameters();
+  // Check if country parameter exists to do other string manipulations.
+  if ($params && !empty($params['country'])) {
+    if ($filter->format == 'full_html') {
+      // Get links in text string.
+      $regex = '/https?\:\/\/[^\",]+/i';
+      preg_match_all($regex, $text, $matches);
+      // If links are found add the querystring to each of them.
+      if ($matches) {
+        $original_links = $matches[0];
+        foreach ($original_links as $original_link) {
+          // If link is a content of digitisation toolbox then apply filter.
+          if (strpos($original_link, AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH) !== FALSE) {
+            $query = drupal_http_build_query($params);
+            $text = str_replace($original_link, $original_link . '?' . $query, $text);
+          }
+
+        }
+      }
+    }
+  }
+
+  return $text;
+}
+
+/**
+ * Enable Digitisation toolbox custom filter for Full HTML and Filtered HTML.
+ */
+function _agri_digitization_toolbox_override_filter() {
+
+  // List of text formats where to enable custom filter.
+  $text_formats = [
+    'full_html',
+    'filtered_html',
+  ];
+
+  $enable_filters = [
+    // Digitisation querystring country filter for links.
+    'agri_filter_querystring',
+  ];
+
+  // Call the filter service container.
+  $filter_config = multisite_config_service('filter');
+
+  foreach ($text_formats as $text_format) {
+    // Enable custom text filters.
+    $filter_config->enableTextFilter($text_format, 'agri_filter_querystring');
+    $format = $filter_config->getFormat($text_format, TRUE);
+    $filters = $filter_config->getFormatFilters($text_format);
+
+    // Enable filter and set weight.
+    foreach ($enable_filters as $filter) {
+      if (isset($filters[$filter])) {
+        $filters[$filter]->status = 1;
+        $filters[$filter]->weight = 30;
+      }
+    }
+
+    foreach ($filters as $key => $value) {
+      $format->filters[$key] = (array) $value;
+    }
+
+    filter_format_save($format);
+  }
+}
+
+/**
+ * Helper function to manage VBO fieldsets around form fields.
+ *
+ * @param array $form
+ *   The $form array to be manipulated.
+ * @param array $form_state
+ *   The $form_state array coming from submitted form.
+ */
+function _agri_digitization_toolbox_manage_vbo_fieldsets(array &$form, array $form_state) {
+  // Attach js to render flag links as checkboxes.
+  $path = drupal_get_path('module', 'agri_digitization_toolbox') . '/js/agri_digitization_toolbox.js';
+  $form['#attached']['js'][] = $path;
+
+  // Form to select nodes to update.
+  if ($form_state['step'] == 'views_form_views_form') {
+    // Custom fieldsets around VBO operations.
+    _agri_digitization_toolbox_add_custom_vbo_operations_fieldsets($form);
+  }
+
+  // Subsequent VBO Form steps.
+  else {
+    // Form to modify entity values.
+    if ($form_state['step'] == 'views_bulk_operations_config_form') {
+      _agri_digitization_toolbox_mamage_vbo_bundles_fieldsets($form, $form_state);
+    }
+  }
+}
+
+/**
+ * Helper function to manage VBO fieldsets around selected bundles.
+ *
+ * @param array $form
+ *   The $form array to be manipulated.
+ * @param array $form_state
+ *   The $form_state array coming from submitted form.
+ */
+function _agri_digitization_toolbox_mamage_vbo_bundles_fieldsets(array &$form, array $form_state) {
+  // Remove our custom fieldsets on form steps.
+  unset($form['digitization_actions']);
+  unset($form['entities_edit_actions']);
+
+  // Additional operations for non projects form.
+  if ($form['#form_id'] == AGRI_DIGITIZATION_TOOLBOX_CONTENT_VBO_FORM_ID) {
+    // Hide fieldsets of non selected node types.
+    _agri_digitization_toolbox_hide_vbo_bundles_fieldsets($form, $form_state);
+  }
+}
+
+/**
+ * Helper function to hide unneeded fieldsets in form steps.
+ *
+ * @param array $form
+ *   The form to modify.
+ * @param array $form_state
+ *   The form_state values to modify.
+ *
+ * @return array
+ *   Returns the edited form array.
+ */
+function _agri_digitization_toolbox_hide_vbo_bundles_fieldsets(array &$form, array $form_state) {
+  // Get VBO selected nodes.
+  $selected = node_load_multiple($form_state['values']['views_bulk_operations']);
+
+  // Fill an array with types of selected nodes.
+  foreach ($selected as $node) {
+    $selected_types[] = "bundle_$node->type";
+  }
+
+  // Array with selected node types.
+  $selected_types = array_unique($selected_types);
+
+  // Set 'field_core_keywords' VBO pseudofield edit action value TRUE by default
+  // to avoid overwriting of existing values.
+  foreach ($selected_types as $selected_type) {
+    $form[$selected_type]['_append::field_core_keywords']['#default_value'] = TRUE;
+  }
+
+  // Get form keys relative to bundles.
+  foreach ($form as $key => $value) {
+    if (preg_match('/^bundle_/', $key)) {
+      $form_bundles[] = $key;
+    }
+  }
+
+  // Array with form fieldsets of bundle to not update.
+  $bundles_to_hide = array_diff($form_bundles, $selected_types);
+
+  // Hide bundle fieldsets of types not involved in entity values.
+  foreach ($bundles_to_hide as $bundle) {
+    $form[$bundle]['#access'] = FALSE;
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function agri_digitization_toolbox_views_pre_render(&$view) {
+
+  /* @var $view \View */
+
+  // Digitising Agriculture Projects & Publications search pages customization.
+  $publications = $view->name == 'publications_search' && $view->current_display == 'digitization_toolbox_publications_landing';
+  $projects = $view->name == 'agri_digitization_toolbox_projects_indexed_search' && $view->current_display == 'digitization_toolbox_projects_landing';
+
+  // Don't show country filter in more link views blocks.
+  if ($publications || $projects) {
+    unset($view->exposed_raw_input['country']);
+  }
+}

@@ -1,0 +1,143 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_pages feature.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function agri_pages_enable() {
+
+  // Adding Organic Group fields.
+  drupal_static_reset('og_fields_info');
+  og_create_field('og_group_ref', 'node', 'page');
+  og_create_field('group_content_access', 'node', 'page');
+
+  // Base table to query and role name.
+  $table = 'og_role';
+  $table_alias = 'ogr';
+  $role_name = 'member';
+  $node_type = 'collaborative_area';
+
+  // Get member role rid.
+  $query = db_select($table, $table_alias)
+    ->fields($table_alias)
+    ->condition('name', $role_name)
+    ->condition('group_bundle', $node_type);
+
+  $og_member_rid = $query->execute()->fetchField();
+
+  // Add new OG permission for member role.
+  db_insert('og_role_permission')
+    ->fields(array(
+      'rid' => $og_member_rid,
+      'permission' => 'update any page content',
+      'module' => 'og',
+    ))
+    ->execute();
+
+  features_revert(array(
+    'agri_pages' => array(
+      'variable',
+    ),
+  ));
+
+  drupal_set_message(t('Agri Pages feature is now active on your site.'));
+
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_pages_disable() {
+  drupal_set_message(t('Agri Pages feature is now inactive on your site.'));
+}
+
+/**
+ * Implements hook_update().
+ */
+function agri_pages_update_7001() {
+  features_revert(array(
+    'agri_pages' => array('user permission'),
+  ));
+}
+
+/**
+ * Mandatory keywords field.
+ */
+function agri_pages_update_7002() {
+  features_revert(array(
+    'agri_pages' => array('field'),
+  ));
+}
+
+/**
+ * EIPAGRI-224: Edit any page content permission for collaborative area members.
+ */
+function agri_pages_update_7003() {
+
+  // Base table to query and role name.
+  $table = 'og_role';
+  $table_alias = 'ogr';
+  $role_name = 'member';
+  $node_type = 'collaborative_area';
+
+  // Get member role rid.
+  $query = db_select($table, $table_alias)
+    ->fields($table_alias)
+    ->condition('name', $role_name)
+    ->condition('group_bundle', $node_type);
+
+  $og_member_rid = $query->execute()->fetchField();
+
+  // Add new OG permission for member role.
+  db_insert('og_role_permission')
+    ->fields(array(
+      'rid' => $og_member_rid,
+      'permission' => 'update any page content',
+      'module' => 'og',
+    ))
+    ->execute();
+
+}
+
+/**
+ * Set some pages as Focus Groups by checking field_agri_pages_is_focus_group.
+ */
+function agri_pages_update_7202() {
+
+  // Revert the new field that set page as focus group.
+  features_revert(array(
+    'agri_pages' => array('field_base', 'field_instance'),
+  ));
+
+  // Existing focus groups nodes url alias substring.
+  $alias_string = 'focus-groups/';
+
+  // Find all node ids with focus groups alias and build an array with the list.
+  $result = db_select('url_alias')
+    ->condition('alias', '%' . $alias_string . '%', 'LIKE')
+    ->condition('source', 'node/%', 'LIKE')
+    ->fields('url_alias')
+    ->execute();
+
+  $nids = array();
+  foreach ($result as $data) {
+    $source_array = explode("/", $data->source);
+    array_push($nids, end($source_array));
+  }
+
+  // Load all nodes from fetched nids.
+  $nodes = node_load_multiple($nids);
+
+  // Set the new field value on all retrieved nodes.
+  foreach ($nodes as $node) {
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $is_focus_group = TRUE;
+    $node_wrapper->field_agri_pages_is_focus_group->set($is_focus_group);
+    $node_wrapper->save();
+    watchdog('agri_pages', 'Set this page as focus group: @title.', array('@title' => $node->title));
+  }
+}

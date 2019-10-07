@@ -1,0 +1,175 @@
+<?php
+
+/**
+ * @file
+ * Code for the AGRI News feature.
+ */
+
+include_once 'agri_news.features.inc';
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_news_form_news_node_form_alter(&$form, &$form_state) {
+
+  $form['field_top_news'][LANGUAGE_NONE]['#title'] = t('Promote news to spotlight');
+
+  $fields = [
+    'field_news_image',
+    'field_news_sources',
+    'field_core_geographical_area',
+    'field_core_other_location',
+    'field_news_related',
+    'field_news_links',
+    'field_core_attachments',
+  ];
+
+  $weight = 50;
+
+  // Move custom fields inside Multisite "Content" vertical tab.
+  foreach ($fields as $field_name) {
+    $form[$field_name]['#weight'] = $weight++;
+    $form['#group_children'][$field_name] = 'group_news_content';
+  }
+
+  // Conditional field "Other location".
+  $other_location = _agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area');
+  $settings = array(
+    'agri_news' => array(
+      'other_location' => $other_location,
+    ),
+  );
+
+  $form['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
+  $form['#attached']['js'][] = drupal_get_path('module', 'agri_news') . '/js/agri_news.js';
+  // Custom conditional fields validation.
+  $form['field_core_other_location']['#element_validate'] = array('_agri_news_other_location_core_validate');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_news_form_funding_opportunities_node_form_alter(&$form, &$form_state) {
+  // Hide old core fields.
+  $form['field_core_geographical_area']['#access'] = FALSE;
+  $form['field_core_other_location']['#access'] = FALSE;
+  $form['field_core_additional_info']['#access'] = FALSE;
+  $form['field_news_website']['#access'] = FALSE;
+  $form['og_user_node']['#access'] = FALSE;
+  // Hide 'Contact person information' fieldset.
+  field_group_hide_field_groups($form, array('group_proj_contact_person_info'));
+
+  // Hide dynamic field collection fields in project add form.
+  $delta = 0;
+  $max_delta = $form['field_organization_collection'][LANGUAGE_NONE]['#max_delta'];
+
+  while ($delta <= $max_delta) {
+
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_department']['#weight'] = 49;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_unit']['#weight'] = 50;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_activity'][LANGUAGE_NONE]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_type'][LANGUAGE_NONE]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_sector'][LANGUAGE_NONE]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_projects_website'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_contact'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_address'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_organization_city'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_core_geographical_area']['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_core_other_location'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_core_email'][LANGUAGE_NONE][0]['#access'] = FALSE;
+    $form['field_organization_collection'][LANGUAGE_NONE][$delta]['field_user_phone'][LANGUAGE_NONE][0]['#access'] = FALSE;
+
+    $delta++;
+  }
+
+  // Conditional field "Other location".
+  $other_location = _agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area');
+  $settings = array(
+    'agri_news' => array(
+      'other_location' => $other_location,
+    ),
+  );
+
+  $form['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
+  $form['#attached']['js'][] = drupal_get_path('module', 'agri_news') . '/js/agri_news.js';
+  // Custom conditional fields validation.
+  $form['field_news_other_location']['#element_validate'] = array('_agri_news_other_location_news_validate');
+}
+
+/**
+ * Implements hook_field_default_fields_alter().
+ */
+function agri_news_field_default_fields_alter(&$fields) {
+
+  // Get default image without overrinding a feature:
+  // https://gist.github.com/sprice/2003047
+  // This code works only with Features 7.x-2.0-beta1 since for newer versions
+  // of Features we have got two different hooks replacing
+  // hook_field_default_fields_alter(), namely:
+  // hook_field_default_field_bases_alter() and
+  // hook_field_default_field_instances_alter()
+  if (isset($fields['node-news-field_news_image']['field_config']['settings']['default_image'])) {
+    $fid = $fields['node-news-field_news_image']['field_config']['settings']['default_image'];
+    $fields['node-news-field_news_image']['field_config']['settings']['default_image'] = variable_get('agri_core_default_image_fid', $fid);
+  }
+}
+
+/**
+ * Custom field_core_other_location validation.
+ *
+ * @param mixed $element
+ *   The field array.
+ * @param mixed $form_state
+ *   The form_state array.
+ * @param mixed $form
+ *   The form array.
+ */
+function _agri_news_other_location_core_validate($element, &$form_state, $form) {
+
+  $other_location = array_column($form_state['values']['field_core_geographical_area'][LANGUAGE_NONE], 'tid');
+
+  if (in_array(_agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area'), $other_location)
+    && empty($element[LANGUAGE_NONE][0]['value']['#value'])) {
+    $element['#required'] = TRUE;
+    form_error($element, t('@label field is required.',
+        array('@label' => $element[LANGUAGE_NONE]['#title']))
+    );
+  }
+}
+
+/**
+ * Custom field_news_other_location validation.
+ *
+ * @param mixed $element
+ *   The field array.
+ * @param mixed $form_state
+ *   The form_state array.
+ * @param mixed $form
+ *   The form array.
+ */
+function _agri_news_other_location_news_validate($element, &$form_state, $form) {
+
+  $other_location = array_column($form_state['values']['field_news_geographical_area'][LANGUAGE_NONE], 'tid');
+  $funding_type = $form_state['values']['field_news_type_of_funding'][LANGUAGE_NONE];
+
+  if (!empty($other_location) && $funding_type != '_none') {
+    if (in_array(_agri_core_get_string_tid_from_term_name('Other', 'core_geographical_area'), $other_location)
+      && empty($element[LANGUAGE_NONE][0]['value']['#value'])) {
+      $element['#required'] = TRUE;
+      form_error($element, t('@label field is required.',
+          ['@label' => $element[LANGUAGE_NONE]['#title']])
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_views_default_views_alter().
+ */
+function agri_news_views_default_views_alter(&$views) {
+  // Disable 'news' platform view.
+  if (array_key_exists('news', $views)) {
+    $view = $views['news'];
+    $view->disabled = TRUE;
+  }
+}

@@ -1,0 +1,11 @@
+name = AGRI SFC2014 SOAP web service
+description = Extends AGRI Projects functionalities providing an SFC projects import tool through SOAP services.
+core = 7.x
+php = 5.6
+package = AGRI
+dependencies[] = agri_projects
+dependencies[] = agri_sfc_project_import
+files[] = includes/agri_projects_sfc_ws.class.inc
+multisite_version = 2.5
+
+configure = admin/config/sfc-project/sfc2014_ws

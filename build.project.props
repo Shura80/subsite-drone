@@ -1,0 +1,29 @@
+# Subsite configuration.
+# ----------------------
+project.id = agri-eip
+project.name = EIP-AGRI Agriculture
+project.install.modules = agri_core
+project.url.production = https://ec.europa.eu/eip/agriculture/
+
+# Solr configuration.
+# -------------------
+solr.type = d7_apachesolr
+
+# Admin configuration.
+# --------------------
+project.admin.email = ${project.admin.username}@example.com
+
+# Platform configuration.
+# -----------------------
+profile = multisite_drupal_communities
+platform.package.version = 2.5
+phpcs.compat.checkreturn = false
+
+devel.mdls.en = dblog
+
+# The location of the .htaccess file in the Drupal root folder.
+build.platform.htaccess.path = ${build.platform.dir}/.htaccess
+
+behat.tags = ~@wip
+
+drush.verbose = TRUE

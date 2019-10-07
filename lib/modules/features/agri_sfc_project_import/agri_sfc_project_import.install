@@ -1,0 +1,143 @@
+<?php
+
+/**
+ * @file
+ * Install file of the agri_sfc_project import feature.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function agri_sfc_project_import_install() {
+
+  $directory = array(
+    'public' => file_default_scheme() . '://' . AGRI_SFC_PROJECT_IMPORT_PUBLIC_FOLDER,
+    'temp' => file_default_scheme() . '://' . AGRI_SFC_PROJECT_IMPORT_TEMP_FOLDER,
+  );
+
+  foreach ($directory as $dir) {
+    file_prepare_directory(drupal_realpath($dir), FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  }
+
+  $agri_sfc_project_funding_source_map = array(
+    'Rural_development_programme' => 0,
+    'H2020' => 4,
+    'other_EU' => 6,
+    'national_regional' => 7,
+    'private_funds' => 8,
+  );
+
+  variable_set('agri_sfc_project_funding_source_map', $agri_sfc_project_funding_source_map);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function agri_sfc_project_import_uninstall() {
+  drupal_uninstall_modules('agri_sfc_project_import');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function agri_sfc_project_import_schema() {
+  $schema['agri_sfc_project_import_log'] = array(
+    'description' => 'Log table for SFC Projects import.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'user' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'file_name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'message' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'details' => array(
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+    ),
+    'indexes' => array(
+      'log_date' => array('timestamp'),
+      'file_name' => array('file_name'),
+    ),
+    'unique keys' => array(
+      'id_timestamp' => array('id', 'timestamp'),
+    ),
+    'primary key' => array('id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_enable().
+ */
+function agri_sfc_project_import_enable() {
+  drupal_set_message(t('Agri SFC project import feature is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function agri_sfc_project_import_disable() {
+  drupal_set_message(t('Agri SFC project import feature is now inactive on your site.'));
+}
+
+/**
+ * Delete field and taxonomy for "SFC Main funding source" and "SFC Keywords".
+ *
+ * Set default value for "agri_sfc_project_funding_source_map" variable.
+ *
+ * New field for "agri_sfc_project_import_log" table log.
+ */
+function agri_sfc_project_import_update_7201() {
+  // Delete vocabulary "sfc_keywords" and relative field.
+  $sfc_keywords = taxonomy_vocabulary_machine_name_load('sfc_keywords');
+  if ($sfc_keywords != FALSE) {
+    taxonomy_vocabulary_delete($sfc_keywords->vid);
+  }
+
+  // Delete vocabulary "sfc_funding_sources" and relative field.
+  $sfc_funding_sources = taxonomy_vocabulary_machine_name_load('sfc_funding_sources');
+  if ($sfc_funding_sources != FALSE) {
+    taxonomy_vocabulary_delete($sfc_funding_sources->vid);
+  }
+
+  $agri_sfc_project_funding_source_map = array(
+    'Rural_development_programme' => 0,
+    'H2020' => 4,
+    'other_EU' => 6,
+    'national_regional' => 7,
+    'private_funds' => 8,
+  );
+
+  variable_set('agri_sfc_project_funding_source_map', $agri_sfc_project_funding_source_map);
+
+  // New field for "agri_sfc_project_import_log" table log.
+  db_add_field('agri_sfc_project_import_log', 'details', array(
+    'type' => 'blob',
+    'size' => 'big',
+  ));
+}
