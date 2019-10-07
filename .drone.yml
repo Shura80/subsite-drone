@@ -50,7 +50,7 @@ steps:
     commands:
       - ./toolkit/phing test-run-phpcs
   # PHP 7 compatibility #
-  - name: phpcs
+  - name: php7-comp
     image: fpfis/php56-dev
     group: pre-build
     commands:
@@ -79,6 +79,7 @@ steps:
       db.dl.password:
         from_secret: agri_db_dl_password
     commands:
+      - rm /toolkit/build/sites/sites.php
       - ./toolkit/phing install-clone
 
   # TEST SECTION #
