@@ -14,13 +14,13 @@ services:
       DOCUMENT_ROOT: /test/toolkit/build
       PORT: 8080
       # TEST CUSTOM SECRETS.
-      test_user:
-        from_secret: test_user
-      test_password:
-        from_secret: test_password
+      db.dl.username:
+        from_secret: agri_user
+      db.dl.password:
+        from_secret: agri_password
     commands:
-      - echo $test_user
-      - echo $test_password
+      - echo 'db.dl.username'
+      - echo 'db.dl.password'
 
 
 
