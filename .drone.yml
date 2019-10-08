@@ -18,9 +18,4 @@ services:
         from_secret: agri_user
       db.dl.password:
         from_secret: agri_password
-    commands:
-      - echo $${"DB.DL.USERNAME"}
-      - echo $${"DB.DL.PASSWORD"}
-
-
 
