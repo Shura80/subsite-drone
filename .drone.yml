@@ -19,8 +19,8 @@ services:
       db.dl.password:
         from_secret: agri_password
     commands:
-      - echo 'db.dl.username'
-      - echo 'db.dl.password'
+      - echo db.dl.username
+      - echo db.dl.password
 
 
 
