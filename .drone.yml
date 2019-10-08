@@ -2,13 +2,25 @@
 kind: pipeline
 name: agri-eip
 
-  - name: test-secrets
-    image: fpfis/php56-dev
+platform:
+  os: linux
+  arch: amd64
+
+# SERVICES #
+services:
+  - name: web
+    image: fpfis/php56-build
     environment:
+      DOCUMENT_ROOT: /test/toolkit/build
+      PORT: 8080
+      # TEST CUSTOM SECRETS.
       DB.DL.USERNAME:
         from_secret: agri_db_dl_username
       DB.DL.PASSWORD:
         from_secret: agri_db_dl_password
     commands:
-      - echo DB.DL.USERNAME
-      - echo DB.DL.PASSWORD
+      - echo $DB.DL.USERNAME
+      - echo $DB.DL.PASSWORD
+
+
+
