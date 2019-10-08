@@ -19,8 +19,8 @@ services:
       test_password:
         from_secret: test_password
     commands:
-      - echo test_user
-      - echo test.password
+      - echo $test_user
+      - echo $test_password
 
 
 
