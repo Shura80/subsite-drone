@@ -6,6 +6,16 @@ platform:
   os: linux
   arch: amd64
 
+# GIT CLONE SECTION #
+git-clone:
+  git:
+    image: plugins/git:next
+
+# WORKSPACE #
+workspace:
+  base: /test
+  path: toolkit
+
 # SERVICES #
 services:
   - name: web
@@ -13,9 +23,79 @@ services:
     environment:
       DOCUMENT_ROOT: /test/toolkit/build
       PORT: 8080
+
+  - name: mysql
+    image: fpfis/mysql56
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_MAX_ALLOWED_PACKET: 128M
+
+# BUILD SECTION #
+steps:
+  # SETUP TOOLKIT #
+  - name: toolkit
+    image: fpfis/php56-dev
+    group: setup
+    commands:
+      - composer install
+      - rm -rf ./.tmp/ ./build
+      - cp ./vendor/ec-europa/toolkit/includes/phing/props/drone.props build.develop.props
+      - ./toolkit/phing project-properties-validate
+
+  # PHPCS CHECKS #
+  # Standard #
+  - name: phpcs
+    image: fpfis/php56-dev
+    group: pre-build
+    commands:
+      - ./toolkit/phing test-run-phpcs
+  # PHP 7 compatibility #
+  - name: php7-comp
+    image: fpfis/php56-dev
+    group: pre-build
+    commands:
+      - ./toolkit/phing test-run-phpcs-compatibility
+
+  # BUILD PLATFORM AND SUBSITE#
+  - name: build
+    image: fpfis/php56-dev
+    group: build
+    commands:
+      - ./toolkit/phing build-platform build-subsite-dev
+
+  # SOLR SERVER SECTION #
+  - name: solr
+    image: fpfis/solr5
+    group: build
+    detach: true
+
+  # INSTALL SECTION #
+  # CLONE #
+  - name: install-clone
+    image: fpfis/php56-dev
+    environment:
       # TEST CUSTOM SECRETS.
       db.dl.username:
         from_secret: agri_user
       db.dl.password:
         from_secret: agri_password
+    commands:
+      - ./toolkit/phing install-clone
 
+  # TEST SECTION #
+  # SELENIUM #
+  - name: selenium
+    image: selenium/hub
+    chrome:
+      image: selenium/node-chrome:2.48.2
+      environment:
+        HUB_PORT_4444_TCP_ADDR: selenium
+        HUB_PORT_4444_TCP_PORT: "4444"
+    group: pre-behat
+    detach: true
+
+  # BEHAT #
+  - name: behat
+    image: fpfis/php56-dev
+    commands:
+      - ./toolkit/phing test-run-behat
