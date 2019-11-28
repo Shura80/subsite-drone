@@ -35,7 +35,6 @@ steps:
   # SETUP TOOLKIT #
   - name: toolkit
     image: fpfis/php56-dev
-    group: setup
     commands:
       - composer install
       - rm -rf ./.tmp/ ./build
@@ -46,33 +45,38 @@ steps:
   # Standard #
   - name: phpcs
     image: fpfis/php56-dev
-    group: pre-build
+    depends_on: toolkit
     commands:
       - ./toolkit/phing test-run-phpcs
   # PHP 7 compatibility #
   - name: php7-comp
     image: fpfis/php56-dev
-    group: pre-build
+    depends_on: toolkit
     commands:
       - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
     image: fpfis/php56-dev
-    group: build
-    depends_on: [ phpcs, php7-comp ]
+    depends_on:
+      - phpcs
+      - php7-comp
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
   # SOLR SERVER SECTION #
   - name: solr
     image: fpfis/solr5
+    depends_on:
+      - build
     detach: true
 
   # INSTALL SECTION #
   # CLONE #
   - name: install-clone
     image: fpfis/php56-dev
+    depends_on:
+      - build
     commands:
       - rm /test/toolkit/build/sites/sites.php
       - ./toolkit/phing install-clone
@@ -84,10 +88,14 @@ steps:
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"
+    depends_on:
+      - install-clone
     detach: true
 
   # BEHAT #
   - name: behat
     image: fpfis/php56-dev
+    depends_on:
+      - selenium
     commands:
       - ./toolkit/phing test-run-behat
