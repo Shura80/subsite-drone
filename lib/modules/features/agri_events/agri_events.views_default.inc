@@ -224,6 +224,10 @@ function agri_events_views_default_views() {
   $handler = $view->new_display('page', 'Events calendar - Month', 'event_month_page');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'Events calendar';
+  $handler->display->display_options['defaults']['pager'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'date_views_pager';
+  $handler->display->display_options['pager']['options']['date_id'] = 'month';
+  $handler->display->display_options['pager']['options']['skip_empty_pages'] = 0;
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'calendar_style';
   $handler->display->display_options['style_options']['name_size'] = '3';
@@ -294,6 +298,107 @@ function agri_events_views_default_views() {
   $handler->display->display_options['tab_options']['type'] = 'normal';
   $handler->display->display_options['tab_options']['title'] = 'Events calendar';
   $handler->display->display_options['tab_options']['weight'] = '0';
+
+  /* Display: Events calendar - Day */
+  $handler = $view->new_display('page', 'Events calendar - Day', 'event_day_page');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Events calendar';
+  $handler->display->display_options['defaults']['pager'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'date_views_pager';
+  $handler->display->display_options['pager']['options']['date_id'] = 'day';
+  $handler->display->display_options['pager']['options']['skip_empty_pages'] = 0;
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'calendar_style';
+  $handler->display->display_options['style_options']['calendar_type'] = 'day';
+  $handler->display->display_options['style_options']['name_size'] = '3';
+  $handler->display->display_options['style_options']['mini'] = '0';
+  $handler->display->display_options['style_options']['with_weekno'] = '0';
+  $handler->display->display_options['style_options']['multiday_theme'] = '1';
+  $handler->display->display_options['style_options']['theme_style'] = '0';
+  $handler->display->display_options['style_options']['max_items'] = '0';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'calendar_entity';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['relationships'] = FALSE;
+  /* Relationship: Content: Taxonomy terms on node */
+  $handler->display->display_options['relationships']['term_node_tid']['id'] = 'term_node_tid';
+  $handler->display->display_options['relationships']['term_node_tid']['table'] = 'node';
+  $handler->display->display_options['relationships']['term_node_tid']['field'] = 'term_node_tid';
+  $handler->display->display_options['relationships']['term_node_tid']['label'] = 'Event type term';
+  $handler->display->display_options['relationships']['term_node_tid']['vocabularies'] = array(
+    'event_type' => 'event_type',
+    'forums' => 0,
+    'agricultural_sectors' => 0,
+    'classification' => 0,
+    'field_of_activity' => 0,
+    'core_geographical_area' => 0,
+    'newsletter' => 0,
+    'nuts_regions' => 0,
+    'publication_type' => 0,
+    'core_stakeholders' => 0,
+    'tags' => 0,
+    'core_user_type' => 0,
+  );
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title']['hide_alter_empty'] = FALSE;
+  /* Field: Taxonomy term: Term ID */
+  $handler->display->display_options['fields']['tid']['id'] = 'tid';
+  $handler->display->display_options['fields']['tid']['table'] = 'taxonomy_term_data';
+  $handler->display->display_options['fields']['tid']['field'] = 'tid';
+  $handler->display->display_options['fields']['tid']['relationship'] = 'term_node_tid';
+  $handler->display->display_options['fields']['tid']['label'] = '';
+  $handler->display->display_options['fields']['tid']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['tid']['element_label_colon'] = FALSE;
+  /* Field: Content: Dates */
+  $handler->display->display_options['fields']['field_event_date_1']['id'] = 'field_event_date_1';
+  $handler->display->display_options['fields']['field_event_date_1']['table'] = 'field_data_field_event_date';
+  $handler->display->display_options['fields']['field_event_date_1']['field'] = 'field_event_date';
+  $handler->display->display_options['fields']['field_event_date_1']['label'] = '';
+  $handler->display->display_options['fields']['field_event_date_1']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_event_date_1']['settings'] = array(
+    'format_type' => 'medium',
+    'custom_date_format' => '',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+    'show_remaining_days' => 0,
+  );
+  /* Field: Field: Geographical scope */
+  $handler->display->display_options['fields']['field_core_geographical_area']['id'] = 'field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['table'] = 'field_data_field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['field'] = 'field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['label'] = '';
+  $handler->display->display_options['fields']['field_core_geographical_area']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_core_geographical_area']['type'] = 'taxonomy_term_reference_plain';
+  $handler->display->display_options['fields']['field_core_geographical_area']['delta_offset'] = '0';
+  $handler->display->display_options['defaults']['arguments'] = FALSE;
+  /* Contextual filter: Content: Dates -  start date (field_event_date) */
+  $handler->display->display_options['arguments']['field_event_date_value']['id'] = 'field_event_date_value';
+  $handler->display->display_options['arguments']['field_event_date_value']['table'] = 'field_data_field_event_date';
+  $handler->display->display_options['arguments']['field_event_date_value']['field'] = 'field_event_date_value';
+  $handler->display->display_options['arguments']['field_event_date_value']['default_action'] = 'default';
+  $handler->display->display_options['arguments']['field_event_date_value']['default_argument_type'] = 'date';
+  $handler->display->display_options['arguments']['field_event_date_value']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['field_event_date_value']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['field_event_date_value']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['field_event_date_value']['granularity'] = 'day';
+  $handler->display->display_options['arguments']['field_event_date_value']['granularity_reset'] = 0;
+  $handler->display->display_options['path'] = 'events/calendar/day';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Day';
+  $handler->display->display_options['menu']['weight'] = '0';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
   $export['agri_calendar'] = $view;
 
   $view = new view();
@@ -355,6 +460,110 @@ function agri_events_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block');
+
+  /* Display: Home block */
+  $handler = $view->new_display('block', 'Home block', 'event_home_block');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Upcoming events';
+  $handler->display->display_options['defaults']['pager'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '3';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'default';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['footer'] = FALSE;
+  /* Footer: Global: Create a custom link page */
+  $handler->display->display_options['footer']['agri_core_link_page']['id'] = 'agri_core_link_page';
+  $handler->display->display_options['footer']['agri_core_link_page']['table'] = 'views';
+  $handler->display->display_options['footer']['agri_core_link_page']['field'] = 'agri_core_link_page';
+  $handler->display->display_options['footer']['agri_core_link_page']['text'] = 'View all events';
+  $handler->display->display_options['footer']['agri_core_link_page']['path'] = 'events';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['max_length'] = '60';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['trim'] = TRUE;
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  /* Field: Content: Dates */
+  $handler->display->display_options['fields']['field_event_date']['id'] = 'field_event_date';
+  $handler->display->display_options['fields']['field_event_date']['table'] = 'field_data_field_event_date';
+  $handler->display->display_options['fields']['field_event_date']['field'] = 'field_event_date';
+  $handler->display->display_options['fields']['field_event_date']['label'] = '';
+  $handler->display->display_options['fields']['field_event_date']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['field_event_date']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_event_date']['settings'] = array(
+    'format_type' => 'eip_agri_medium',
+    'custom_date_format' => '',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+    'show_remaining_days' => 0,
+  );
+  /* Field: Field: Geographical scope */
+  $handler->display->display_options['fields']['field_core_geographical_area']['id'] = 'field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['table'] = 'field_data_field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['field'] = 'field_core_geographical_area';
+  $handler->display->display_options['fields']['field_core_geographical_area']['label'] = '';
+  $handler->display->display_options['fields']['field_core_geographical_area']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['field_core_geographical_area']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['field_core_geographical_area']['alter']['text'] = '[field_event_date] - [field_core_geographical_area]';
+  $handler->display->display_options['fields']['field_core_geographical_area']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_core_geographical_area']['type'] = 'taxonomy_term_reference_plain';
+  $handler->display->display_options['fields']['field_core_geographical_area']['delta_offset'] = '0';
+  /* Field: Field: Specify other location */
+  $handler->display->display_options['fields']['field_core_other_location']['id'] = 'field_core_other_location';
+  $handler->display->display_options['fields']['field_core_other_location']['table'] = 'field_data_field_core_other_location';
+  $handler->display->display_options['fields']['field_core_other_location']['field'] = 'field_core_other_location';
+  $handler->display->display_options['fields']['field_core_other_location']['label'] = '';
+  $handler->display->display_options['fields']['field_core_other_location']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['field_core_other_location']['alter']['text'] = '[field_event_date] - [field_core_other_location]';
+  $handler->display->display_options['fields']['field_core_other_location']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_core_other_location']['empty'] = '[field_core_geographical_area]';
+  /* Field: Content: Link */
+  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['label'] = '';
+  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['view_node']['text'] = 'Read more';
+  $handler->display->display_options['defaults']['sorts'] = FALSE;
+  /* Sort criterion: Content: Dates -  start date (field_event_date) */
+  $handler->display->display_options['sorts']['field_event_date_value']['id'] = 'field_event_date_value';
+  $handler->display->display_options['sorts']['field_event_date_value']['table'] = 'field_data_field_event_date';
+  $handler->display->display_options['sorts']['field_event_date_value']['field'] = 'field_event_date_value';
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Published */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'node';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = 1;
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'event' => 'event',
+  );
+  /* Filter criterion: Content: Dates -  start date (field_event_date) */
+  $handler->display->display_options['filters']['field_event_date_value']['id'] = 'field_event_date_value';
+  $handler->display->display_options['filters']['field_event_date_value']['table'] = 'field_data_field_event_date';
+  $handler->display->display_options['filters']['field_event_date_value']['field'] = 'field_event_date_value';
+  $handler->display->display_options['filters']['field_event_date_value']['operator'] = '>=';
+  $handler->display->display_options['filters']['field_event_date_value']['granularity'] = 'second';
+  $handler->display->display_options['filters']['field_event_date_value']['form_type'] = 'date_text';
+  $handler->display->display_options['filters']['field_event_date_value']['default_date'] = 'today';
   $export['events_blocks'] = $view;
 
   $view = new view();
@@ -485,7 +694,9 @@ function agri_events_views_default_views() {
 
 You can find a list of all past and upcoming events below. Please use the search form to find specific topics, event types or locations you may be interested in. By clicking the calendar on the left, you can go directly to all events from a specific month.
 
-If you would like to share information about interesting European events that will take place in the coming months, please let us know at <a mailto=\'servicepoint@eip-agri.eu\'>servicepoint@eip-agri.eu</a>.';
+If you would like to share information about interesting European events that will take place in the coming months, please let us know at <a mailto=\'servicepoint@eip-agri.eu\'>servicepoint@eip-agri.eu</a>.
+
+Please note that we can only publish events in the EU calendar if they (1) relate to agriculture and innovation - food chains and forestry, (2) have a European dimension, (3) are public, (4) do not require a registration or participation fee, and (5) include a website reference.';
   $handler->display->display_options['header']['area']['format'] = 'full_html';
   $handler->display->display_options['defaults']['footer'] = FALSE;
   $handler->display->display_options['defaults']['empty'] = FALSE;

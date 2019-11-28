@@ -20,3 +20,10 @@ function agri_digitization_toolbox_disable() {
   $t = get_t();
   drupal_set_message($t('Agri Digitization Toolbox feature is now inactive on your site.'));
 }
+
+/**
+ * Removed unused variable.
+ */
+function agri_digitization_toolbox_update_7001() {
+  variable_del('agri_digitization_block_data');
+}

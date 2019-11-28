@@ -98,23 +98,6 @@ function agri_core_install() {
     _agri_core_api_create_term('field_of_activity', $name);
   }
 
-  foreach (_agri_core_get_default_core_geographical_area_terms() as $key => $value) {
-    _agri_core_api_create_term('core_geographical_area', $key);
-
-    if (is_array($value)) {
-      foreach ($value as $country) {
-        _agri_core_api_create_term('core_geographical_area', $country, $key);
-      }
-    }
-  }
-
-  $other = taxonomy_get_term_by_name('Other', 'core_geographical_area');
-  if (!empty($other)) {
-    $term = reset($other);
-    $term->weight = '10';
-    taxonomy_term_save($term);
-  }
-
   foreach (_agri_core_get_default_core_user_type_terms() as $weight => $name) {
     _agri_core_api_create_term('core_user_type', $name, NULL, $weight);
   }
@@ -171,11 +154,20 @@ function agri_core_install() {
   );
   _agri_core_create_default_image($default_image);
 
-  // Adding links to the footer menu - see agri_core.module.
-  _agri_core_footer_menu_links();
+  // Revert custom menu component to import default items.
+  features_revert(['agri_core' => ['menu_custom']]);
 
-  // Adding the administer menu link.
-  _agri_core_add_user_menu_link();
+  // Custom menu to populate.
+  $menus = [
+    'menu-core-action-menu',
+    'menu-core-quicklinks',
+    'menu-core-search-find',
+    'menu-core-user-quicklinks',
+    'menu-social-footer',
+  ];
+
+  // Populate menus with default items.
+  _agri_core_build_custom_menu_links($menus);
 
   // Enabling forum module and adding OG field to forum taxonomy.
   module_enable(array('forum'));
@@ -217,57 +209,15 @@ function agri_core_install() {
     }
   }
 
+  $other = taxonomy_get_term_by_name('Other', 'core_geographical_area');
+  if (!empty($other)) {
+    $term = reset($other);
+    $term->weight = '10';
+    taxonomy_term_save($term);
+  }
+
   // Set countries ISO code to vocabulary 'core_geographical_area'.
   _agri_core_set_isocode_geographical_area('core_geographical_area', 'field_core_iso_code_alpha2');
-
-  _agri_core_import_default_menu_items();
-
-  // Menu link attributes to serialize.
-  $register_login_options = array(
-    'alter' => 1,
-    'attributes' => array(
-      'data-display-title' => 1,
-      'class' => array(
-        0 => 'menu-link-user-register',
-      ),
-    ),
-    'data-remove-class' => 0,
-  );
-
-  // Update menu link data.
-  db_update('menu_links')
-    ->fields(array(
-      'options' => serialize($register_login_options),
-      'hidden' => 0,
-    ))
-    ->condition('link_title', 'Register or login to "EIP-AGRI"')
-    ->condition('menu_name', 'menu-core-quicklinks')
-    ->execute();
-
-  // Update My EIP-AGRI Home block menu link data.
-  $my_eipagri = array(
-    'alter' => 1,
-    'attributes' => array(
-      'data-display-title' => 1,
-      'class' => array(
-        0 => 'menu-link-my-eip-agri',
-      ),
-      'title' => 'Connect to your own EIP-AGRI dashboard and
-      follow the information and people you are interested in',
-    ),
-    'data-remove-class' => 0,
-  );
-
-  db_update('menu_links')
-    ->fields(array(
-      'options' => serialize($my_eipagri),
-      'hidden' => 0,
-    ))
-    ->condition('link_title', 'My Account')
-    ->condition('menu_name', 'menu-core-search-find')
-    ->execute();
-
-  menu_cache_clear('menu-core-search-find');
 
   db_update('menu_links')
     ->fields(array(
@@ -335,6 +285,9 @@ function agri_core_install() {
 
   // Call override_multisite_components hook.
   _agri_core_overrides_all();
+
+  // Populate the bean in homepage.
+  _agri_core_create_agri_static_block_beans();
 
   search_api_index_delete('default_node_index');
   features_revert(array(
@@ -745,7 +698,7 @@ function agri_core_update_7039() {
   if (!module_exists('menu_attributes')) {
     module_enable(array('menu_attributes'));
   }
-  _agri_core_footer_menu_links();
+  _agri_core_menu_social_footer_menu_links();
 }
 
 /**
@@ -778,7 +731,7 @@ function agri_core_update_7043() {
       }
     }
 
-    _agri_core_add_user_menu_link();
+    _agri_core_menu_core_action_links();
     features_revert(array('agri_core' => array('context')));
   }
 }
@@ -1251,18 +1204,6 @@ function agri_core_update_7081() {
     'oauth_common',
     'oauthconnector',
   ));
-}
-
-/**
- * EIPAGRI-179: Enable twitter_post.
- */
-function agri_core_update_7082() {
-  module_enable(array('twitter_post'));
-
-  drupal_static_reset('module_implements');
-
-  $role = user_role_load_by_name('editor');
-  user_role_grant_permissions($role->rid, array('post to twitter'));
 }
 
 /**
@@ -2586,4 +2527,43 @@ function agri_core_update_7237() {
     ->execute();
 
   menu_cache_clear('main-menu');
+}
+
+/**
+ * EIPAGRI-608.
+ */
+function agri_core_update_7238() {
+  // Enable "bean" module.
+  module_enable(array(
+    'bean',
+    'bean_admin_ui',
+  ));
+
+  // Disable "twitter" modules.
+  $modules = array(
+    'twitter_post',
+    'twitter',
+  );
+  module_disable($modules, TRUE);
+  drupal_uninstall_modules($modules, TRUE);
+
+  // Revert component.
+  features_revert(array(
+    'agri_core' => array(
+      'field_base',
+      'field_instance',
+      'user_permission',
+      'variable',
+    ),
+  ));
+
+  // Populate the bean in homepage.
+  _agri_core_create_agri_static_block_beans();
+
+  // Clean menu-core-quicklinks from old links and repopulate it.
+  $menu = array(
+    'menu-core-quicklinks',
+    'menu-social-footer',
+  );
+  _agri_core_build_custom_menu_links($menu, TRUE);
 }

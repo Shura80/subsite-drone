@@ -54,6 +54,9 @@ default:
         content_second: ".region.region-content-second"
         content_third: ".region.region-content-third"
         content_bottom: ".region.region-content-bottom"
+        content_bottom_first: ".region.region-content-bottom-first"
+        content_bottom_second: ".region.region-content-bottom-second"
+        content_bottom_third: ".region.region-content-bottom-third"
         main_bottom: ".region.region-main-bottom"
         footer: ".region.region-footer"
       selectors:

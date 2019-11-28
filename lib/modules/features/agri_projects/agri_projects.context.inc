@@ -14,51 +14,6 @@ function agri_projects_context_default_contexts() {
   $context = new stdClass();
   $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
   $context->api_version = 3;
-  $context->name = 'projects-find-connect-splash-page';
-  $context->description = 'Active only on Projects & Actions section front page';
-  $context->tag = 'AGRI Projects';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'find-connect' => 'find-connect',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'views-projects_blocks-block_1' => array(
-          'module' => 'views',
-          'delta' => 'projects_blocks-block_1',
-          'region' => 'content_top_left',
-          'weight' => '-10',
-        ),
-        'views-projects_blocks-block_2' => array(
-          'module' => 'views',
-          'delta' => 'projects_blocks-block_2',
-          'region' => 'content_top_right',
-          'weight' => '-10',
-        ),
-        'views-projects_blocks-block' => array(
-          'module' => 'views',
-          'delta' => 'projects_blocks-block',
-          'region' => 'content_top',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-  );
-  $context->condition_mode = 0;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('AGRI Projects');
-  t('Active only on Projects & Actions section front page');
-  $export['projects-find-connect-splash-page'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
   $context->name = 'projects-needs-for-research-full-node';
   $context->description = 'Active on Needs for research from practice content types.';
   $context->tag = 'AGRI Projects';

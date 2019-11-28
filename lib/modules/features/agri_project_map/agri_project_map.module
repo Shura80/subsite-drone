@@ -22,16 +22,6 @@ function agri_project_map_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // Administration page.
-  $items['admin/config/services/agri-project-map'] = array(
-    'title' => 'Agri project map settings',
-    'description' => 'Configuration Webtools path',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('agri_project_map_settings_form'),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'agri_project_map.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
-  );
   return $items;
 }
 

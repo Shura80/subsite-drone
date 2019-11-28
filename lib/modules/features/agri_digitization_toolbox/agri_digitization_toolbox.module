@@ -18,10 +18,11 @@ define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_VBO_FORM_ID', 'views_form_agri_digiti
 // Exposed forms ids.
 define('AGRI_DIGITIZATION_TOOLBOX_CONTENT_EXPOSED_FORM_ID', 'views-exposed-form-agri-digitization-toolbox-content-digitization-toolbox-content');
 define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_EXPOSED_FORM_ID', 'views-exposed-form-agri-digitization-toolbox-projects-digitization-toolbox-projects');
+define('AGRI_DIGITIZATION_TOOLBOX_PROJECTS_PROJECTS_LIST_EXPOSED_FORM_ID', 'views-exposed-form-agri-digitization-toolbox-projects-indexed-search-projects-list');
 
 // Digitisation path.
 define('AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH', 'digitising-agriculture');
-define('AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE', t('Digitising Agriculture'));
+define('AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE', 'Digital Agriculture');
 
 /**
  * Implements hook_menu().
@@ -36,7 +37,7 @@ function agri_digitization_toolbox_menu() {
   ];
 
   $items[AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH] = [
-    'title' => 'Digitising Agriculture',
+    'title' => AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE,
     'page callback' => 'agri_digitization_toolbox_return_landing_page',
     'access arguments' => ['access content'],
     'type' => MENU_CALLBACK,
@@ -65,92 +66,6 @@ function agri_digitization_toolbox_permission() {
       'restrict access' => FALSE,
     ],
   ];
-}
-
-/**
- * Implements hook_block_info().
- */
-function agri_digitization_toolbox_block_info() {
-  // Define the Digitisation EIPAGRI homepage entry point block.
-  $blocks['agri_digitization_entry_point'] = [
-    'info' => t('Digitisation Toolbox Homepage block'),
-    'description' => t('This block is placed on homepage to reach Digitisation toolbox section.'),
-  ];
-
-  return $blocks;
-}
-
-/**
- * Helper function for default values for block.
- *
- * @return array
- *   An array with value/format keys.
- */
-function _agri_digitization_toolbox_home_block_defaults() {
-  // Prepare path to get img from theme folder.
-  $theme_path = base_path() . path_to_theme();
-  $img_link = url(AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH);
-  $text_url = base_path() . AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH;
-
-  return [
-    'value' => <<<HTML
-<a href="$img_link" title="Open Digitising Agriculture section">
-<img class="img-responsive digitisation" src="$theme_path/images/digitisation/SEM-multilevelstrategies-digitisation_home.jpg" />
-</a>
-<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Digital technologies can increase profitability, improve working conditions for farmers and reduce the environmental impacts of agriculture.</a></p>
-<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Get inspired by existing digital technologies, projects and the agricultural community already working with them.</a></p>
-<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Find out how to improve digital skills and knowledge and be part of the agricultural digital (r)evolution.</a></p>
-<p><a href="$text_url" class="d-block" title="Open Digitising Agriculture section">Let’s get digital!</a></p>
-HTML
-    ,
-    'format' => 'full_html',
-  ];
-}
-
-/**
- * Implements hook_block_view().
- */
-function agri_digitization_toolbox_block_view($delta = '') {
-  $block = [];
-
-  if ($delta == 'agri_digitization_entry_point') {
-    // Use defaults block values if not overridden in configure block form.
-    $content = variable_get('agri_digitization_block_data', _agri_digitization_toolbox_home_block_defaults());
-
-    // Default title block if not set from configure form.
-    $block['subject'] = AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE;
-    $block['content'] = check_markup($content['value'], $content['format']);
-  }
-  return $block;
-}
-
-/**
- * Implements hook_block_configure().
- */
-function agri_digitization_toolbox_block_configure($delta = '') {
-  $form = [];
-
-  if ($delta == 'agri_digitization_entry_point') {
-    $default_block = variable_get('agri_digitization_block_data', _agri_digitization_toolbox_home_block_defaults());
-
-    $form['agri_digitization_block_data'] = [
-      '#type' => 'text_format',
-      '#title' => t('Add an image and a description text for Digitisation section.'),
-      '#default_value' => $default_block['value'],
-      '#format' => $default_block['format'],
-    ];
-  }
-  return $form;
-}
-
-/**
- * Implements hook_block_save().
- */
-function agri_digitization_toolbox_block_save($delta = '', $edit = []) {
-  if ($delta == 'agri_digitization_entry_point') {
-    variable_set('agri_digitization_block_data', $edit['agri_digitization_block_data']);
-    drupal_flush_all_caches();
-  }
 }
 
 /**
@@ -186,6 +101,14 @@ function agri_digitization_toolbox_form_views_exposed_form_alter(&$form, &$form_
     // Rename default "True/False" options for Digitisation flag status.
     $form['flagged']['#options'][0] = "Not included";
     $form['flagged']['#options'][1] = "Included";
+  }
+
+  // Remove second level on filter "Geographical location".
+  // Views: agri_digitization_toolbox_projects_indexed_search - projects-list.
+  if ($form['#id'] == AGRI_DIGITIZATION_TOOLBOX_PROJECTS_PROJECTS_LIST_EXPOSED_FORM_ID) {
+    $options = $form['field_proj_geographical_area']['#options'];
+    $options = array_filter($options, '_agri_projects_clean_filter_options');
+    $form['field_proj_geographical_area']['#options'] = $options;
   }
 }
 

@@ -1154,270 +1154,6 @@ function agri_projects_views_default_views() {
   $export['agri_projects_manage_projects'] = $view;
 
   $view = new view();
-  $view->name = 'projects_blocks';
-  $view->description = '';
-  $view->tag = 'AGRI Projects';
-  $view->base_table = 'node';
-  $view->human_name = 'Projects Blocks';
-  $view->core = 7;
-  $view->api_version = '3.0';
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-
-  /* Display: Master */
-  $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['use_more_always'] = FALSE;
-  $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['cache']['type'] = 'none';
-  $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'some';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '5';
-  $handler->display->display_options['style_plugin'] = 'table';
-  $handler->display->display_options['style_options']['columns'] = array(
-    'title' => 'title',
-  );
-  $handler->display->display_options['style_options']['default'] = '-1';
-  $handler->display->display_options['style_options']['info'] = array(
-    'title' => array(
-      'sortable' => 0,
-      'default_sort_order' => 'asc',
-      'align' => '',
-      'separator' => '',
-      'empty_column' => 0,
-    ),
-  );
-  /* Field: Content: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'node';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = '';
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Sort criterion: Content: Post date */
-  $handler->display->display_options['sorts']['created']['id'] = 'created';
-  $handler->display->display_options['sorts']['created']['table'] = 'node';
-  $handler->display->display_options['sorts']['created']['field'] = 'created';
-  $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status']['id'] = 'status';
-  $handler->display->display_options['filters']['status']['table'] = 'node';
-  $handler->display->display_options['filters']['status']['field'] = 'status';
-  $handler->display->display_options['filters']['status']['value'] = 1;
-  $handler->display->display_options['filters']['status']['group'] = 1;
-  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'node';
-  $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'innovative_action' => 'innovative_action',
-  );
-
-  /* Display: Block: Latest research projects */
-  $handler = $view->new_display('block', 'Block: Latest research projects', 'block');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Latest research projects';
-  $handler->display->display_options['display_description'] = 'Latest research projects displayed on entrance page';
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Content: Post date */
-  $handler->display->display_options['fields']['created']['id'] = 'created';
-  $handler->display->display_options['fields']['created']['table'] = 'node';
-  $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['label'] = 'Published on';
-  $handler->display->display_options['fields']['created']['date_format'] = 'eip_agri_short';
-  /* Field: Content: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'node';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = 'Project name';
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Start/ending dates */
-  $handler->display->display_options['fields']['field_projects_dates']['id'] = 'field_projects_dates';
-  $handler->display->display_options['fields']['field_projects_dates']['table'] = 'field_data_field_projects_dates';
-  $handler->display->display_options['fields']['field_projects_dates']['field'] = 'field_projects_dates';
-  $handler->display->display_options['fields']['field_projects_dates']['settings'] = array(
-    'format_type' => 'eip_agri_medium',
-    'fromto' => 'both',
-    'multiple_number' => '',
-    'multiple_from' => '',
-    'multiple_to' => '',
-  );
-  /* Field: Content: Project code */
-  $handler->display->display_options['fields']['field_projects_project_code']['id'] = 'field_projects_project_code';
-  $handler->display->display_options['fields']['field_projects_project_code']['table'] = 'field_data_field_projects_project_code';
-  $handler->display->display_options['fields']['field_projects_project_code']['field'] = 'field_projects_project_code';
-  /* Field: Content: Link */
-  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['label'] = '';
-  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['view_node']['text'] = 'View project';
-  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
-  $handler->display->display_options['filter_groups']['operator'] = 'OR';
-  $handler->display->display_options['filter_groups']['groups'] = array(
-    1 => 'AND',
-    2 => 'AND',
-  );
-  $handler->display->display_options['defaults']['filters'] = FALSE;
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status']['id'] = 'status';
-  $handler->display->display_options['filters']['status']['table'] = 'node';
-  $handler->display->display_options['filters']['status']['field'] = 'status';
-  $handler->display->display_options['filters']['status']['value'] = 1;
-  $handler->display->display_options['filters']['status']['group'] = 1;
-  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'node';
-  $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'research_project' => 'research_project',
-  );
-  $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status_1']['id'] = 'status_1';
-  $handler->display->display_options['filters']['status_1']['table'] = 'node';
-  $handler->display->display_options['filters']['status_1']['field'] = 'status';
-  $handler->display->display_options['filters']['status_1']['value'] = '1';
-  $handler->display->display_options['filters']['status_1']['group'] = 2;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type_1']['id'] = 'type_1';
-  $handler->display->display_options['filters']['type_1']['table'] = 'node';
-  $handler->display->display_options['filters']['type_1']['field'] = 'type';
-  $handler->display->display_options['filters']['type_1']['value'] = array(
-    'project' => 'project',
-  );
-  $handler->display->display_options['filters']['type_1']['group'] = 2;
-  /* Filter criterion: Content: Project type (field_proj_project_type) */
-  $handler->display->display_options['filters']['field_proj_project_type_value']['id'] = 'field_proj_project_type_value';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['table'] = 'field_data_field_proj_project_type';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['field'] = 'field_proj_project_type_value';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['value'] = 'Research project';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['group'] = 2;
-
-  /* Display: Block: Latest innovative actions */
-  $handler = $view->new_display('block', 'Block: Latest innovative actions', 'block_1');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Latest innovative actions';
-  $handler->display->display_options['display_description'] = 'Latest Innovative actions displayed on entrance page';
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Content: Post date */
-  $handler->display->display_options['fields']['created']['id'] = 'created';
-  $handler->display->display_options['fields']['created']['table'] = 'node';
-  $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['label'] = 'Published on';
-  $handler->display->display_options['fields']['created']['date_format'] = 'eip_agri_short';
-  /* Field: Content: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'node';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = 'Action name';
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Link */
-  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['label'] = '';
-  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['view_node']['text'] = 'View action';
-  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
-  $handler->display->display_options['filter_groups']['operator'] = 'OR';
-  $handler->display->display_options['filter_groups']['groups'] = array(
-    1 => 'AND',
-    2 => 'AND',
-  );
-  $handler->display->display_options['defaults']['filters'] = FALSE;
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status']['id'] = 'status';
-  $handler->display->display_options['filters']['status']['table'] = 'node';
-  $handler->display->display_options['filters']['status']['field'] = 'status';
-  $handler->display->display_options['filters']['status']['value'] = 1;
-  $handler->display->display_options['filters']['status']['group'] = 1;
-  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'node';
-  $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'innovative_action' => 'innovative_action',
-  );
-  $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: Content: Multi-stakeholder innovative action or project (field_projects_status) */
-  $handler->display->display_options['filters']['field_projects_status_value']['id'] = 'field_projects_status_value';
-  $handler->display->display_options['filters']['field_projects_status_value']['table'] = 'field_data_field_projects_status';
-  $handler->display->display_options['filters']['field_projects_status_value']['field'] = 'field_projects_status_value';
-  $handler->display->display_options['filters']['field_projects_status_value']['value'] = array(
-    1 => '1',
-  );
-  $handler->display->display_options['filters']['field_projects_status_value']['group'] = 1;
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status_1']['id'] = 'status_1';
-  $handler->display->display_options['filters']['status_1']['table'] = 'node';
-  $handler->display->display_options['filters']['status_1']['field'] = 'status';
-  $handler->display->display_options['filters']['status_1']['value'] = '1';
-  $handler->display->display_options['filters']['status_1']['group'] = 2;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type_1']['id'] = 'type_1';
-  $handler->display->display_options['filters']['type_1']['table'] = 'node';
-  $handler->display->display_options['filters']['type_1']['field'] = 'type';
-  $handler->display->display_options['filters']['type_1']['value'] = array(
-    'project' => 'project',
-  );
-  $handler->display->display_options['filters']['type_1']['group'] = 2;
-  /* Filter criterion: Content: Project type (field_proj_project_type) */
-  $handler->display->display_options['filters']['field_proj_project_type_value']['id'] = 'field_proj_project_type_value';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['table'] = 'field_data_field_proj_project_type';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['field'] = 'field_proj_project_type_value';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['value'] = 'Innovative action';
-  $handler->display->display_options['filters']['field_proj_project_type_value']['group'] = 2;
-
-  /* Display: Block: Latest needs for research from practice */
-  $handler = $view->new_display('block', 'Block: Latest needs for research from practice', 'block_2');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Latest needs for research from practice';
-  $handler->display->display_options['display_description'] = 'Latest needs for research from practice displayed on entrance page';
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Content: Post date */
-  $handler->display->display_options['fields']['created']['id'] = 'created';
-  $handler->display->display_options['fields']['created']['table'] = 'node';
-  $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['label'] = 'Published on';
-  $handler->display->display_options['fields']['created']['date_format'] = 'eip_agri_short';
-  /* Field: Content: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'node';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Link */
-  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
-  $handler->display->display_options['fields']['view_node']['label'] = '';
-  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['view_node']['text'] = 'View NFRFP';
-  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
-  $handler->display->display_options['defaults']['filters'] = FALSE;
-  /* Filter criterion: Content: Published */
-  $handler->display->display_options['filters']['status']['id'] = 'status';
-  $handler->display->display_options['filters']['status']['table'] = 'node';
-  $handler->display->display_options['filters']['status']['field'] = 'status';
-  $handler->display->display_options['filters']['status']['value'] = 1;
-  $handler->display->display_options['filters']['status']['group'] = 1;
-  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-  /* Filter criterion: Content: Type */
-  $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'node';
-  $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'needs_for_research_from_practice' => 'needs_for_research_from_practice',
-  );
-  $export['projects_blocks'] = $view;
-
-  $view = new view();
   $view->name = 'projects_indexed_search_sub_pages';
   $view->description = '';
   $view->tag = 'AGRI Projects';
@@ -2232,6 +1968,96 @@ function agri_projects_views_default_views() {
   $handler->display->display_options['use_batch'] = 'batch';
   $handler->display->display_options['return_path'] = 'find-connect/projects';
   $handler->display->display_options['segment_size'] = '25';
+
+  /* Display: Homepage Projects block */
+  $handler = $view->new_display('block', 'Homepage Projects block', 'home_projects');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Latest Projects';
+  $handler->display->display_options['defaults']['css_class'] = FALSE;
+  $handler->display->display_options['css_class'] = 'latest-projects homepage';
+  $handler->display->display_options['defaults']['use_more'] = FALSE;
+  $handler->display->display_options['use_more'] = TRUE;
+  $handler->display->display_options['defaults']['use_more_always'] = FALSE;
+  $handler->display->display_options['defaults']['use_more_always'] = FALSE;
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['defaults']['use_more_text'] = FALSE;
+  $handler->display->display_options['use_more_text'] = 'View all projects';
+  $handler->display->display_options['defaults']['access'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['defaults']['pager'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '7';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'default';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Indexed Content: Project type */
+  $handler->display->display_options['fields']['field_proj_project_type']['id'] = 'field_proj_project_type';
+  $handler->display->display_options['fields']['field_proj_project_type']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['fields']['field_proj_project_type']['field'] = 'field_proj_project_type';
+  $handler->display->display_options['fields']['field_proj_project_type']['label'] = '';
+  $handler->display->display_options['fields']['field_proj_project_type']['element_label_colon'] = FALSE;
+  /* Field: Indexed Content: Geographical location */
+  $handler->display->display_options['fields']['field_proj_geographical_area']['id'] = 'field_proj_geographical_area';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['field'] = 'field_proj_geographical_area';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['label'] = '';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['field_proj_geographical_area']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['field_proj_geographical_area']['alter']['text'] = '[field_proj_geographical_area] - ';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_proj_geographical_area']['link_to_entity'] = 0;
+  $handler->display->display_options['fields']['field_proj_geographical_area']['view_mode'] = 'full';
+  $handler->display->display_options['fields']['field_proj_geographical_area']['bypass_access'] = 0;
+  /* Field: Indexed Content: Date created */
+  $handler->display->display_options['fields']['created']['id'] = 'created';
+  $handler->display->display_options['fields']['created']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['fields']['created']['field'] = 'created';
+  $handler->display->display_options['fields']['created']['label'] = '';
+  $handler->display->display_options['fields']['created']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['created']['alter']['text'] = '[field_proj_geographical_area] [created] ';
+  $handler->display->display_options['fields']['created']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['created']['date_format'] = 'custom';
+  $handler->display->display_options['fields']['created']['custom_date_format'] = 'd F Y';
+  $handler->display->display_options['fields']['created']['second_date_format'] = 'eip_agri_long';
+  $handler->display->display_options['fields']['created']['link_to_entity'] = 0;
+  /* Field: Indexed Content: Project title */
+  $handler->display->display_options['fields']['field_proj_title']['id'] = 'field_proj_title';
+  $handler->display->display_options['fields']['field_proj_title']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['fields']['field_proj_title']['field'] = 'field_proj_title';
+  $handler->display->display_options['fields']['field_proj_title']['label'] = '';
+  $handler->display->display_options['fields']['field_proj_title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_proj_title']['link_to_entity'] = 1;
+  /* Field: Content: Link */
+  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['label'] = '';
+  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['view_node']['text'] = 'Read more';
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Indexed Content: Content type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'project' => 'project',
+  );
+  $handler->display->display_options['filters']['type']['group'] = 1;
+  /* Filter criterion: Indexed Content: Status */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'search_api_index_core_node_index';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = array(
+    1 => '1',
+  );
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['block_description'] = 'AGRI Homepage Projects block';
   $export['projects_indexed_search_sub_pages'] = $view;
 
   $view = new view();
@@ -2439,7 +2265,7 @@ function agri_projects_views_default_views() {
   /* Display: Page: Needs for research */
   $handler = $view->new_display('page', 'Page: Needs for research', 'page_2');
   $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Needs for research from practice';
+  $handler->display->display_options['title'] = 'Research needs';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Content: Post date */
   $handler->display->display_options['fields']['created']['id'] = 'created';
@@ -2872,7 +2698,7 @@ function agri_projects_views_default_views() {
   /* Display: Page: Project ideas */
   $handler = $view->new_display('page', 'Page: Project ideas', 'page_3');
   $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Project Ideas';
+  $handler->display->display_options['title'] = 'Project ideas';
   $handler->display->display_options['defaults']['access'] = FALSE;
   $handler->display->display_options['access']['type'] = 'role';
   $handler->display->display_options['access']['role'] = array(
@@ -3041,7 +2867,7 @@ function agri_projects_views_default_views() {
   $handler->display->display_options['filters']['field_projects_language_value_i18n']['reduce_duplicates'] = TRUE;
   $handler->display->display_options['path'] = 'find-connect/project-ideas';
   $handler->display->display_options['menu']['type'] = 'normal';
-  $handler->display->display_options['menu']['title'] = 'Project Ideas';
+  $handler->display->display_options['menu']['title'] = 'Project ideas';
   $handler->display->display_options['menu']['weight'] = '-44';
   $handler->display->display_options['menu']['name'] = 'main-menu';
   $handler->display->display_options['menu']['context'] = 0;
@@ -3439,11 +3265,11 @@ function agri_projects_views_default_views() {
   $handler->display->display_options['fields']['field_projects_language']['id'] = 'field_projects_language';
   $handler->display->display_options['fields']['field_projects_language']['table'] = 'field_data_field_projects_language';
   $handler->display->display_options['fields']['field_projects_language']['field'] = 'field_projects_language';
-  /* Field: Content: Practice oriented results (English) */
+  /* Field: Content: Main expected outcomes (fill in if the innovative action or project is still ongoing) */
   $handler->display->display_options['fields']['field_projects_outcomes_eng']['id'] = 'field_projects_outcomes_eng';
   $handler->display->display_options['fields']['field_projects_outcomes_eng']['table'] = 'field_data_field_projects_outcomes_eng';
   $handler->display->display_options['fields']['field_projects_outcomes_eng']['field'] = 'field_projects_outcomes_eng';
-  /* Field: Content: Practice oriented results (original language) */
+  /* Field: Content: Main activities to obtain the objectives */
   $handler->display->display_options['fields']['field_projects_outcomes']['id'] = 'field_projects_outcomes';
   $handler->display->display_options['fields']['field_projects_outcomes']['table'] = 'field_data_field_projects_outcomes';
   $handler->display->display_options['fields']['field_projects_outcomes']['field'] = 'field_projects_outcomes';

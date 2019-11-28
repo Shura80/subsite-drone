@@ -34,3 +34,22 @@ function agri_stakeholder_menu() {
 
   return $items;
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agri_stakeholder_form_views_exposed_form_alter(&$form, $form_state) {
+
+  // Remove second level on filter "Geographical location".
+  $ids = array(
+    // Views: agri_stakeholder_projects_page.
+    'views-exposed-form-agri-stakeholder-projects-page-page-1',
+    'views-exposed-form-agri-stakeholder-projects-page-page-2',
+    'views-exposed-form-agri-stakeholder-projects-page-page-3',
+  );
+  if (in_array($form['#id'], $ids)) {
+    $options = $form['field_proj_geographical_area']['#options'];
+    $options = array_filter($options, '_agri_projects_clean_filter_options');
+    $form['field_proj_geographical_area']['#options'] = $options;
+  }
+}

@@ -11,6 +11,42 @@
 function agri_core_user_default_permissions() {
   $permissions = array();
 
+  // Exported permission: 'access bean overview'.
+  $permissions['access bean overview'] = array(
+    'name' => 'access bean overview',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'administer bean settings'.
+  $permissions['administer bean settings'] = array(
+    'name' => 'administer bean settings',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'administer bean types'.
+  $permissions['administer bean types'] = array(
+    'name' => 'administer bean types',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'administer beans'.
+  $permissions['administer beans'] = array(
+    'name' => 'administer beans',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
   // Exported permission: 'administer checked out documents'.
   $permissions['administer checked out documents'] = array(
     'name' => 'administer checked out documents',
@@ -65,6 +101,24 @@ function agri_core_user_default_permissions() {
       'authenticated user' => 'authenticated user',
     ),
     'module' => 'content_lock',
+  );
+
+  // Exported permission: 'create any agri_static_block bean'.
+  $permissions['create any agri_static_block bean'] = array(
+    'name' => 'create any agri_static_block bean',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'delete any agri_static_block bean'.
+  $permissions['delete any agri_static_block bean'] = array(
+    'name' => 'delete any agri_static_block bean',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
   );
 
   // Exported permission: 'delete own comments'.
@@ -168,6 +222,24 @@ function agri_core_user_default_permissions() {
       'editor' => 'editor',
     ),
     'module' => 'taxonomy',
+  );
+
+  // Exported permission: 'edit any agri_static_block bean'.
+  $permissions['edit any agri_static_block bean'] = array(
+    'name' => 'edit any agri_static_block bean',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'edit bean view mode'.
+  $permissions['edit bean view mode'] = array(
+    'name' => 'edit bean view mode',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
   );
 
   // Exported permission: 'edit own comments'.
@@ -369,6 +441,15 @@ function agri_core_user_default_permissions() {
     'module' => 'workbench_moderation',
   );
 
+  // Exported permission: 'show format selection for bean'.
+  $permissions['show format selection for bean'] = array(
+    'name' => 'show format selection for bean',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'better_formats',
+  );
+
   // Exported permission: 'unflag agri_core_report_forum_topics'.
   $permissions['unflag agri_core_report_forum_topics'] = array(
     'name' => 'unflag agri_core_report_forum_topics',
@@ -396,6 +477,35 @@ function agri_core_user_default_permissions() {
       'authenticated user' => 'authenticated user',
     ),
     'module' => 'search_api_saved_searches',
+  );
+
+  // Exported permission: 'view any agri_static_block bean'.
+  $permissions['view any agri_static_block bean'] = array(
+    'name' => 'view any agri_static_block bean',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'anonymous user' => 'anonymous user',
+      'authenticated user' => 'authenticated user',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'view bean page'.
+  $permissions['view bean page'] = array(
+    'name' => 'view bean page',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
+  );
+
+  // Exported permission: 'view bean revisions'.
+  $permissions['view bean revisions'] = array(
+    'name' => 'view bean revisions',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'bean',
   );
 
   return $permissions;

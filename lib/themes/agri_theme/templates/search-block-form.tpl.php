@@ -32,7 +32,7 @@
 
 <div class="input-group">
   <?php print $search['search_block_form']; ?>
-  <span class="input-group-btn">
+  <span class="input-group-btn glyphicon glyphicon-search">
     <?php print $search['actions']; ?>
   </span>
 </div>

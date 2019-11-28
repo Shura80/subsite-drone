@@ -181,8 +181,8 @@ function agri_stakeholder_views_default_views() {
   $handler->display->display_options['footer']['agri_core_link_page']['id'] = 'agri_core_link_page';
   $handler->display->display_options['footer']['agri_core_link_page']['table'] = 'views';
   $handler->display->display_options['footer']['agri_core_link_page']['field'] = 'agri_core_link_page';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_text'] = 'View all Operational Groups';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_path'] = 'projects/operational-groups';
+  $handler->display->display_options['footer']['agri_core_link_page']['text'] = 'View all Operational Groups';
+  $handler->display->display_options['footer']['agri_core_link_page']['path'] = 'eip-agri-projects/projects/operational-groups';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Content: Geographical location */
   $handler->display->display_options['fields']['field_proj_geographical_area']['id'] = 'field_proj_geographical_area';
@@ -282,14 +282,14 @@ function agri_stakeholder_views_default_views() {
   $handler->display->display_options['footer']['agri_core_link_page']['id'] = 'agri_core_link_page';
   $handler->display->display_options['footer']['agri_core_link_page']['table'] = 'views';
   $handler->display->display_options['footer']['agri_core_link_page']['field'] = 'agri_core_link_page';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_text'] = 'View all Multi-Actor Projects';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_path'] = 'projects/multi-actor-projects';
+  $handler->display->display_options['footer']['agri_core_link_page']['text'] = 'View all Multi-Actor Projects';
+  $handler->display->display_options['footer']['agri_core_link_page']['path'] = 'eip-agri-projects/projects/multi-actor-projects';
   /* Footer: Global: Create a custom link page */
   $handler->display->display_options['footer']['agri_core_link_page_1']['id'] = 'agri_core_link_page_1';
   $handler->display->display_options['footer']['agri_core_link_page_1']['table'] = 'views';
   $handler->display->display_options['footer']['agri_core_link_page_1']['field'] = 'agri_core_link_page';
-  $handler->display->display_options['footer']['agri_core_link_page_1']['custom_text'] = 'View all Thematic Networks';
-  $handler->display->display_options['footer']['agri_core_link_page_1']['custom_path'] = 'projects/thematic-networks';
+  $handler->display->display_options['footer']['agri_core_link_page_1']['text'] = 'View all Thematic Networks';
+  $handler->display->display_options['footer']['agri_core_link_page_1']['path'] = 'eip-agri-projects/projects/thematic-networks';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Content: Project Identification */
   $handler->display->display_options['fields']['field_proj_sfc_identification']['id'] = 'field_proj_sfc_identification';
@@ -1277,8 +1277,8 @@ function agri_stakeholder_views_default_views() {
   $handler->display->display_options['footer']['agri_core_link_page']['id'] = 'agri_core_link_page';
   $handler->display->display_options['footer']['agri_core_link_page']['table'] = 'views';
   $handler->display->display_options['footer']['agri_core_link_page']['field'] = 'agri_core_link_page';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_text'] = 'view more';
-  $handler->display->display_options['footer']['agri_core_link_page']['custom_path'] = 'publications';
+  $handler->display->display_options['footer']['agri_core_link_page']['text'] = 'view more';
+  $handler->display->display_options['footer']['agri_core_link_page']['path'] = 'eip-agri-projects/publications';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Content: Publication type */
   $handler->display->display_options['fields']['field_publication_type']['id'] = 'field_publication_type';

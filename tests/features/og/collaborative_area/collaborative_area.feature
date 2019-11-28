@@ -23,7 +23,7 @@ Feature: AGRI Collaborative area
     And I have the "member" role in the "BDD Collaborative area Community" group
     And I am on "/user"
     When I click "BDD Collaborative area Community"
-    Then I should not see the link "Group"
+    Then I should not see "Group" in the ".tabs" element
 
   @og_permission
   Scenario: Check og permission for the administrator user

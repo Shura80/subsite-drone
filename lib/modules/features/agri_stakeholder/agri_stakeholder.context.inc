@@ -42,19 +42,19 @@ function agri_stakeholder_context_default_contexts() {
         'views-778c714f89405a3f72cac5489a071dd2' => array(
           'module' => 'views',
           'delta' => '778c714f89405a3f72cac5489a071dd2',
-          'region' => 'content_first',
+          'region' => 'content_bottom_first',
           'weight' => '-10',
         ),
         'views-d9fc9c927f8096f499df1d8bc1f4a6bd' => array(
           'module' => 'views',
           'delta' => 'd9fc9c927f8096f499df1d8bc1f4a6bd',
-          'region' => 'content_second',
+          'region' => 'content_bottom_second',
           'weight' => '-10',
         ),
         'views-2a2427e2ddeae72339de69ef07a6114c' => array(
           'module' => 'views',
           'delta' => '2a2427e2ddeae72339de69ef07a6114c',
-          'region' => 'content_third',
+          'region' => 'content_bottom_third',
           'weight' => '-10',
         ),
       ),

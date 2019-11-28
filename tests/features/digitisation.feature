@@ -147,19 +147,18 @@ Feature: This feature aim to setup tests for both backend and frontend
     And I am at "digitising-agriculture"
     And I click "BDD Digitisation Page"
     # Check internal page with no country filter applied.
-    Then I should see the link "Digitising Agriculture" in the "sidebar_left" region
+    Then I should see the link "Digital Agriculture" in the "sidebar_left" region
     And I should see the link "BDD Digitisation Page" in the "sidebar_left" region
     And I should see "BDD Digitisation News" in the "content_top_left" region
     And I should see "BDD Digitisation Publication" in the "content_top_left" region
     And I should see "BDD Digitisation Focus Group" in the "content_top_left" region
     # Check that the first menu link (block title) always leads to Digitisation splash page.
-    When I click "Digitising Agriculture" in the "sidebar_left" region
-    Then I should see the heading "Digitising Agriculture"
+    When I click "Digital Agriculture" in the "sidebar_left" region
+    Then I should see the heading "Digital Agriculture"
     # Check that also breadcrumb leads to splash page.
     When I click "BDD Digitisation Page"
-    Then I should see the link "Digitising Agriculture" in the "featured" region
-    When I click "Digitising Agriculture" in the "featured" region
-    Then I should see the heading "Digitising Agriculture"
+    When I click "Digital Agriculture" in the "featured" region
+    Then I should see the heading "Digital Agriculture"
     # Check the landing page.
     When I am at "digitising-agriculture"
     # Solr index for related content.
@@ -183,7 +182,7 @@ Feature: This feature aim to setup tests for both backend and frontend
     # This publication has same country but non-matching tag, so it should not appear in internal filtered page.
     And I should not see "BDD Digitisation Publication Excluded" in the "content_top_left" region
     # Check that go back link preserve country filter if it has been set.
-    When I click "Digitising Agriculture" in the "sidebar_left" region
+    When I click "Digital Agriculture" in the "sidebar_left" region
     Then I should see the link "BDD Digitisation News" in the "content_top" region
     And I should see the link "BDD Digitisation Publication" in the "sidebar_right" region
     But I should not see "BDD Digitisation Publication Excluded" in the "sidebar_right" region
@@ -456,7 +455,7 @@ Feature: This feature aim to setup tests for both backend and frontend
     And I should see the link "BDD Project eng" in the "content"
     But I should not see the link "BDD Project native lang" in the "content"
     And I should see the link "BDD Project title fallback" in the "content"
-    When I click "Digitising Agriculture"
+    When I click "Digital Agriculture" in the "featured" region
     And I click "BDD Projects Titles"
     Then I click "BDD Digital HUB"
     Then I should see the link "BDD Project eng" in the "content_top_left"

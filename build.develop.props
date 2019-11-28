@@ -7,6 +7,8 @@ db.password = agri
 db.host = 127.0.0.1
 db.port = 3306
 db.url = ${db.type}://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}
+db.dl.username = agri-eip
+db.dl.password = Kpfa-xCcdFhXQ_B6hihR
 
 # Admin user 1.
 admin.username = fpfis-admin

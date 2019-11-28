@@ -1,7 +1,7 @@
 @api @solr
 Feature: Test functionality of search site core
 
-  Scenario: As anonymous user I search content.
+  Scenario: As anonymous user I search content and check search page layout.
     # Create a published Basic Page.
     Given I am viewing a "page" content in "published" status:
       | title | BDD page published                                       |
@@ -12,26 +12,12 @@ Feature: Test functionality of search site core
       | body  | Lorem ipsum dolor sit amet, consectetur adipiscing elit. |
     And I send the "page" to the Solr search index
     When I am on "/search/site/"
-    And I fill in "Search" with "BDD page"
+    Then I should see the text "Filter by content type" in the "sidebar_left" region
+    And I should see the text "Sort by" in the "sidebar_right" region
+    When I fill in "edit-keys" with "BDD page"
     And I press the "Search" button
     Then I should see "BDD page published" in the "content" region
     But I should not see "BDD page draft" in the "content" region
-
-  Scenario: Check search page layout
-    # Create a published Basic Page 1.
-    Given I am viewing a "page" content in "published" status:
-      | title | BDD page published 1                                     |
-      | body  | Lorem ipsum dolor sit amet, consectetur adipiscing elit. |
-    # Create a published Basic Page 2.
-    And I am viewing a "page" content in "published" status:
-      | title | BDD page published 2                                     |
-      | body  | Lorem ipsum dolor sit amet, consectetur adipiscing elit. |
-    And I send the "page" to the Solr search index
-    When I am on "/search/site/"
-    And I fill in "Search" with "BDD"
-    And I press the "Search" button
-    Then I should see the text "Filter by content type" in the "sidebar_left" region
-    And I should see the text "Sort by" in the "sidebar_right" region
 
   Scenario Outline: Check for bundles that shows a Solr related content block.
     # Crate content of any type that is supposed to be searchable and check related content.

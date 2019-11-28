@@ -45,28 +45,15 @@
  */
 ?>
 
-<div id="<?php print $block_html_id; ?>"
-     class="<?php print $classes; ?> <?php if ($panel): ?>
-      <?php print 'panel panel-default clearfix'; ?>
-    <?php endif; ?>">
+<div id="<?php print $block_html_id; ?>" class="panel panel-default clearfix <?php print $classes; ?>">
 
   <?php print render($title_prefix); ?>
   <?php if ($title && $block->subject): ?>
-    <div class="block-title <?php if ($panel): ?>
-      <?php print 'panel-heading'; ?>
-   <?php endif; ?>">
+    <div class="block-title panel-heading">
       <?php print $block->subject; ?>
     </div>
   <?php endif; ?>
   <?php print render($title_suffix); ?>
 
-  <div class="<?php if ($panel && $body_class): ?>
-    <?php print 'panel-body'; ?>
- <?php endif; ?> content"<?php print $content_attributes; ?>>
-    <?php print $content; ?>
-  </div>
-  <div class="buttons-latest-news-events">
-    <?php print l(t('View all'), 'news-events', array('attributes' => array('class' => 'view-all'))); ?>
-    <?php print l(t('Subscribe'), 'news-events/feed', array('attributes' => array('class' => 'subscribe'))); ?>
-  </div>
+  <?php print $content; ?>
 </div>

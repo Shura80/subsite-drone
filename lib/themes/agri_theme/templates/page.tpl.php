@@ -110,27 +110,18 @@
 <div id="wrapper-container">
 
   <!-- Header -->
-  <div>
     <?php print $region_header_top; ?>
     <div id="layout-header">
       <div class="container">
-        <div class="row">
-          <div class="col-sm-3">
-            <?php print $logo; ?>
-          </div>
-          <div class="col-sm-9">
-            <div class="pull-right">
-              <div id="banner-image-right" class="hidden-sm hidden-xs">
-                <?php print $service_menu; ?>
-                <?php print $region_header_right; ?>
-              </div>
-            </div>
+        <div class="header-top-content">
+          <?php print $logo; ?>
+          <div id="banner-image-right" class="hidden-sm hidden-xs">
+            <?php print $region_header_right; ?>
           </div>
         </div>
       </div>
     </div>
     <!-- /#layout-header -->
-  </div>
   <!-- /Header -->
 
   <div class="region-featured-wrapper <?php print $sidebar_visible_sm; ?>">
@@ -172,14 +163,17 @@
   <?php endif; ?>
 
   <div id="layout-body" class="container">
-    <div class="row">
-      <div class="col-lg-<?php print $col_tools['lg']; ?>
-        col-md-<?php print $col_tools['md']; ?>
-        col-sm-<?php print $col_tools['sm']; ?>
-        col-xs-<?php print $col_tools['xs']; ?>">
-        <?php print $region_tools; ?>
+
+    <?php if (!empty($region_tools)): ?>
+      <div class="row">
+        <div class="col-lg-<?php print $col_tools['lg']; ?>
+          col-md-<?php print $col_tools['md']; ?>
+          col-sm-<?php print $col_tools['sm']; ?>
+          col-xs-<?php print $col_tools['xs']; ?>">
+          <?php print $region_tools; ?>
+        </div>
       </div>
-    </div>
+    <?php endif; ?>
 
     <?php if ($messages): ?>
       <div id="messages">
@@ -221,7 +215,9 @@
           </div>
         <?php endif; ?>
 
-        <?php print $region_help; ?>
+        <?php if (!empty($region_help)): ?>
+          <?php print $region_help; ?>
+        <?php endif; ?>
 
         <?php if ($action_links): ?>
           <ul class="action-links">
@@ -229,7 +225,9 @@
           </ul>
         <?php endif; ?>
 
-        <?php print $region_content_top; ?>
+        <?php if (!empty($region_content_top)): ?>
+          <?php print $region_content_top; ?>
+        <?php endif; ?>
 
         <?php if ($page['content_top_left'] || $page['content_top_right']): ?>
           <div class="row">
@@ -252,21 +250,23 @@
           </div>
         <?php endif; ?>
 
-        <div class="row">
-          <div class="col-lg-<?php print $col_content['lg']; ?>
-            col-md-<?php print $col_content['md']; ?>
-            col-sm-<?php print $col_content['sm']; ?>
-            col-xs-<?php print $col_content['xs']; ?>">
-            <?php print $region_content; ?>
-          </div>
+        <?php if (!empty($region_content) || !empty($region_content_right)): ?>
+          <div class="row">
+            <div class="col-lg-<?php print $col_content['lg']; ?>
+              col-md-<?php print $col_content['md']; ?>
+              col-sm-<?php print $col_content['sm']; ?>
+              col-xs-<?php print $col_content['xs']; ?>">
+              <?php print $region_content; ?>
+            </div>
 
-          <div class="col-lg-<?php print $col_content_right['lg']; ?>
-            col-md-<?php print $col_content_right['md']; ?>
-            col-sm-<?php print $col_content_right['sm']; ?>
-            col-xs-<?php print $col_content_right['xs']; ?>">
-            <?php print $region_content_right; ?>
+            <div class="col-lg-<?php print $col_content_right['lg']; ?>
+              col-md-<?php print $col_content_right['md']; ?>
+              col-sm-<?php print $col_content_right['sm']; ?>
+              col-xs-<?php print $col_content_right['xs']; ?>">
+              <?php print $region_content_right; ?>
+            </div>
           </div>
-        </div>
+        <?php endif; ?>
 
         <?php if (isset($region_content_index) && $region_content_index): ?>
           <div class="row">
@@ -297,9 +297,30 @@
           </div>
         <?php endif; ?>
 
-        <?php print $feed_icons; ?>
+        <?php if (!empty($feed_icons)): ?>
+          <?php print $feed_icons; ?>
+        <?php endif; ?>
 
-        <?php print $region_content_bottom; ?>
+        <?php if (!empty($region_content_bottom)): ?>
+          <div class="row content-bottom-row">
+            <div class="col-sm-12">
+              <?php print $region_content_bottom; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($print_region_content_bottom_x): ?>
+          <div class="row">
+            <?php foreach ($content_bottom_x as $region_content_block): ?>
+              <?php if (!empty($region_content_block['content'])): ?>
+                <div<?php print drupal_attributes($region_content_block['attributes']); ?>>
+                  <?php print $region_content_block['content']; ?>
+                </div>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+
       </div>
 
       <div class="clearfix visible-sm visible-xs"></div>
@@ -327,14 +348,12 @@
       </div>
     <?php endif; ?>
 
-    <!-- #layout-footer -->
-    <div id="layout-footer">
-      <div class="footer-inner clearfix">
-        <?php print $region_footer; ?>
-      </div>
-    </div>
-    <!-- /#layout-footer -->
-
   </div><!-- /#layout-body -->
+
+  <!-- #layout-footer -->
+  <div id="layout-footer">
+      <?php print $region_footer; ?>
+  </div>
+  <!-- /#layout-footer -->
 
 </div><!-- /#wrapper-container -->

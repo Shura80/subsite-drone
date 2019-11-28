@@ -43,6 +43,64 @@ function agri_core_field_group_info() {
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
   $field_group->api_version = 1;
+  $field_group->identifier = 'group_agri_core_bean_content|bean|agri_static_block|form';
+  $field_group->group_name = 'group_agri_core_bean_content';
+  $field_group->entity_type = 'bean';
+  $field_group->bundle = 'agri_static_block';
+  $field_group->mode = 'form';
+  $field_group->parent_name = '';
+  $field_group->data = array(
+    'label' => 'Content',
+    'weight' => '0',
+    'children' => array(
+      0 => 'field_agri_core_bean_body',
+      1 => 'field_agri_core_bean_image',
+      2 => 'field_agri_core_bean_link',
+      3 => 'title',
+    ),
+    'format_type' => 'tab',
+    'format_settings' => array(
+      'formatter' => 'closed',
+      'instance_settings' => array(
+        'description' => '',
+        'classes' => 'group-agri-core-bean-content field-group-tab',
+        'required_fields' => 1,
+      ),
+    ),
+  );
+  $field_groups['group_agri_core_bean_content|bean|agri_static_block|form'] = $field_group;
+
+  $field_group = new stdClass();
+  $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
+  $field_group->api_version = 1;
+  $field_group->identifier = 'group_agri_core_bean_other|bean|agri_static_block|form';
+  $field_group->group_name = 'group_agri_core_bean_other';
+  $field_group->entity_type = 'bean';
+  $field_group->bundle = 'agri_static_block';
+  $field_group->mode = 'form';
+  $field_group->parent_name = '';
+  $field_group->data = array(
+    'label' => 'Other',
+    'weight' => '1',
+    'children' => array(
+      0 => 'label',
+      1 => 'view_mode',
+    ),
+    'format_type' => 'tab',
+    'format_settings' => array(
+      'formatter' => 'closed',
+      'instance_settings' => array(
+        'description' => '',
+        'classes' => '',
+        'required_fields' => 1,
+      ),
+    ),
+  );
+  $field_groups['group_agri_core_bean_other|bean|agri_static_block|form'] = $field_group;
+
+  $field_group = new stdClass();
+  $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
+  $field_group->api_version = 1;
   $field_group->identifier = 'group_agri_stakeholders|node|collaborative_area|form';
   $field_group->group_name = 'group_agri_stakeholders';
   $field_group->entity_type = 'node';
@@ -669,6 +727,7 @@ function agri_core_field_group_info() {
   t('Images');
   t('Land owner');
   t('Metadata');
+  t('Other');
   t('Other info');
   t('Position in the organization and Sector working in hidden fields');
   t('Press');

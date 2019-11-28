@@ -123,19 +123,19 @@ Feature: Test for content type Projects
 
     # Show Partners info
     And I am on "/search/site/"
-    And I fill in "Search" with "BDD+partner+organization+name"
+    And I fill in "edit-keys" with "BDD+partner+organization+name"
     And I press the "Search" button
     And I should see "BDD projects Operational Group" in the "content" region
-    And I fill in "Search" with "BDD+partner+contact+person"
+    And I fill in "edit-keys" with "BDD+partner+contact+person"
     And I press the "Search" button
     And I should see "BDD projects Operational Group" in the "content" region
-    And I fill in "Search" with "BDD+partner+Street+123"
+    And I fill in "edit-keys" with "BDD+partner+Street+123"
     And I press the "Search" button
     And I should see "BDD projects Operational Group" in the "content" region
-    And I fill in "Search" with "bdd-partner@BDD.local"
+    And I fill in "edit-keys" with "bdd-partner@BDD.local"
     And I press the "Search" button
     And I should see "BDD projects Operational Group" in the "content" region
-    And I fill in "Search" with "+39 333 33 33 333"
+    And I fill in "edit-keys" with "+39 333 33 33 333"
     And I press the "Search" button
     And I should see "BDD projects Operational Group" in the "content" region
 
@@ -267,7 +267,7 @@ Feature: Test for content type Projects
       | Title (in English) field is required.                         |
       | Language field is required.                                   |
 
-  @search_api_node @title_fallback
+  @search_api_node @title_fallback @homepage
   Scenario: As anonymous user I should see the english title instead of the native language one
   in every projects block or list page.
     Given I am viewing a "project" content in "published" status:
@@ -286,3 +286,6 @@ Feature: Test for content type Projects
     And I should see the link "BDD Title eng" in the "content"
     And I should see the link "BDD Title fallback" in the "content"
     But I should not see the link "BDD Title native lang" in the "content"
+    When I am on the homepage
+    Then I should see the link "BDD Title eng" in the "content_bottom_first"
+    And I should see the link "BDD Title fallback" in the "content_bottom_first"

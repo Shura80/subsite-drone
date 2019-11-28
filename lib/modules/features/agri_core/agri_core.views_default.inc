@@ -4437,7 +4437,7 @@ function agri_core_views_default_views() {
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Feature News';
+  $handler->display->display_options['title'] = 'Spotlight news';
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -4447,6 +4447,12 @@ function agri_core_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '5';
   $handler->display->display_options['style_plugin'] = 'default';
   $handler->display->display_options['row_plugin'] = 'fields';
+  /* Footer: Global: Create a custom link page */
+  $handler->display->display_options['footer']['agri_core_link_page']['id'] = 'agri_core_link_page';
+  $handler->display->display_options['footer']['agri_core_link_page']['table'] = 'views';
+  $handler->display->display_options['footer']['agri_core_link_page']['field'] = 'agri_core_link_page';
+  $handler->display->display_options['footer']['agri_core_link_page']['text'] = 'View all news';
+  $handler->display->display_options['footer']['agri_core_link_page']['path'] = 'news-events/news';
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -4553,78 +4559,6 @@ function agri_core_views_default_views() {
     1 => '1',
   );
   $export['core_spotlight'] = $view;
-
-  $view = new view();
-  $view->name = 'core_tweets';
-  $view->description = '';
-  $view->tag = 'AGRI Core';
-  $view->base_table = 'twitter';
-  $view->human_name = 'Core Tweets';
-  $view->core = 7;
-  $view->api_version = '3.0';
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-
-  /* Display: Master */
-  $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Latest Tweets';
-  $handler->display->display_options['use_more'] = TRUE;
-  $handler->display->display_options['use_more_always'] = FALSE;
-  $handler->display->display_options['access']['type'] = 'none';
-  $handler->display->display_options['cache']['type'] = 'none';
-  $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'some';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '3';
-  $handler->display->display_options['style_plugin'] = 'default';
-  $handler->display->display_options['row_plugin'] = 'fields';
-  /* Field: Twitter Account: Profile image */
-  $handler->display->display_options['fields']['profile_image_url']['id'] = 'profile_image_url';
-  $handler->display->display_options['fields']['profile_image_url']['table'] = 'twitter_account';
-  $handler->display->display_options['fields']['profile_image_url']['field'] = 'profile_image_url';
-  $handler->display->display_options['fields']['profile_image_url']['label'] = '';
-  $handler->display->display_options['fields']['profile_image_url']['element_label_colon'] = FALSE;
-  /* Field: Twitter Account: Login name */
-  $handler->display->display_options['fields']['screen_name']['id'] = 'screen_name';
-  $handler->display->display_options['fields']['screen_name']['table'] = 'twitter_account';
-  $handler->display->display_options['fields']['screen_name']['field'] = 'screen_name';
-  $handler->display->display_options['fields']['screen_name']['label'] = '';
-  $handler->display->display_options['fields']['screen_name']['element_label_colon'] = FALSE;
-  /* Field: Twitter: Message text */
-  $handler->display->display_options['fields']['text']['id'] = 'text';
-  $handler->display->display_options['fields']['text']['table'] = 'twitter';
-  $handler->display->display_options['fields']['text']['field'] = 'text';
-  $handler->display->display_options['fields']['text']['label'] = '';
-  $handler->display->display_options['fields']['text']['element_type'] = 'div';
-  $handler->display->display_options['fields']['text']['element_class'] = 'italic grey';
-  $handler->display->display_options['fields']['text']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['text']['link_urls'] = 1;
-  $handler->display->display_options['fields']['text']['link_usernames'] = 1;
-  $handler->display->display_options['fields']['text']['link_hashtags'] = 0;
-  $handler->display->display_options['fields']['text']['link_attributes'] = 1;
-  /* Field: Twitter: Created time */
-  $handler->display->display_options['fields']['created_time']['id'] = 'created_time';
-  $handler->display->display_options['fields']['created_time']['table'] = 'twitter';
-  $handler->display->display_options['fields']['created_time']['field'] = 'created_time';
-  $handler->display->display_options['fields']['created_time']['label'] = '';
-  $handler->display->display_options['fields']['created_time']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['created_time']['element_wrapper_type'] = 'div';
-  $handler->display->display_options['fields']['created_time']['element_wrapper_class'] = 'small grey align-right';
-  $handler->display->display_options['fields']['created_time']['element_default_classes'] = FALSE;
-  $handler->display->display_options['fields']['created_time']['date_format'] = 'time ago';
-  /* Sort criterion: Twitter: Created time */
-  $handler->display->display_options['sorts']['created_time']['id'] = 'created_time';
-  $handler->display->display_options['sorts']['created_time']['table'] = 'twitter';
-  $handler->display->display_options['sorts']['created_time']['field'] = 'created_time';
-  $handler->display->display_options['sorts']['created_time']['order'] = 'DESC';
-  /* Filter criterion: Twitter Account: Protected status */
-  $handler->display->display_options['filters']['protected']['id'] = 'protected';
-  $handler->display->display_options['filters']['protected']['table'] = 'twitter_account';
-  $handler->display->display_options['filters']['protected']['field'] = 'protected';
-  $handler->display->display_options['filters']['protected']['value'] = '0';
-
-  /* Display: Block */
-  $handler = $view->new_display('block', 'Block', 'block');
-  $export['core_tweets'] = $view;
 
   $view = new view();
   $view->name = 'core_user_collaborative_areas';

@@ -635,47 +635,65 @@ function agri_core_context_default_contexts() {
   $context->reactions = array(
     'block' => array(
       'blocks' => array(
+        'agri_core-agri_core_twitter_feeds' => array(
+          'module' => 'agri_core',
+          'delta' => 'agri_core_twitter_feeds',
+          'region' => 'content_top',
+          'weight' => '-9',
+        ),
         'menu-menu-core-quicklinks' => array(
           'module' => 'menu',
           'delta' => 'menu-core-quicklinks',
-          'region' => 'sidebar_right',
-          'weight' => '-42',
-        ),
-        'views-core_news_events-block' => array(
-          'module' => 'views',
-          'delta' => 'core_news_events-block',
-          'region' => 'sidebar_right',
-          'weight' => '-40',
-        ),
-        'agri_core-logo_enrd' => array(
-          'module' => 'agri_core',
-          'delta' => 'logo_enrd',
-          'region' => 'sidebar_right',
-          'weight' => '-10',
-        ),
-        'menu-menu-core-search-find' => array(
-          'module' => 'menu',
-          'delta' => 'menu-core-search-find',
-          'region' => 'content_top_left',
-          'weight' => '-10',
-        ),
-        'agri_digitization_toolbox-agri_digitization_entry_point' => array(
-          'module' => 'agri_digitization_toolbox',
-          'delta' => 'agri_digitization_entry_point',
-          'region' => 'content_top_right',
-          'weight' => '-10',
+          'region' => 'content_top',
+          'weight' => '-8',
         ),
         'views-core_spotlight-block' => array(
           'module' => 'views',
           'delta' => 'core_spotlight-block',
-          'region' => 'content_top',
+          'region' => 'content_top_left',
           'weight' => '-10',
         ),
-        'views-core_tweets-block' => array(
+        'views-events_blocks-event_home_block' => array(
           'module' => 'views',
-          'delta' => 'core_tweets-block',
-          'region' => 'main_bottom',
+          'delta' => 'events_blocks-event_home_block',
+          'region' => 'content_top_right',
           'weight' => '-10',
+        ),
+        'views-2be5cc485f630726ac16a016e1ccfdde' => array(
+          'module' => 'views',
+          'delta' => '2be5cc485f630726ac16a016e1ccfdde',
+          'region' => 'content_bottom_first',
+          'weight' => '-10',
+        ),
+        'bean-funding_opportunities' => array(
+          'module' => 'bean',
+          'delta' => 'funding_opportunities',
+          'region' => 'content_bottom_second',
+          'weight' => '-10',
+        ),
+        'bean-digital_agriculture' => array(
+          'module' => 'bean',
+          'delta' => 'digital_agriculture',
+          'region' => 'content_bottom_second',
+          'weight' => '-9',
+        ),
+        'bean-videos' => array(
+          'module' => 'bean',
+          'delta' => 'videos',
+          'region' => 'content_bottom_third',
+          'weight' => '-10',
+        ),
+        'bean-find_people' => array(
+          'module' => 'bean',
+          'delta' => 'find_people',
+          'region' => 'content_bottom_third',
+          'weight' => '-9',
+        ),
+        'bean-enrd' => array(
+          'module' => 'bean',
+          'delta' => 'enrd',
+          'region' => 'content_bottom_third',
+          'weight' => '-8',
         ),
       ),
     ),
@@ -818,17 +836,23 @@ function agri_core_context_default_contexts() {
   $context->reactions = array(
     'block' => array(
       'blocks' => array(
+        'menu-menu-service-tools' => array(
+          'module' => 'menu',
+          'delta' => 'menu-service-tools',
+          'region' => 'header_right',
+          'weight' => '-15',
+        ),
         'agri_core-agri_user_login' => array(
           'module' => 'agri_core',
           'delta' => 'agri_user_login',
           'region' => 'header_right',
-          'weight' => -9,
+          'weight' => '-5',
         ),
         'search-form' => array(
           'module' => 'search',
           'delta' => 'form',
           'region' => 'header_right',
-          'weight' => '10',
+          'weight' => '-10',
         ),
         'system-main-menu' => array(
           'module' => 'system',
@@ -848,17 +872,23 @@ function agri_core_context_default_contexts() {
           'region' => 'content_bottom',
           'weight' => '-10',
         ),
+        'agri_core-footer_ec_logo' => array(
+          'module' => 'agri_core',
+          'delta' => 'footer_ec_logo',
+          'region' => 'footer',
+          'weight' => '10',
+        ),
         'menu-menu-social-footer' => array(
           'module' => 'menu',
           'delta' => 'menu-social-footer',
           'region' => 'footer',
-          'weight' => '-46',
+          'weight' => '-10',
         ),
         'agri_core-footer_contacts' => array(
           'module' => 'agri_core',
           'delta' => 'footer_contacts',
           'region' => 'footer',
-          'weight' => '-45',
+          'weight' => '0',
         ),
       ),
     ),

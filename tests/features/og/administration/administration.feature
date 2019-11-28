@@ -13,7 +13,7 @@ Feature: EIP-AGRI Administration group
     And I have the "member" role in the "BDD Administration Community" group
     And I am on "/user"
     When I click "BDD Administration Community"
-    Then I should not see the link "Group"
+    Then I should not see "Group" in the ".tabs" element
     And I should see "Published content" in the "content_top_left" region
     And I should see "Unpublished content" in the "content_top_right" region
     And I should not see "Create content" in the "sidebar_left" region
@@ -26,7 +26,7 @@ Feature: EIP-AGRI Administration group
     And I have the "group contributor" role in the "BDD Administration Community" group
     And I am on "/user"
     When I click "BDD Administration Community"
-    Then I should not see the link "Group"
+    Then I should not see "Group" in the ".tabs" element
     And I should see "Published content" in the "content_top_left" region
     And I should see "Unpublished content" in the "content_top_right" region
     And I should see "Create content" in the "sidebar_left" region
@@ -39,7 +39,7 @@ Feature: EIP-AGRI Administration group
     And I have the "group editor" role in the "BDD Administration Community" group
     And I am on "/user"
     When I click "BDD Administration Community"
-    Then I should not see the link "Group"
+    Then I should not see "Group" in the ".tabs" element
     And I should see "Published content" in the "content_top_left" region
     And I should see "Unpublished content" in the "content_top_right" region
     And I should see "Create content" in the "sidebar_left" region

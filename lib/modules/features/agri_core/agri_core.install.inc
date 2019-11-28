@@ -262,172 +262,6 @@ function _agri_core_disable_views(array $views) {
 }
 
 /**
- * A function used to populate vocabularies with terms.
- */
-function _agri_core_import_default_menu_items() {
-  features_revert(array('agri_core' => array('menu_custom')));
-
-  $user_quicklinks = array(
-    array(
-      'title' => 'Publish an innovative action',
-      'path'  => 'node/add/innovative-action',
-    ),
-    array(
-      'title' => 'Share your needs for research from practice',
-      'path'  => 'node/add/needs-for-research-from-practice',
-    ),
-    array(
-      'title' => 'Share your project ideas',
-      'path'  => 'node/add/project-ideas',
-    ),
-  );
-
-  $i = 0;
-  foreach ($user_quicklinks as $user_quicklink) {
-    $item = array(
-      'menu_name' => 'menu-core-user-quicklinks',
-      'module' => 'menu',
-      'customized' => 1,
-      'link_path' => $user_quicklink['path'],
-      'link_title' => $user_quicklink['title'],
-      'weight' => $i,
-    );
-    $i++;
-    menu_link_save($item);
-  }
-
-  $quicklinks = array(
-    array(
-      'title' => 'Register or login to "EIP-AGRI"',
-      'path'  => 'user',
-      'class' => 'menu-link-user-register',
-    ),
-    array(
-      'title' => 'Ask a question or provide feedback',
-      'path'  => '<front>',
-      'class' => 'menu-link-ask-question',
-    ),
-  );
-
-  $i = 0;
-  foreach ($quicklinks as $quicklink) {
-    $item = array(
-      'menu_name' => 'menu-core-quicklinks',
-      'module' => 'menu',
-      'customized' => 1,
-      'link_path' => $quicklink['path'],
-      'link_title' => $quicklink['title'],
-      'weight' => $i,
-      'options' => array(
-        'attributes' => array(
-          'class' => array($quicklink['class']),
-        ),
-      ),
-    );
-    $i++;
-    menu_link_save($item);
-  }
-
-  $search_find = array(
-    array(
-      'title'       => 'Share with us',
-      'path'        => 'find-connect/share-with-us',
-      'class'       => 'menu-link-share-with-us',
-      'description' => 'information about you, your projects and projects ideas, research needs, etc.',
-    ),
-    array(
-      'title'       => 'Search and find',
-      'path'        => 'find-connect',
-      'class'       => 'menu-link-search-and-find',
-      'description' => 'funding opportunities, partners, interesting projects... on EIP-AGRI meeting point',
-    ),
-    array(
-      'title'       => 'Focus on',
-      'path'        => '<front>',
-      'class'       => 'menu-link-focus-on',
-      'description' => 'practical innovative solutions to problems and opportunities provided in the EIP-AGRI Focus Group chapter',
-    ),
-    array(
-      'title'       => 'Deepen your knowledge',
-      'path'        => 'publications',
-      'class'       => 'menu-link-deepen-your-knowledge',
-      'description' => 'by different EIP-AGRI related publications in our library',
-    ),
-    array(
-      'title'       => 'Stay up to date',
-      'path'        => 'news-events',
-      'class'       => 'menu-link-stay-up-to-date',
-      'description' => 'on innovation related agricultural topics and read about the latest EIP-AGRI news and events',
-    ),
-    array(
-      'title'       => 'My Account',
-      'path'        => 'user',
-      'class'       => 'menu-link-my-eip-agri',
-      'description' => 'connects you to your own EIP-AGRI dashboard and enables you to follow the information and people you are interested in',
-    ),
-  );
-
-  $i = 0;
-  foreach ($search_find as $search_link) {
-    $item = array(
-      'menu_name' => 'menu-core-search-find',
-      'module' => 'menu',
-      'customized' => 1,
-      'link_path' => $search_link['path'],
-      'link_title' => $search_link['title'],
-      'weight' => $i,
-      'options' => array(
-        'attributes' => array(
-          'title' => $search_link['description'],
-          'class' => array($search_link['class']),
-        ),
-      ),
-    );
-    $i++;
-    menu_link_save($item);
-  }
-
-  menu_cache_clear_all();
-}
-
-/**
- * Adding a direct link to the menus administration page.
- */
-function _agri_core_add_user_menu_link() {
-  $menu = menu_load('menu-core-action-menu');
-
-  if ($menu) {
-    $item = array(
-      'menu_name' => 'menu-core-action-menu',
-      'module' => 'menu',
-      'customized' => 1,
-      'link_path' => 'admin/structure/menu',
-      'language'  => 'en',
-      'link_title' => t('Menu management'),
-      'weight' => 9,
-      'options' => array(),
-    );
-
-    menu_link_save($item);
-
-    $item = array(
-      'menu_name' => 'menu-core-action-menu',
-      'module' => 'menu',
-      'customized' => 1,
-      'link_path' => 'admin/structure/taxonomy',
-      'language'  => 'en',
-      'link_title' => t('Categories management'),
-      'weight' => 8,
-      'options' => array(),
-    );
-
-    menu_link_save($item);
-  }
-
-  menu_cache_clear_all();
-}
-
-/**
  * Return a file object after saving a default image and storing the fid.
  *
  * @param array $image
@@ -469,25 +303,254 @@ function _agri_core_create_default_image(array $image) {
 }
 
 /**
+ * Create menu-core-quicklinks default items.
+ */
+function _agri_core_menu_core_quicklinks_menu_links() {
+
+  // Get "Magazine" term.
+  $publication_query = '';
+  $magazine_term = taxonomy_get_term_by_name('Magazine', 'publication_type');
+  if (!empty($magazine_term)) {
+    $publication_query = [
+      'field_publication_type:' . reset($magazine_term)->tid,
+    ];
+  }
+
+  // Defalut menu items.
+  $quicklinks = [
+    [
+      'title' => 'Call to action button',
+      'path' => '<front>',
+      'class' => 'menu-link-call-to-action',
+    ],
+    [
+      'title' => 'Register to the EIP‑AGRI website',
+      'path' => '<front>',
+      'class' => 'menu-link-user-register',
+    ],
+    [
+      'title' => 'Subscribe to the EIP‑AGRI newsletter',
+      'path' => 'news-events/subscribe-newsletter',
+      'class' => 'menu-link-subscribe-newsletter',
+    ],
+    [
+      'title' => 'Read Agrinnovation magazine',
+      'path' => 'publications',
+      'class' => 'menu-link-agrinnovation-magazine',
+      'query' => [
+        'f' => $publication_query,
+      ],
+    ],
+  ];
+
+  $i = 0;
+  foreach ($quicklinks as $quicklink) {
+    $item = [
+      'menu_name' => 'menu-core-quicklinks',
+      'module' => 'menu',
+      'customized' => 1,
+      'link_path' => $quicklink['path'],
+      'link_title' => $quicklink['title'],
+      'weight' => $i,
+      'options' => [
+        'attributes' => [
+          'class' => [$quicklink['class']],
+        ],
+      ],
+    ];
+
+    if (isset($quicklink['query'])) {
+      $item['options']['query'] = $quicklink['query'];
+    }
+
+    $i++;
+    menu_link_save($item);
+  }
+  menu_cache_clear_all();
+}
+
+/**
+ * Create menu-core-user-quicklinks default items.
+ */
+function _agri_core_menu_core_user_quicklinks_menu_links() {
+  $user_quicklinks = [
+    [
+      'title' => 'Publish an innovative action',
+      'path' => 'node/add/innovative-action',
+    ],
+    [
+      'title' => 'Share your needs for research from practice',
+      'path' => 'node/add/needs-for-research-from-practice',
+    ],
+    [
+      'title' => 'Share your project ideas',
+      'path' => 'node/add/project-ideas',
+    ],
+  ];
+
+  $i = 0;
+  foreach ($user_quicklinks as $user_quicklink) {
+    $item = [
+      'menu_name' => 'menu-core-user-quicklinks',
+      'module' => 'menu',
+      'customized' => 1,
+      'link_path' => $user_quicklink['path'],
+      'link_title' => $user_quicklink['title'],
+      'weight' => $i,
+    ];
+    $i++;
+    menu_link_save($item);
+  }
+  menu_cache_clear_all();
+}
+
+/**
+ * Create menu-core-search-find default items.
+ */
+function _agri_core_menu_core_search_find_menu_links() {
+  $search_find = [
+    [
+      'title' => 'Share with us',
+      'path' => 'find-connect/share-with-us',
+      'class' => 'menu-link-share-with-us',
+      'description' => 'information about you, your projects and projects ideas, research needs, etc.',
+    ],
+    [
+      'title' => 'Search and find',
+      'path' => 'find-connect',
+      'class' => 'menu-link-search-and-find',
+      'description' => 'funding opportunities, partners, interesting projects... on EIP-AGRI meeting point',
+    ],
+    [
+      'title' => 'Focus on',
+      'path' => '<front>',
+      'class' => 'menu-link-focus-on',
+      'description' => 'practical innovative solutions to problems and opportunities provided in the EIP-AGRI Focus Group chapter',
+    ],
+    [
+      'title' => 'Deepen your knowledge',
+      'path' => 'publications',
+      'class' => 'menu-link-deepen-your-knowledge',
+      'description' => 'by different EIP-AGRI related publications in our library',
+    ],
+    [
+      'title' => 'Stay up to date',
+      'path' => 'news-events',
+      'class' => 'menu-link-stay-up-to-date',
+      'description' => 'on innovation related agricultural topics and read about the latest EIP-AGRI news and events',
+    ],
+    [
+      'title' => 'My Account',
+      'path' => 'user',
+      'class' => 'menu-link-my-eip-agri',
+      'description' => 'Connect to your own EIP-AGRI dashboard and follow the information and people you are interested in',
+    ],
+  ];
+
+  $i = 0;
+  foreach ($search_find as $search_link) {
+    $item = [
+      'menu_name' => 'menu-core-search-find',
+      'module' => 'menu',
+      'customized' => 1,
+      'link_path' => $search_link['path'],
+      'link_title' => $search_link['title'],
+      'weight' => $i,
+      'options' => [
+        'attributes' => [
+          'title' => $search_link['description'],
+          'class' => [$search_link['class']],
+        ],
+      ],
+    ];
+    $i++;
+    menu_link_save($item);
+  }
+  menu_cache_clear_all();
+}
+
+/**
+ * Adding a direct link to the menus administration page.
+ */
+function _agri_core_menu_core_action_menu_menu_links() {
+  $item = array(
+    'menu_name' => 'menu-core-action-menu',
+    'module' => 'menu',
+    'customized' => 1,
+    'link_path' => 'admin/structure/menu',
+    'language'  => 'en',
+    'link_title' => 'Menu management',
+    'weight' => 9,
+    'options' => array(),
+  );
+
+  menu_link_save($item);
+
+  $item = array(
+    'menu_name' => 'menu-core-action-menu',
+    'module' => 'menu',
+    'customized' => 1,
+    'link_path' => 'admin/structure/taxonomy',
+    'language'  => 'en',
+    'link_title' => 'Categories management',
+    'weight' => 8,
+    'options' => array(),
+  );
+
+  menu_link_save($item);
+
+  menu_cache_clear_all();
+}
+
+/**
  * A function used to create the items for a menù.
  */
-function _agri_core_footer_menu_links() {
+function _agri_core_menu_social_footer_menu_links() {
   features_revert(array('agri_core' => array('menu_custom')));
-  $social = array('RSS', 'Twitter' , 'Facebook');
+  $social = array(
+    'youtube' => array(
+      'title' => 'Youtube',
+      'path' => 'https://www.youtube.com/channel/UC_c3dn6-hKy80aCVCBHHWIA/featured',
+      'hidden' => 0,
+    ),
+    'linkedin' => array(
+      'title' => 'LinkedIn',
+      'path' => 'https://www.linkedin.com/company/eip-agri-service-point/',
+      'hidden' => 0,
+    ),
+    'twitter' => array(
+      'title' => 'Twitter',
+      'path' => 'https://twitter.com/eipagri_sp/',
+      'hidden' => 0,
+    ),
+    'facebook' => array(
+      'title' => 'Facebook',
+      'path' => 'https://twitter.com/eipagri_sp/',
+      'hidden' => 1,
+    ),
+    'rss' => array(
+      'title' => 'RSS',
+      'path' => 'https://twitter.com/eipagri_sp/',
+      'hidden' => 1,
+    ),
+  );
   $i = 0;
-  foreach ($social as $social_link) {
+  foreach ($social as $key => $link_options) {
     $item = array(
       'menu_name' => 'menu-social-footer',
       'module' => 'menu',
       'customized' => 1,
-      'link_path' => '<front>',
+      'link_path' => $link_options['path'],
       'language'  => 'en',
-      'link_title' => $social_link,
+      'link_title' => $link_options['title'],
       'weight' => $i,
+      'hidden' => $link_options['hidden'],
       'options' => array(
         'attributes' => array(
+          'rel' => 'nofollow',
+          'target' => '_blank',
           'class' => array(
-            drupal_strtolower($social_link) . '-icon',
+            drupal_strtolower($key) . '-icon',
           ),
         ),
       ),
@@ -496,6 +559,27 @@ function _agri_core_footer_menu_links() {
     menu_link_save($item);
   }
   menu_cache_clear_all();
+}
+
+/**
+ * Helper function to delete custom menu links.
+ *
+ * @param array $menus
+ *   An array of custom menu names of which menu links have to be rebuilt.
+ * @param bool $clean
+ *   TRUE if items should be delted before recreate them, otherwise FALSE.
+ */
+function _agri_core_build_custom_menu_links(array $menus, $clean = FALSE) {
+  if (!empty($menus)) {
+    foreach ($menus as $menu) {
+      if (menu_load($menu)) {
+        if ($clean) {
+          menu_delete_links($menu);
+        }
+        call_user_func('_agri_core_' . str_replace('-', '_', $menu) . '_menu_links');
+      }
+    }
+  }
 }
 
 /**

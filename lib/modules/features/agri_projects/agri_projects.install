@@ -733,3 +733,20 @@ function agri_projects_update_7217() {
 
   field_purge_batch(count($fields_to_delete));
 }
+
+/**
+ * Delete "projects_blocks" view and revert features component.
+ */
+function agri_projects_update_7218() {
+  // Get and delete the old views "projects_blocks".
+  if ($view = views_get_view('projects_blocks')) {
+    views_delete_view($view);
+  }
+
+  // Revert "views" component.
+  features_revert(array(
+    'agri_projects' => array(
+      'views_view',
+    ),
+  ));
+}

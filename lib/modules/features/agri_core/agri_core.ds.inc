@@ -92,6 +92,43 @@ function agri_core_ds_layout_settings_info() {
 
   $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
+  $ds_layout->id = 'bean|agri_static_block|default';
+  $ds_layout->entity_type = 'bean';
+  $ds_layout->bundle = 'agri_static_block';
+  $ds_layout->view_mode = 'default';
+  $ds_layout->layout = 'ds_1col';
+  $ds_layout->settings = array(
+    'regions' => array(
+      'ds_content' => array(
+        0 => 'field_agri_core_bean_image',
+        1 => 'field_agri_core_bean_body',
+        2 => 'field_agri_core_bean_link',
+      ),
+    ),
+    'fields' => array(
+      'field_agri_core_bean_image' => 'ds_content',
+      'field_agri_core_bean_body' => 'ds_content',
+      'field_agri_core_bean_link' => 'ds_content',
+    ),
+    'classes' => array(
+      'layout_class' => array(
+        '' => '',
+      ),
+    ),
+    'wrappers' => array(
+      'ds_content' => 'div',
+    ),
+    'layout_wrapper' => 'div',
+    'layout_attributes' => '',
+    'layout_attributes_merge' => 1,
+    'layout_link_attribute' => '',
+    'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
+  );
+  $export['bean|agri_static_block|default'] = $ds_layout;
+
+  $ds_layout = new stdClass();
+  $ds_layout->api_version = 1;
   $ds_layout->id = 'node|collaborative_area|default';
   $ds_layout->entity_type = 'node';
   $ds_layout->bundle = 'collaborative_area';

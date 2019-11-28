@@ -303,28 +303,20 @@ function agri_projects_field_collection_item_view_alter(&$build) {
  */
 function agri_projects_form_views_exposed_form_alter(&$form, $form_state) {
 
-  if ($form['#id'] == 'views-exposed-form-projects-fsearch-sub-pages-page-1') {
+  switch ($form['#id']) {
+    case 'views-exposed-form-projects-indexed-search-sub-pages-page':
+      // Remove second level on filter "Geographical location".
+      // Views: projects_indexed_search_sub_pages - page.
+      $options = $form['field_proj_geographical_area']['#options'];
+      $options = array_filter($options, '_agri_projects_clean_filter_options');
+      $form['field_proj_geographical_area']['#options'] = $options;
+      break;
 
-    if ($form['field_proj_project_type']) {
-
-      $form['field_proj_project_type']['#type'] = 'select';
-      $form['field_proj_project_type']['#attributes'] = array(
-        'size' => 1,
-      );
-      $form['field_proj_project_type']['#options'] = array(
-        '' => t('- Any -'),
-        'Operational group' => t('Operational group'),
-        'Research project' => t('Research project'),
-        'Innovative action' => t('Innovative action'),
-      );
-
-    }
-  }
-
-  // Attach JS to SFC Projects > Manage Projects view.
-  if ($form['#id'] == 'views-exposed-form-agri-projects-manage-projects-page') {
-    // Attach js to render flag links as checkboxes in "Manage Projects".
-    $form['#attached']['js'][] = drupal_get_path('module', 'agri_projects') . '/js/agri_projects.js';
+    // Attach JS to SFC Projects > Manage Projects view.
+    case 'views-exposed-form-agri-projects-manage-projects-page':
+      // Attach js to render flag links as checkboxes in "Manage Projects".
+      $form['#attached']['js'][] = drupal_get_path('module', 'agri_projects') . '/js/agri_projects.js';
+      break;
   }
 
 }
@@ -625,6 +617,19 @@ function agri_projects_entity_property_info_alter(&$info) {
     'type' => 'text',
     'getter callback' => '_agri_projects_search_api_custom_project_title',
   );
+}
+
+/**
+ * Clean country options in views exposed filters.
+ *
+ * @param string $option
+ *   The element of the array.
+ *
+ * @return bool
+ *   Return FALSE if the string starting with '-'.
+ */
+function _agri_projects_clean_filter_options($option) {
+  return !(drupal_substr($option, 0, 1) === '-');
 }
 
 /**

@@ -45,18 +45,8 @@
  */
 ?>
 
-<div id="<?php print $block_html_id; ?>">
+<div id="<?php print $block_html_id; ?>" class="<?php print $classes; ?>">
   <div class="content"<?php print $content_attributes; ?>>
-    <div class="dropdown">
-
-      <a class = "search-dropdown" data-toggle="dropdown" href="#" class="btn btn-primary">
-        <span class="glyphicon glyphicon-search"></span>
-      </a>
-
-      <div class="dropdown-menu dropdown-menu-right">
-        <?php print $content; ?>
-      </div>
-
-    </div>
+    <?php print $content; ?>
   </div>
 </div>

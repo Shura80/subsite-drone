@@ -26,6 +26,7 @@ Feature: EIP-AGRI Events section
     When I am on "events/calendar"
     Then I should see the heading "Events calendar"
     # Check if the tabs for the navigation exists.
+    And I should see the link "Day"
     And I should see the link "Month"
     And I should see the link "Year"
     # Check if show the month calendar.
@@ -33,9 +34,14 @@ Feature: EIP-AGRI Events section
     And I should see the link "Current month"
     # View the year calendar
     When I am on "events/calendar/year"
-    # Check if show the month calendar.
+    # Check if show the year calendar.
     Then I should see an ".year-view" element
     And I should see the link "Current year"
+    # View the day calendar
+    When I am on "events/calendar/day"
+    # Check if show the day calendar.
+    Then I should see an ".day-view" element
+    And I should see the link "Current day"
 
   @javascript
   Scenario: Check the conditional fields functionality in Event content type.
@@ -81,3 +87,22 @@ Feature: EIP-AGRI Events section
     And I click "Past"
     Then I should see the link "BDD Event Dates visibility"
     And I should see "Monday, 1 January, 2018 - 09:00 to Wednesday, 31 January, 2018 - 09:00"
+
+  @homepage
+  Scenario: Check that newest events are visbile in the block of new homepage's layout.
+    Given I am an anonymous user
+    And "core_geographical_area" terms:
+      | name              |
+      | BDD Test location |
+    And "event_type" terms:
+      | name           |
+      | BDD Event Home |
+    And I am viewing an "event" content in "published" status:
+      | title                        | BDD Event in homepage           |
+      | language                     | und                             |
+      | field_event_type             | BDD Event Home                  |
+      | field_event_address          | Via Italia 55, 00100 ROMA ITALY |
+      | field_event_date             | now - now +1week                |
+      | field_core_geographical_area | BDD Test location               |
+    When I am on the homepage
+    Then I should see the link "BDD Event in homepage" in the "content_top_right"

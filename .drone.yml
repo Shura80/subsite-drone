@@ -73,24 +73,17 @@ steps:
   # CLONE #
   - name: install-clone
     image: fpfis/php56-dev
-    environment:
-      # TEST CUSTOM SECRETS.
-      db.dl.username:
-        from_secret: agri_user
-      db.dl.password:
-        from_secret: agri_password
     commands:
+      - rm /test/toolkit/build/sites/sites.php
       - ./toolkit/phing install-clone
 
   # TEST SECTION #
   # SELENIUM #
   - name: selenium
-    image: selenium/hub
-    chrome:
-      image: selenium/node-chrome:2.48.2
-      environment:
-        HUB_PORT_4444_TCP_ADDR: selenium
-        HUB_PORT_4444_TCP_PORT: "4444"
+    image: selenium/standalone-chrome:3.141.59-oxygen
+    environment:
+      HUB_PORT_4444_TCP_ADDR: selenium
+      HUB_PORT_4444_TCP_PORT: "4444"
     group: pre-behat
     detach: true
 

@@ -65,7 +65,7 @@ function _agri_core_api_create_term($vocabulary, $name, $parent = NULL, $weight 
  *   Type of "id", tid or nid, basically.
  */
 function _agri_core_field_dependencies(array $ids, $fields, $entity, $bundle, $id, $values_set = CONDITIONAL_FIELDS_DEPENDENCY_VALUES_WIDGET) {
-  $values = '';
+  $values = [];
 
   // Create fields and dependencies.
   switch ($values_set) {

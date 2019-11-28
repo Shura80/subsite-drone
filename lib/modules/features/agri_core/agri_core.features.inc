@@ -12,6 +12,9 @@ function agri_core_ctools_plugin_api($module = NULL, $api = NULL) {
   if ($module == "apachesolr_search" && $api == "apachesolr_search_defaults") {
     return array("version" => "3");
   }
+  if ($module == "bean_admin_ui" && $api == "bean") {
+    return array("version" => "5");
+  }
   if ($module == "captcha" && $api == "captcha") {
     return array("version" => "1");
   }
@@ -146,6 +149,22 @@ function agri_core_image_default_styles() {
         'data' => array(
           'width' => 200,
           'height' => 120,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: bean_static_block.
+  $styles['bean_static_block'] = array(
+    'label' => 'Bean static block',
+    'effects' => array(
+      13 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 360,
+          'height' => 240,
+          'upscale' => 0,
         ),
         'weight' => 1,
       ),

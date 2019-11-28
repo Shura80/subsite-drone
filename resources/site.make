@@ -76,7 +76,8 @@ projects[search_api_exclude][subdir] = "contrib"
 projects[search_api_exclude][version] = "1.3"
 
 projects[search_api_saved_searches][subdir] = "contrib"
-projects[search_api_saved_searches][version] = "1.6"
+projects[search_api_saved_searches][version] = "1.7"
+projects[search_api_saved_searches][patch][] = https://www.drupal.org/files/issues/2019-03-07/fix-result-count-3038333-2-7.patch
 
 projects[term_merge][subdir] = "contrib"
 projects[term_merge][version] = "1.4"

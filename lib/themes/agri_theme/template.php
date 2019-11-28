@@ -91,33 +91,7 @@ function agri_theme_menu_tree__menu_core_action_menu($variables) {
  * Implements theme('menu_tree') using extra Menu Block hook suggestions.
  */
 function agri_theme_menu_tree__menu_core_quicklinks($variables) {
-  $attributes = array(
-    'class' => 'quicklinks',
-  );
-
-  return theme('item_list', array(
-    'items' => array($variables['tree']),
-    'title' => NULL,
-    'type' => 'ul',
-    'attributes' => $attributes,
-  ));
-}
-
-/**
- * Implements theme('menu_tree') using extra Menu Block hook suggestions.
- */
-function agri_theme_menu_tree__menu_service_tools($variables) {
-  $attributes = array(
-    'class' => 'reset-list',
-    'id' => 'services',
-  );
-
-  return theme('item_list', array(
-    'items' => array($variables['tree']),
-    'title' => NULL,
-    'type' => 'ul',
-    'attributes' => $attributes,
-  ));
+  return '<ul>' . $variables['tree'] . '</ul>';
 }
 
 /**
@@ -138,11 +112,8 @@ function agri_theme_preprocess_page(&$variables) {
     libraries_load('bootstrap-hover-dropdown');
   }
 
-  $services = menu_tree('menu-service-tools');
-  $variables['service_menu'] = render($services);
-
   // Format regions.
-  $variables['region_header_right'] = (isset($variables['page']['header_right']) ? render($variables['page']['header_right']) : '');
+  $variables['region_header_right'] = (isset($variables['regions']['header_right']) ? render($variables['regions']['header_right']) : '');
   $variables['region_header_top'] = (isset($variables['page']['header_top']) ? render($variables['page']['header_top']) : '');
   $variables['region_featured'] = (isset($variables['page']['featured']) ? render($variables['page']['featured']) : '');
   $variables['region_sidebar_left'] = (isset($variables['page']['sidebar_left']) ? render($variables['page']['sidebar_left']) : '');
@@ -156,7 +127,7 @@ function agri_theme_preprocess_page(&$variables) {
   $variables['region_content_second'] = (isset($variables['page']['content_second']) ? render($variables['page']['content_second']) : '');
   $variables['region_content_third'] = (isset($variables['page']['content_third']) ? render($variables['page']['content_third']) : '');
   $variables['region_sidebar_right'] = (isset($variables['page']['sidebar_right']) ? render($variables['page']['sidebar_right']) : '');
-  $variables['region_footer'] = (isset($variables['page']['footer']) ? render($variables['page']['footer']) : '');
+  $variables['region_footer'] = (isset($variables['regions']['footer']) ? render($variables['regions']['footer']) : '');
 
   // Check if there is a responsive sidebar or not.
   $variables['has_responsive_sidebar'] = ($variables['region_header_right'] || $variables['region_sidebar_left'] || $variables['region_sidebar_right'] ? 1 : 0);
@@ -253,18 +224,63 @@ function agri_theme_preprocess_page(&$variables) {
   );
 
   $variables['col_content_top_left'] = array(
-    'lg' => 12 - ($variables['page']['content_top_right'] ? ($variables['is_front'] ? 4 : 6) : 0),
-    'md' => 12 - ($variables['page']['content_top_right'] ? ($variables['is_front'] ? 4 : 6) : 0),
+    'lg' => 12 - ($variables['page']['content_top_right'] ? ($variables['is_front'] ? 3 : 6) : 0),
+    'md' => 12 - ($variables['page']['content_top_right'] ? ($variables['is_front'] ? 3 : 6) : 0),
     'sm' => 12,
     'xs' => 12,
   );
 
   $variables['col_content_top_right'] = array(
-    'lg' => 12 - ($variables['page']['content_top_left'] ? ($variables['is_front'] ? 8 : 6) : 0),
-    'md' => 12 - ($variables['page']['content_top_left'] ? ($variables['is_front'] ? 8 : 6) : 0),
+    'lg' => 12 - ($variables['page']['content_top_left'] ? ($variables['is_front'] ? 9 : 6) : 0),
+    'md' => 12 - ($variables['page']['content_top_left'] ? ($variables['is_front'] ? 9 : 6) : 0),
     'sm' => 12,
     'xs' => 12,
   );
+
+  // New structure for the regions multi col "content_bottom_x".
+  $quotient = 0;
+  $variables['print_region_content_bottom_x'] = FALSE;
+
+  // Declaration format regions.
+  $region_content_bottom_x = array(
+    'region_content_bottom_1' => (isset($variables['page']['content_bottom_first']) ? render($variables['page']['content_bottom_first']) : ''),
+    'region_content_bottom_2' => (isset($variables['page']['content_bottom_second']) ? render($variables['page']['content_bottom_second']) : ''),
+    'region_content_bottom_3' => (isset($variables['page']['content_bottom_third']) ? render($variables['page']['content_bottom_third']) : ''),
+  );
+
+  foreach ($region_content_bottom_x as $name => $content) {
+    if (!empty($content)) {
+      $quotient++;
+      $variables['print_region_content_bottom_x'] = TRUE;
+    }
+  }
+
+  if ($variables['print_region_content_bottom_x']) {
+    $col_content_bottom_n = array(
+      'lg' => 12 / $quotient,
+      'md' => 12 / $quotient,
+      'sm' => 12,
+      'xs' => 12,
+    );
+
+    $classes_array = array();
+    foreach ($col_content_bottom_n as $key => $value) {
+      $classes_array[] = 'col-' . $key . '-' . $value;
+    }
+
+    $content_bottom_x = array();
+    foreach ($region_content_bottom_x as $name => $content) {
+      $content_bottom_x[] = array(
+        'content' => $region_content_bottom_x[$name],
+        'attributes' => array(
+          'id' => $name,
+          'class' => $classes_array,
+        ),
+      );
+    }
+
+    $variables['content_bottom_x'] = $content_bottom_x;
+  }
 
   $logo = l(theme('image', array(
     'path' => $base_url . '/' . drupal_get_path('theme', 'agri_theme') . "/images/logo/logo_en.gif",
@@ -280,18 +296,6 @@ function agri_theme_preprocess_page(&$variables) {
 
   // Add dynamically class attributes for title page.
   $variables['title_attributes_array']['class'][] = 'title';
-
-  $alias = drupal_get_path_alias();
-
-  // Add template suggestions based on path-alias.
-  if ($alias != $_GET['q']) {
-    $alias_array = explode('/', $alias);
-    // Add template suggestions based on path-alias.
-    $base_tpl_filename = 'page';
-    $template_filenames = theme_get_suggestions($alias_array, $base_tpl_filename);
-    // Add new generated suggestions to existing ones.
-    $variables['theme_hook_suggestions'] = array_merge($variables['theme_hook_suggestions'], $template_filenames);
-  }
 }
 
 /**
@@ -388,9 +392,6 @@ function agri_theme_css_alter(&$css) {
 function agri_theme_preprocess_block(&$variables) {
 
   switch ($variables['block_html_id']) {
-    case 'block-menu-menu-social-footer':
-      $variables['block']->subject = t('Follow us:');
-      break;
 
     case 'block-views-core-spotlight-block':
     case 'block-views-core-spotlight-block-1':
@@ -423,11 +424,11 @@ function agri_theme_preprocess_block(&$variables) {
       // Check if country parameter exists add querystring to block title link.
       if ($params && !empty($params['country'])) {
         // Add the country querystring to internal path.
-        $variables['block']->subject = l(AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE, AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH, ['query' => ['country' => $params['country']]]);
+        $variables['block']->subject = l(t('Digital Agriculture'), AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH, ['query' => ['country' => $params['country']]]);
       }
       // Print normal block title link.
       else {
-        $variables['block']->subject = l(AGRI_DIGITIZATION_TOOLBOX_SECTION_TITLE, AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH);
+        $variables['block']->subject = l(t('Digital Agriculture'), AGRI_DIGITIZATION_TOOLBOX_SECTION_PATH);
       }
       break;
 
@@ -456,7 +457,7 @@ function agri_theme_preprocess_block(&$variables) {
   }
 
   // List of all block than don't need a panel.
-  $variables['block_no_panel'] = array(
+  $block_no_panel = array(
     'agri_core' => array('agri_user_login'),
     'search' => array('form'),
     'print' => array('print-links'),
@@ -465,6 +466,10 @@ function agri_theme_preprocess_block(&$variables) {
     'system' => array(
       'main',
       'help',
+    ),
+    'menu' => array(
+      'menu-service-tools',
+      'menu-social-footer',
     ),
     'views' => array(
       'view_ec_content_slider-block',
@@ -478,16 +483,20 @@ function agri_theme_preprocess_block(&$variables) {
     ),
   );
 
-  $variables['block_no_title'] = array(
-    'fat_footer' => 'fat-footer',
+  $block_no_title = array(
+    'menu' => array(
+      'menu-service-tools',
+      'menu-social-footer',
+    ),
+    'fat_footer' => array('fat-footer'),
   );
 
-  $variables['block_no_body_class'] = array(
+  $block_no_body_class = array(
     'views' => 'community_content-block_content',
   );
 
   $variables['panel'] = TRUE;
-  foreach ($variables['block_no_panel'] as $key => $deltas) {
+  foreach ($block_no_panel as $key => $deltas) {
     foreach ($deltas as $value) {
       if ($variables['block']->module == $key && $variables['block']->delta == $value) {
         $variables['panel'] = FALSE;
@@ -496,17 +505,31 @@ function agri_theme_preprocess_block(&$variables) {
   }
 
   $variables['title'] = TRUE;
-  foreach ($variables['block_no_title'] as $key => $value) {
-    if ($variables['block']->module == $key && $variables['block']->delta == $value) {
-      $variables['title'] = FALSE;
+  foreach ($block_no_title as $key => $deltas) {
+    foreach ($deltas as $value) {
+      if ($variables['block']->module == $key && $variables['block']->delta == $value) {
+        $variables['title'] = FALSE;
+      }
     }
   }
 
   $variables['body_class'] = TRUE;
-  foreach ($variables['block_no_body_class'] as $key => $value) {
+  foreach ($block_no_body_class as $key => $value) {
     if ($variables['block']->module == $key && $variables['block']->delta == $value) {
       $variables['body_class'] = FALSE;
     }
+  }
+
+  // For bean blocks.
+  if ($variables['block']->module == 'bean') {
+    // Get the bean elements.
+    $beans = $variables['elements']['bean'];
+    // There is only 1 bean per block.
+    $bean = reset($beans);
+    // Add bean type classes to the parent block.
+    $variables['classes_array'][] = drupal_html_class('block-bean-' . $bean['#bundle']);
+    // Add template suggestions for bean types.
+    $variables['theme_hook_suggestions'][] = 'block__bean__' . $bean['#bundle'];
   }
 }
 
@@ -884,6 +907,10 @@ function agri_theme_preprocess_date_views_pager(&$vars) {
 
         case 'month':
           $url = date_pager_url($view, NULL, date('Y-m'));
+          break;
+
+        case 'day':
+          $url = date_pager_url($view, NULL, date('Y-m-d'));
           break;
       }
 

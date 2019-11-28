@@ -87,7 +87,7 @@ class agri_project_map_plugin_style extends views_plugin_style {
    */
   public function render() {
 
-    $smartloader_prurl = variable_get('agri_project_map_smartloader_prurl', '');
+    $smartloader_prurl = variable_get('agri_core_webtools_smartloader_prurl', AGRI_CORE_WEBTOOLS_SMARTLOADER_PRURL);
     if (!empty($smartloader_prurl)) {
 
       if (isset($this->view->live_preview) && $this->view->live_preview) {

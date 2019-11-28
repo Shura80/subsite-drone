@@ -58,14 +58,14 @@ Feature: Test the EIP-AGRI stakeholders area
     # View block in main page.
     When I am on "/eip-agri-projects/"
     Then I should see 'Discover Operational Group Projects' in the "content" region
-    And I should see "Relevant EIP-AGRI documents" in the "content_first" region
-    And I should see "BDD publication published" in the "content_first" region
-    And I should see "More about..." in the "content_second" region
-    And I should see "BDD short title" in the "content_second" region
+    And I should see "Relevant EIP-AGRI documents" in the "content_bottom_first" region
+    And I should see "BDD publication published" in the "content_bottom_first" region
+    And I should see "More about..." in the "content_bottom_second" region
+    And I should see "BDD short title" in the "content_bottom_second" region
     And I should see "Latest Operational Groups" in the "content_right" region
     And I should see "BDD projects Operational Group" in the "content_right" region
-    And I should see "Latest Horizon 2020 projects" in the "content_third" region
-    And I should see "BDD projects H2020" in the "content_third" region
+    And I should see "Latest Horizon 2020 projects" in the "content_bottom_third" region
+    And I should see "BDD projects H2020" in the "content_bottom_third" region
     When I click "view more"
     Then I should see "BDD publication published" in the "content" region
 
@@ -98,7 +98,7 @@ Feature: Test the EIP-AGRI stakeholders area
       | field_proj_geographical_area   | BDD Italy                                         |
       | field_proj_sfc_identification  | Thematic network                                  |
       | field_proj_funding_source_list | Horizon 2020 (EU Research & Innovation programme) |
-      | created                        | now -4 minutes                                    |
+      | created                        | now -4 seconds                                    |
     # H2020 with title fallback.
     And I am viewing a "project" content in "published" status:
       | title                          | BDD H2020 title fallback                          |
@@ -106,7 +106,7 @@ Feature: Test the EIP-AGRI stakeholders area
       | field_proj_geographical_area   | BDD Italy                                         |
       | field_proj_sfc_identification  | Thematic network                                  |
       | field_proj_funding_source_list | Horizon 2020 (EU Research & Innovation programme) |
-      | created                        | now -3 minutes                                    |
+      | created                        | now -3 seconds                                    |
     # Create published Projects "Multi-actor".
     And I am viewing a "project" content in "published" status:
       | title                          | BDD H2020 Multi-actor native-lang                 |
@@ -115,7 +115,7 @@ Feature: Test the EIP-AGRI stakeholders area
       | field_proj_geographical_area   | BDD Italy                                         |
       | field_proj_sfc_identification  | Multi-actor project                               |
       | field_proj_funding_source_list | Horizon 2020 (EU Research & Innovation programme) |
-      | created                        | now -2 minutes                                     |
+      | created                        | now -2 seconds                                     |
     # Multi-actor with title fallback.
     And I am viewing a "project" content in "published" status:
       | title                          | BDD H2020 Multi-actor title fallback              |
@@ -123,7 +123,7 @@ Feature: Test the EIP-AGRI stakeholders area
       | field_proj_geographical_area   | BDD Italy                                         |
       | field_proj_sfc_identification  | Multi-actor project                               |
       | field_proj_funding_source_list | Horizon 2020 (EU Research & Innovation programme) |
-      | created                        | now -1 minute                                    |
+      | created                        | now -1 second                                    |
     When I am at "eip-agri-projects"
     And I send site contents to the Search API node index
     # EIP-AGRI Projects home blocks.
@@ -132,10 +132,10 @@ Feature: Test the EIP-AGRI stakeholders area
     And I should see the link "BDD Operational title fallback" in the "content_right"
     But I should not see the link "BDD Operational native lang" in the "content_right"
     # Thematic networks / "Multi-actor" projects.
-    And I should see the link "BDD H2020 Multi-actor title fallback" in the "content_third"
-    And I should see the link "BDD H2020 Multi-actor eng" in the "content_third"
-    And I should see the link "BDD H2020 title fallback" in the "content_third"
-    But I should not see the link "BDD H2020 Multi-actor native-lang" in the "content_third"
+    And I should see the link "BDD H2020 Multi-actor title fallback" in the "content_bottom_third"
+    And I should see the link "BDD H2020 Multi-actor eng" in the "content_bottom_third"
+    And I should see the link "BDD H2020 title fallback" in the "content_bottom_third"
+    But I should not see the link "BDD H2020 Multi-actor native-lang" in the "content_bottom_third"
     # EIP-AGRI Projects views.
     # Operational groups.
     When I am at "eip-agri-projects/projects/operational-groups"

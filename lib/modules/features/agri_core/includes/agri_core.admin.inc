@@ -50,3 +50,20 @@ function agri_core_brexit_disclaimer_form_submit(array $form, array &$form_state
     ));
   }
 }
+
+/**
+ * Form construction for the NextEuropa Webtools settings form.
+ */
+function agri_core_webtools_settings_form() {
+  $form = array();
+
+  $form['agri_core_webtools_smartloader_prurl'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Smartloader Protocol-Relative URL'),
+    '#default_value' => variable_get('agri_core_webtools_smartloader_prurl', AGRI_CORE_WEBTOOLS_SMARTLOADER_PRURL),
+    '#description' => t("The URL of the webtools smartloader script. e.g. '!default'", array('!default' => AGRI_CORE_WEBTOOLS_SMARTLOADER_PRURL)),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}

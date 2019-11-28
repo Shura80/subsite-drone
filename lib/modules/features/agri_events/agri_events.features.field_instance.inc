@@ -947,6 +947,7 @@ function agri_events_field_default_field_instances() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Attachments');
+  t('Further reading');
   t('Group content visibility');
   t('Groups audience');
   t('Image');
@@ -954,7 +955,6 @@ function agri_events_field_default_field_instances() {
   t('Location');
   t('Other');
   t('Pictures');
-  t('Further reading');
   t('Set here, if needed, stakeholders terms, to display this content in its relative area within Stakeholders toolkit.');
   t('Specify other location');
   t('Stakeholders');

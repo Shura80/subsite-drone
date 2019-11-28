@@ -1256,6 +1256,7 @@ col-xs-12';
     'node/add' => 'node/add',
     'admin/structure/menu' => 'admin/structure/menu',
     'eip-agri-projects/projects' => 'eip-agri-projects/projects',
+    'events/calendar' => 'events/calendar',
   );
   $export['easy_breadcrumb-excluded_paths'] = $strongarm;
 
@@ -2109,6 +2110,7 @@ col-xs-12';
       'search_api_views:press_search:page' => 'search_api_views:press_search:page',
       'search_api_views:projects_indexed_search_sub_pages:block_1' => 'search_api_views:projects_indexed_search_sub_pages:block_1',
       'search_api_views:projects_indexed_search_sub_pages:default' => 'search_api_views:projects_indexed_search_sub_pages:default',
+      'search_api_views:projects_indexed_search_sub_pages:home_projects' => 'search_api_views:projects_indexed_search_sub_pages:home_projects',
       'search_api_views:projects_indexed_search_sub_pages:page' => 'search_api_views:projects_indexed_search_sub_pages:page',
       'search_api_views:projects_indexed_search_sub_pages:sfc' => 'search_api_views:projects_indexed_search_sub_pages:sfc',
       'search_api_views:projects_indexed_search_sub_pages:views_data_export_1' => 'search_api_views:projects_indexed_search_sub_pages:views_data_export_1',
@@ -2191,35 +2193,6 @@ col-xs-12';
     'ec_resp_base_theme_of_subtheme' => '',
   );
   $export['theme_agri_theme_settings'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'twitter_post_types';
-  $strongarm->value = array(
-    'page' => 'page',
-    'event' => 'event',
-    'funding_opportunities' => 'funding_opportunities',
-    'innovative_action' => 'innovative_action',
-    'needs_for_research_from_practice' => 'needs_for_research_from_practice',
-    'news' => 'news',
-    'online_resource' => 'online_resource',
-    'operational_group' => 'operational_group',
-    'press_release' => 'press_release',
-    'press_clipping' => 'press_clipping',
-    'project_ideas' => 'project_ideas',
-    'publication' => 'publication',
-    'research_project' => 'research_project',
-    'article' => 0,
-    'collaborative_area' => 0,
-    'community' => 0,
-    'forum' => 0,
-    'poll' => 0,
-    'simplenews' => 0,
-    'webform' => 0,
-    'digitisation_toolbox' => 0,
-  );
-  $export['twitter_post_types'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
