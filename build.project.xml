@@ -1,2 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="agri-eip" description="Custom EIP-AGRI targets." default="help" />
+<project name="agri-eip" description="Custom EIP-AGRI targets." default="help">
+    <!-- Subtarget: execute makefiles with the no-core option. -->
+    <target name="drush-make-no-core" description="Make a file without core." hidden="true">
+        <if>
+            <available file="${make-file}" type="file" />
+            <then>
+                <loadfile property="make-string" file="${make-file}" />
+                <propertyregex
+                        property="not.empty"
+                        subject="${make-string}"
+                        pattern="([^#; ])(libraries\[|projects\[|includes\[)"
+                        match="$1"
+                        casesensitive="false"
+                        defaultvalue="empty" />
+                <if>
+                    <equals arg1="${not.empty}" arg2="empty" />
+                    <then>
+                        <echo msg="Empty make file found. Skipping... ${not.empty}" />
+                    </then>
+                    <else>
+                        <echo message="Running make file ${make-file} into folder ${make-folder}." />
+                        <mkdir dir="${project.tmp.dir}/make" />
+                        <drush command="make" assume="yes" bin="${toolkit.dir.bin.drush}" pipe="yes" verbose="${drush.verbose}" color="${drush.color}">
+                            <param>${make-file}</param>
+                            <param>${make-folder}</param>
+                            <option name="contrib-destination">${make-destination}</option>
+                            <option name="concurrency">10</option>
+                            <option name="no-patch-txt"></option>
+                            <option name="no-core"></option>
+                        </drush>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <!--
+        <phingcall target="copy-homepage-beans-default-images">
+        </phingcall>
+        -->
+    </target>
+
+    <!-- Copy Beans homepage images on new build -->
+    <target name="copy-homepage-beans-default-images" description="Copy default images from theme folder to files directory.">
+        <echo message="Copying default homepage beans images." />
+        <echo message="From dir: ${lib.dir.themes}/agri_theme/images/beans/" />
+        <echo message="To dir: ${build.platform.dir}/${build.subsite.dir.files}" />
+        <copy todir="${build.platform.dir}/${build.subsite.dir.files}">
+            <fileset dir="${lib.dir.themes}/agri_theme/images/beans/">
+                <include name="**"></include>
+            </fileset>
+        </copy>
+    </target>
+</project>

@@ -1,89 +1,16 @@
-# Database connection settings.
-# -----------------------------
-db.type = mysql
-db.name = ${project.id}_clone
-db.user = agri
-db.password = agri
-db.host = 127.0.0.1
-db.port = 3306
-db.url = ${db.type}://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}
+# ------------------------------------------------------------------------------
+# Default properties for toolkit pipeline on Drone:
+# https://github.com/ec-europa/ne-pipelines/blob/master/drone/toolkit.yml
+# ------------------------------------------------------------------------------
+
+db.host = mysql
+solr.host = solr
+behat.wd_host.url = http://selenium:4444/wd/hub
+share.path = /cache
+project.db.file = ./dump.sql
+project.url.base = http://web:8080
 db.dl.username = agri-eip
 db.dl.password = Kpfa-xCcdFhXQ_B6hihR
-
-# Admin user 1.
-admin.username = fpfis-admin
-admin.password = admin
-
-# Temporary folders and resources.
-# --------------------------------
-project.docroot = ~/Sites/${project.id}
-
-# Subsite configuration.
-# ----------------------
-#project.url.base =  https://eip-agri.test.ec.europa.eu
-project.url.base =  http://eip-agri.clone
-
-build.subsite.dir.files = sites/${project.id}/files
-build.subsite.dir.tmp = sites/${project.id}/tmp
-
-# Development variables.
-# ----------------------
-# Modules to be enabled.
-devel.mdls.en = dblog devel maillog redis module_filter stage_file_proxy
-#devel.mdls.en = dblog devel maillog module_filter stage_file_proxy
-# Stage File Proxy.
-devel.vars.stage_file_proxy_hotlink = 1
-devel.vars.stage_file_proxy_use_imagecache_root = 0
-devel.vars.stage_file_proxy_origin = ${project.url.production}
-devel.vars.stage_file_proxy_origin_dir = sites/${project.id}/files
-# System.
-devel.vars.file_temporary_path = /Users/alessiodepisi/toolkit/tmp
-devel.vars.error_level = 2
-devel.vars.cron_safe_threshold = 0
-devel.vars.drupal_http_request_function = chr_curl_http_request
-devel.vars.chr_override_drupal_http_request = 1
-devel.vars.chr_debug = 0
-# Theme.
-devel.vars.preprocess_css = 0
-# Apachesolr.
-project.solr.type = ${project.id}
-solr.type = ${project.id}
-devel.vars.apachesolr_attachments_tika_path = /Applications/Apache/
-devel.vars.apachesolr_attachments_tika_jar = tika-app-1.21.jar
-# Misc
-devel.vars.devel_raw_names = 1
-devel.vars.maillog_send = 0
-devel.vars.autologout_timeout = 31536000
-
-# Binaries.
-# ---------
-project.bin.composer = /usr/local/bin/composer
-
-# Behat configuration
-# -------------------
-# The base URL to use in Behat tests.
-behat.base_url = http://eip-agri.clone
-behat.browser.name = chrome
-behat.wd_host.url = http://localhost:8643/wd/hub
-behat.tags = ~@wip
+drush.verbose = TRUE
+behat.tags = ~@wip&&~@clean
 behat.formatter.name = progress
-
-# Debugging and development configuration
-# ---------------------------------------
-# Verbosity of drush commands. Set to TRUE to be verbose.
-# drush.debug = TRUE
-# Add manually debug="${drush.debug}" to build.project.xml drush make no-core.
-drush.color = 0
-
-# Verbosity of PHP Codesniffer. Set to 0 for standard output, 1 for progress
-# report, 2 for debugging info.
-phpcs.verbose = 1
-
-platform.package.provider.token = d753bc20ca5911275ab6a325980b07c6e6becad9
-platform.package.version = 2.5
-
-# Patch file for platform .htaccess
-build.platform.htaccess.patch = ${resources.dir}/patches/htaccess-custom-rewriterules.patch
-
-# SETTINGS.LOCAL.PHP LOCATION
-build.platform.htaccess.append.text = SetEnv DRUPAL_LOCAL_SETTINGS_LOCATION ../settings.local.php${line.separator}

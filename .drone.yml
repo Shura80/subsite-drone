@@ -60,13 +60,13 @@ steps:
   - name: build
     image: fpfis/php56-dev
     group: build
+    depends_on: [ phpcs, php7-comp ]
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
   # SOLR SERVER SECTION #
   - name: solr
     image: fpfis/solr5
-    group: build
     detach: true
 
   # INSTALL SECTION #
@@ -84,7 +84,6 @@ steps:
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"
-    group: pre-behat
     detach: true
 
   # BEHAT #
