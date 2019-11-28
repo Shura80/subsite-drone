@@ -56,7 +56,6 @@ steps:
   # BUILD PLATFORM AND SUBSITE#
   - name: build
     image: fpfis/php56-dev
-    depends_on: [ phpcs, php7-comp ]
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
@@ -80,12 +79,10 @@ steps:
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"
-    depends_on: [ install-clone ]
     detach: true
 
   # BEHAT #
   - name: behat
     image: fpfis/php56-dev
-    depends_on: [ selenium ]
     commands:
       - ./toolkit/phing test-run-behat
