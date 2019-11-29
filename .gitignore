@@ -26,3 +26,4 @@ toolkit
 /dist
 /tests/bin
 /tests/vendor
+/.idea/
