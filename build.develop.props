@@ -1,4 +1,4 @@
-project.id = enrd
+project.id = agri-eip
 db.host = mysql
 solr.host = solr
 behat.wd_host.url = http://selenium:4444/wd/hub
