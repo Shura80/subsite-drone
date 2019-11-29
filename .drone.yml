@@ -48,10 +48,10 @@ steps:
     commands:
       - ./toolkit/phing test-run-phpcs
   # PHP 7 compatibility #
-#  - name: php7-comp
-#    image: fpfis/php56-dev
-#    commands:
-#      - ./toolkit/phing test-run-phpcs-compatibility
+  - name: php7-comp
+    image: fpfis/php56-dev
+    commands:
+      - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
@@ -65,17 +65,17 @@ steps:
     detach: true
 
   # INSTALL SECTION #
-  # CLONE #
-  - name: install-clone
+  # CLEAN #
+  - name: install-clean
     image: fpfis/php56-dev
     commands:
       - rm /test/toolkit/build/sites/sites.php
-      - ./toolkit/phing install-clone
+      - ./toolkit/phing install-clean
 
   # TEST SECTION #
   # SELENIUM #
   - name: selenium
-    image: selenium/standalone-chrome:3.141.59-oxygen
+    image: selenium/standalone-chrome
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"

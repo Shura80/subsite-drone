@@ -21,11 +21,13 @@ default:
       javascript_session: 'selenium2'
       browser_name: '{{ behat.browser.name }}'
       selenium2:
-        browser: '{{ behat.browser.name }}'
         wd_host: '{{ behat.wd_host.url }}'
         capabilities:
-          chrome:
-            switches:
+          browser: '{{ behat.browser.name }}'
+          extra_capabilities:
+            chromeOptions:
+              w3c: false
+              args:
               - "--headless"
               - "--disable-gpu"
               - "--window-size=1280,800"
