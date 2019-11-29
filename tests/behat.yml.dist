@@ -23,10 +23,6 @@ default:
       selenium2:
         wd_host: '{{ behat.wd_host.url }}'
         capabilities:
-          browser: '{{ behat.browser.name }}'
-          extra_capabilities:
-            chromeOptions:
-              w3c: false
           chrome:
             switches:
               - "--headless"
