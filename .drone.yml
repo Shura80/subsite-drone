@@ -71,6 +71,7 @@ steps:
     commands:
       - rm /test/toolkit/build/sites/sites.php
       - ./toolkit/phing install-clean
+      - ./toolkit/phing drush-solr-enable
 
   # TEST SECTION #
   # SELENIUM #
