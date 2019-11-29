@@ -48,17 +48,14 @@ steps:
     commands:
       - ./toolkit/phing test-run-phpcs
   # PHP 7 compatibility #
-  - name: php7-comp
-    image: fpfis/php56-dev
-    commands:
-      - ./toolkit/phing test-run-phpcs-compatibility
+#  - name: php7-comp
+#    image: fpfis/php56-dev
+#    commands:
+#      - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
     image: fpfis/php56-dev
-    depends_on:
-      - phpcs
-      - php7-comp
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
@@ -71,8 +68,6 @@ steps:
   # CLONE #
   - name: install-clone
     image: fpfis/php56-dev
-    depends_on:
-      - build
     commands:
       - rm /test/toolkit/build/sites/sites.php
       - ./toolkit/phing install-clone
@@ -89,7 +84,5 @@ steps:
   # BEHAT #
   - name: behat
     image: fpfis/php56-dev
-    depends_on:
-      - behat
     commands:
       - ./toolkit/phing test-run-behat
