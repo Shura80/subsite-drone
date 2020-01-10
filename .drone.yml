@@ -24,6 +24,12 @@ services:
       DOCUMENT_ROOT: /test/toolkit/build
       PORT: 8080
 
+  - name: mysql
+    image: fpfis/mysql56
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_MAX_ALLOWED_PACKET: 128M
+
 # BUILD SECTION #
 steps:
   # SETUP TOOLKIT #
@@ -35,10 +41,54 @@ steps:
       # - cp ./vendor/ec-europa/toolkit/includes/phing/props/drone.props build.develop.props
       - ./toolkit/phing project-properties-validate
 
-# TELEGRAM NOTIFICATIONS
+# PHPCS CHECKS #
+# Standard #
+  - name: phpcs
+    image: fpfis/php56-dev
+    commands:
+      - ./toolkit/phing test-run-phpcs
+
+  # BUILD PLATFORM AND SUBSITE#
+  - name: build
+    image: fpfis/php56-dev
+    commands:
+      - ./toolkit/phing build-platform build-subsite-dev
+
+  # SOLR SERVER SECTION #
+  - name: solr
+    image: fpfis/solr5
+    detach: true
+
+  # INSTALL SECTION #
+  # CLEAN #
+  - name: install-clean
+    image: fpfis/php56-dev
+    commands:
+      - rm /test/toolkit/build/sites/sites.php
+      - ./toolkit/phing install-clean
+      - ./toolkit/phing drush-solr-enable
+
+  # TEST SECTION #
+  # SELENIUM #
+  - name: selenium
+    image: selenium/standalone-chrome-debug
+    environment:
+      HUB_PORT_4444_TCP_ADDR: selenium
+      HUB_PORT_4444_TCP_PORT: "4444"
+    detach: true
+
+  # BEHAT #
+  - name: behat
+    image: fpfis/php56-dev
+    commands:
+      - ./toolkit/phing test-run-behat
+
+  # TELEGRAM NOTIFICATIONS
   - name: notification
     image: appleboy/drone-telegram
     secrets: [ telegram_token, telegram_to ]
+    when:
+      status: [ success, failure ]
     settings:
       token:
         from_secret: telegram_token
@@ -46,9 +96,9 @@ steps:
         from_secret: telegram_to
       message: >
         {{#success build.status}}
-          ✅ Build succeeded #{{build.number}} of {{repo.name}} - Good job.
-          📝 Commit by {{commit.author}} on {{commit.branch}}:
+          ✅ Build succeeded #{{build.number}} of '{{repo.name}}' - Good job!
+          Commit by {{commit.author}} on {{commit.branch}}:
         {{else}}
-          ❌ Build failed #{{build.number}} of {{repo.name}} - Fix me please.
-          📝 Commit by {{commit.author}} on {{commit.branch}}:
+          ❌ Build failed #{{build.number}} of '{{repo.name}}' - Fix it please.
+          Commit by {{commit.author}} on {{commit.branch}}:
         {{/success}}
