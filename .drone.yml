@@ -47,11 +47,6 @@ steps:
     image: fpfis/php56-dev
     commands:
       - ./toolkit/phing test-run-phpcs
-  # PHP 7 compatibility #
-  - name: php7-comp
-    image: fpfis/php56-dev
-    commands:
-      - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
