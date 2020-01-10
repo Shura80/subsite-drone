@@ -4,7 +4,7 @@
     "homepage": "https://github.com/ec-europa/toolkit#nexteuropa-toolkit",
     "license": "EUPL-1.1",
     "require": {
-        "ec-europa/toolkit": "3.0.27"
+        "ec-europa/toolkit": "3.*"
     },
     "scripts": {
         "post-install-cmd": "@toolkit-install",
