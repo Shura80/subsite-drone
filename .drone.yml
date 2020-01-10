@@ -38,7 +38,6 @@ steps:
     commands:
       - composer install
       - rm -rf ./.tmp/ ./build
-      # - cp ./vendor/ec-europa/toolkit/includes/phing/props/drone.props build.develop.props
       - ./toolkit/phing project-properties-validate
 
 # PHPCS CHECKS #
