@@ -40,10 +40,10 @@ steps:
     image: appleboy/drone-telegram
     settings:
       token: 1010031050:AAFiKD77-RBdVB9BKQMRFmHypOGuz1ACa9k
-      to: alessiodepisi
+      to: 12833500
       message: >
         {{#success build.status}}
-          build succeeded. Good job.
+          ✅ build succeeded. Good job.
         {{else}}
-          build failed. Fix me please.
+          ❌ build failed. Fix me please.
         {{/success}}
