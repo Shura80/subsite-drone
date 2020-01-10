@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ruleset name="NextEuropa_default">
   <description>Default PHP CodeSniffer configuration for NextEuropa subsites.</description>
-  <rule ref="PHP7"/>
-  <file>/Users/alessiodepisi/Sites/agri-eip_clone/dist</file>
-  <arg name="extensions" value="php,inc,module,install,test,profile,theme"/>
+  <rule ref="Subsite"/>
+  <rule ref="/Users/alessiodepisi/Sites/enrd_clone/phpcs-ruleset.xml"/>
+  <file>/Users/alessiodepisi/Sites/enrd_clone/resources</file>
+  <file>/Users/alessiodepisi/Sites/enrd_clone/lib</file>
+  <arg name="extensions" value="php,inc,module,install,info,test,profile,theme,css,js"/>
   <arg name="report" value="full"/>
   <arg value="p"/>
 </ruleset>

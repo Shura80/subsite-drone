@@ -1,33 +1,43 @@
 default:
   suites:
-    default:
+    subsite:
+      paths:
+        - '{{ behat.dir }}/features/CustomFeatures'
       contexts:
         - FeatureContext
-        - Drupal\agri\Context\DrupalContext
-        - Drupal\agri\Context\EmailNotificationsContext
-        - Drupal\agri\Context\SolrContext
-        - Drupal\agri\Context\SearchApiContext
-        - Drupal\agri\Context\FieldCollectionContext
-        - Drupal\DrupalExtension\Context\MinkContext
-        - Drupal\DrupalExtension\Context\DrushContext
+        - Drupal\enrd\Context\DrupalContext
+        - Drupal\enrd\Context\GeneralContext
+        - Drupal\enrd\Context\EmailNotificationsContext
+        - Drupal\enrd\Context\TaxonomiesContext
+        - Drupal\enrd\Context\CommunityContext
+        - Drupal\enrd\Context\SolrContext
+        - Drupal\enrd\Context\FieldCollectionContext
+        - Drupal\enrd\Context\InviteContext
+        - Drupal\enrd\Context\MediaContext
+        - Drupal\nexteuropa\Context\MultilingualContext
+        - Drupal\nexteuropa\Context\MinkContext
         - Drupal\DrupalExtension\Context\MessageContext
-        - Drupal\DrupalExtension\Context\BatchContext
+        - Drupal\DrupalExtension\Context\DrushContext
         - Drupal\DrupalExtension\Context\MarkupContext
+        - Drupal\DrupalExtension\Context\BatchContext
       filters:
         tags: "{{ behat.tags }}"
   extensions:
     Behat\MinkExtension:
-      goutte: ~
-      javascript_session: 'selenium2'
       browser_name: '{{ behat.browser.name }}'
+      goutte: ~
       selenium2:
         wd_host: '{{ behat.wd_host.url }}'
         capabilities:
-          chrome:
-            switches:
-              - "--headless"
-              - "--disable-gpu"
-              - "--window-size=1280,800"
+          browser: '{{ behat.browser.name }}'
+          extra_capabilities:
+            chromeOptions:
+              w3c: false
+              args:
+                - "--headless"
+                - "--disable-gpu"
+                - "--window-size=1280,800"
+      javascript_session: 'selenium2'
       base-url: '{{ behat.base_url }}'
       files_path: '{{ behat.dir }}/resources'
     Drupal\DrupalExtension:
@@ -36,28 +46,20 @@ default:
       drupal:
         drupal_root: '{{ build.platform.dir }}'
       region_map:
-        header: "#layout-header"
-        header_top: ".region-header-top"
-        header_right: ".region.region-header-right"
-        featured: ".region.region-featured"
-        tools: ".region.region-tools"
-        sidebar_left: ".region.region-sidebar-left"
-        sidebar_right: ".region.region-sidebar-right"
-        help: ".region.region-help"
-        content_top: ".region.region-content-top"
-        content_top_left: ".region.region-content-top-left"
-        content_top_right: ".region.region-content-top-right"
-        content: ".region.region-content"
-        content_right: ".region.region-content-right"
-        content_first: ".region.region-content-first"
-        content_second: ".region.region-content-second"
-        content_third: ".region.region-content-third"
-        content_bottom: ".region.region-content-bottom"
-        content_bottom_first: ".region.region-content-bottom-first"
-        content_bottom_second: ".region.region-content-bottom-second"
-        content_bottom_third: ".region.region-content-bottom-third"
-        main_bottom: ".region.region-main-bottom"
-        footer: ".region.region-footer"
+        title: "#page-title"
+        content: ".region-content"
+        right content: ".region-content-right"
+        bottom content: ".region-content-bottom"
+        featured: ".region-featured"
+        tools: ".region-tools"
+        tools buttons: "#main.container .region-tools-buttons"
+        og contextual links: "#block-multisite-og-button-og-contextual-links"
+        left sidebar: ".region-sidebar-left"
+        right sidebar: ".region-sidebar-right"
+        top header: ".region-header-top"
+        right header: ".region-header-right"
+        footer: ".region-footer"
+        footer top: ".region-footer-top"
       selectors:
         message_selector: '.messages'
         error_message_selector: '.messages.error'

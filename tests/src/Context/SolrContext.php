@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\agri\Context;
+namespace Drupal\enrd\Context;
 
 /**
  * Defines application features from the specific context.
@@ -10,7 +10,7 @@ class SolrContext extends RawGeneralContext {
   private $environment;
 
   /**
-   * Check if Solr environment and server are available.
+   * Check Solr environment before the indexation tests run.
    *
    * @BeforeScenario @solr
    */
@@ -25,7 +25,7 @@ class SolrContext extends RawGeneralContext {
 
     // Check for availability.
     if (!apachesolr_server_status($environment['url'], $environment['service_class'])) {
-      throw new \Exception('Solr server seems to be unavailable or misconfigured.');
+      throw new \Exception('Solr server seems to be unavailable or misconfigurated.');
     }
 
     $this->environment = $environment;
@@ -50,7 +50,7 @@ class SolrContext extends RawGeneralContext {
       $this->getDriver('drush')->$command();
     }
     // Reindexes contents just marked.
-    $command = 'solr-index';
+    $command = "solr-index";
     $this->getDriver('drush')->$command();
 
     // Waits for Apache Solr server to finish indexing.
@@ -72,7 +72,7 @@ class SolrContext extends RawGeneralContext {
     $this->getDriver('drush')->$command();
 
     // Reindexes contents just marked.
-    $command = 'solr-index';
+    $command = "solr-index";
     $this->getDriver('drush')->$command();
 
     // Waits for Apache Solr server to finish indexing.
@@ -101,7 +101,7 @@ class SolrContext extends RawGeneralContext {
       return ($status['total'] != 0 && $status['remaining'] == 0 && $data->index->numDocs < $status['total']);
     }
     catch (Exception $e) {
-      throw new \Exception('Error retrieving pending docs.');
+      throw new \Exception('Error retriving pending docs.');
     }
 
   }

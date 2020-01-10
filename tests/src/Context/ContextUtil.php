@@ -2,6 +2,8 @@
 
 namespace Drupal\nexteuropa\Context;
 
+use Behat\Mink\Element\Element;
+
 /**
  * Util trait proposing.
  *
@@ -19,8 +21,10 @@ trait ContextUtil {
    * @param string $langcode
    *   The language code for the entity.
    *
-   * @return bool
+   * @return bool|mixed
    *   TRUE if Pathauto is enabled, FALSE if not.
+   *
+   * @throws \EntityMalformedException
    *
    * @see pathauto_field_attach_form()
    * @see \NextEuropaMultilingualSubContext::createMultilingualContent()
@@ -33,7 +37,7 @@ trait ContextUtil {
         module_load_include('inc', 'pathauto');
         $uri = entity_uri($entity_type, $entity);
         $path = drupal_get_path_alias($uri['path'], $langcode);
-        $pathauto_alias = pathauto_create_alias($entity_type, 'return', $uri['path'], [$entity_type => $entity], $bundle, $langcode);
+        $pathauto_alias = pathauto_create_alias($entity_type, 'return', $uri['path'], array($entity_type => $entity), $bundle, $langcode);
         return $path != $uri['path'] && $path == $pathauto_alias;
       }
       else {
@@ -41,6 +45,33 @@ trait ContextUtil {
       }
     }
     return $entity->path['pathauto'];
+  }
+
+  /**
+   * Retrieve a table row containing specified text from a given element.
+   *
+   * @param \Behat\Mink\Element\Element $element
+   *   The DOM element where to search in.
+   * @param string $search
+   *   The text to search for in the table row.
+   *
+   * @return \Behat\Mink\Element\NodeElement
+   *   The row containing the searched text.
+   *
+   * @throws \Exception
+   */
+  public function getTableRow(Element $element, $search) {
+    $rows = $element->findAll('css', 'tr');
+    if (empty($rows)) {
+      throw new \Exception(sprintf('No rows found on the page %s', $this->getSession()->getCurrentUrl()));
+    }
+
+    foreach ($rows as $row) {
+      if (strpos($row->getText(), $search) !== FALSE) {
+        return $row;
+      }
+    }
+    throw new \Exception(sprintf('Failed to find a row containing "%s" on the page %s', $search, $this->getSession()->getCurrentUrl()));
   }
 
 }

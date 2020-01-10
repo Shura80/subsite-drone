@@ -1,8 +1,3 @@
-; ===================
-; This file is intended as an EXAMPLE.
-; Copy it to resources/site.make to include it in your builds.
-; ===================
-
 api = 2
 core = 7.x
 
@@ -10,91 +5,129 @@ core = 7.x
 ; Contributed modules
 ; ===================
 
-projects[calendar][subdir] = "contrib"
-projects[calendar][version] = "3.5"
-projects[calendar][patch][] = https://www.drupal.org/files/issues/calendar-multi-day-past-future-2698061-2.patch
+projects[addressfield][subdir] = "contrib"
+projects[addressfield][version] = "1.3"
 
-projects[conditional_fields][subdir] = "contrib"
-projects[conditional_fields][version] = "3.0-alpha2"
-projects[conditional_fields][patch][] = https://www.drupal.org/files/issues/filled_with_a_value-2142691-16.patch
-projects[conditional_fields][patch][] = https://www.drupal.org/files/issues/conditional_fields-IE9_fix-1373656-13.patch
+; https://webgate.ec.europa.eu/fpfis/wikis/x/YZ3YC
+projects[admin_views][subdir] = "contrib"
+; https://www.drupal.org/sa-contrib-2019-076
+projects[admin_views][version] = "1.7"
 
-projects[content_lock][subdir] = "contrib"
-projects[content_lock][version] = "2.2"
+; https://webgate.ec.europa.eu/fpfis/wikis/x/b5d7Eg
+projects[double_field][subdir] = "contrib"
+projects[double_field][version] = "2.5"
 
-projects[context_menu_block][subdir] = "contrib"
-projects[context_menu_block][version] = "3.1"
-projects[context_menu_block][patch][] = https://www.drupal.org/files/issues/context_menu_block-2415167-7.patch
+projects[ds_bootstrap_layouts][subdir] = "contrib"
+projects[ds_bootstrap_layouts][download][type] = git
+projects[ds_bootstrap_layouts][download][revision] = 0bef9d49a2b302c29ebed001b66f415c1d05b6c7
+projects[ds_bootstrap_layouts][download][branch] = 7.x-3.x
 
-projects[context_og][subdir] = "contrib"
-projects[context_og][version] = "2.1"
+projects[entityqueue][subdir] = "contrib"
+projects[entityqueue][version] = "1.4"
+
+projects[entityreference_view_widget][subdir] = "contrib"
+projects[entityreference_view_widget][version] = "2.0-rc6"
+
+projects[expanding_formatter][subdir] = "contrib"
+projects[expanding_formatter][version] = "1.0"
+projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
+
+projects[feeds_tamper_string2id][subdir] = "contrib"
+projects[feeds_tamper_string2id][version] = "1.1"
+
+projects[facetapi_bonus][subdir] = "contrib"
+projects[facetapi_bonus][version] = "1.2"
 
 projects[field_collection][subdir] = "contrib"
 projects[field_collection][version] = "1.0-beta12"
-projects[field_collection][patch][] = https://www.drupal.org/files/issues/field_collection-logic_issue_with_fetchHostDetails-2382089-47.patch
 
-projects[field_collection_fieldset][subdir] = "contrib"
-projects[field_collection_fieldset][version] = "2.6"
+; Temporary local downgrade of File Entity for the Solr issues (NEMA-2381).
+projects[file_entity][subdir] = "contrib"
+projects[file_entity][version] = "2.10"
 
-projects[field_collection_table][subdir] = "contrib"
-projects[field_collection_table][version] = "1.0-beta5"
+projects[geocoder][subdir] = "contrib"
+projects[geocoder][version] = "1.3"
+projects[geocoder][patch][] = https://www.drupal.org/files/issues/geocoder-osm-nominatim-address-2682507-2.patch
+
+projects[invisimail][subdir] = "contrib"
+projects[invisimail][version] = "1.2"
 
 projects[invite][subdir] = "contrib"
 projects[invite][version] = "4.1-rc1"
 
-projects[node_clone][subdir] = "contrib"
-projects[node_clone][version] = "1.0"
+projects[message_digest][subdir] = "contrib"
+projects[message_digest][version] = "1.0"
+;Patch for translatable digests.
+projects[message_digest][patch][] = https://www.drupal.org/files/issues/message_digest-i18n-2257445-1.patch
+;Patch to add table index.
+projects[message_digest][patch][] = patches/message-digest-add-table-indexes-2554627-D7.patch
+;Patch to fix queue logic when aggregating digests.
+projects[message_digest][patch][] = https://www.drupal.org/files/issues/message-queue-logic-2238833-8.patch
 
-projects[oauth][subdir] = "contrib"
-projects[oauth][version] = "3.4"
+projects[message_notify][subdir] = "contrib"
+projects[message_notify][version] = "2.5"
 
-projects[og_bulkadd][subdir] = "contrib"
-projects[og_bulkadd][version] = "1.3"
+projects[message_subscribe][subdir] = "contrib"
+projects[message_subscribe][version] = "1.0-rc2"
 
-projects[og_menu][subdir] = "contrib"
-projects[og_menu][version] = "3.1"
+;Patches on message_subscribe.
+projects[message_subscribe][patch][] = https://www.drupal.org/files/issues/2184567-message-subscribe-blocked-users-23.patch
+projects[message_subscribe][patch][] = https://www.drupal.org/files/issues/group-context-1828184-67.patch
+projects[message_subscribe][patch][] = https://www.drupal.org/files/issues/prevent_loop_of_message-2303795-12.patch
 
-projects[og_webform][subdir] = "contrib"
-projects[og_webform][version] = "1.x-dev"
+projects[message_subscribe_email_frequency][subdir] = "contrib"
+projects[message_subscribe_email_frequency][version] = "1.1"
 
-projects[persistent_menu_items][subdir] = "contrib"
-projects[persistent_menu_items][version] = "1.0"
+; https://webgate.ec.europa.eu/fpfis/wikis/x/q98RC
+projects[multiple_fields_remove_button][subdir] = "contrib"
+projects[multiple_fields_remove_button][version] = "1.5"
 
-projects[phpexcel][subdir] = "contrib"
-projects[phpexcel][version] = "3.11"
+projects[queue_mail][subdir] = "contrib"
+projects[queue_mail][version] = "1.6"
 
 projects[redirect][subdir] = "contrib"
 projects[redirect][version] = "1.0-rc3"
 
-projects[search_api][subdir] = "contrib"
-projects[search_api][version] = "1.22"
+projects[shs][subdir] = "contrib"
+projects[shs][version] = "1.8"
 
-projects[search_api_db][subdir] = "contrib"
-projects[search_api_db][version] = "1.6"
+projects[special_menu_items][subdir] = "contrib"
+projects[special_menu_items][version] = "2.0"
 
-projects[search_api_exclude][subdir] = "contrib"
-projects[search_api_exclude][version] = "1.3"
+projects[socialfield][subdir] = "contrib"
+projects[socialfield][version] = "1.5"
+projects[socialfield][patch][] = https://www.drupal.org/files/issues/2823399-default-values-fix.patch
+projects[socialfield][patch][] = https://www.drupal.org/files/issues/2018-05-01/socialfield-new-services-unavailable-existing-fields-2464803-12.patch
 
-projects[search_api_saved_searches][subdir] = "contrib"
-projects[search_api_saved_searches][version] = "1.7"
-projects[search_api_saved_searches][patch][] = https://www.drupal.org/files/issues/2019-03-07/fix-result-count-3038333-2-7.patch
+projects[taxonomy_csv][subdir] = "contrib"
+projects[taxonomy_csv][version] = "5.10"
+projects[taxonomy_csv][patch][] = https://www.drupal.org/files/taxonomy_csv-rm_unknown_options_check-1475952-10.patch
 
 projects[term_merge][subdir] = "contrib"
-projects[term_merge][version] = "1.4"
+projects[term_merge][version] = "1.2"
 
-projects[twitter][subdir] = "contrib"
-projects[twitter][version] = "5.11"
+projects[uuid_features][subdir] = "contrib"
+projects[uuid_features][version] = "1.0-rc1"
 
-projects[usermerge][subdir] = "contrib"
-projects[usermerge][version] = "2.11"
+projects[views_between_dates_filter][subdir] = "contrib"
+projects[views_between_dates_filter][version] = "1.0"
 
-projects[views_block_filter_block][subdir] = "contrib"
-projects[views_block_filter_block][version] = "1.0-beta2"
-projects[views_block_filter_block][patch][] = https://www.drupal.org/files/issues/vbfb-no_ajax_dependency-2162479-5.patch
+; https://webgate.ec.europa.eu/fpfis/wikis/x/cR_CE
+projects[views_data_export_phpexcel][subdir] = "contrib"
+projects[views_data_export_phpexcel][version] = "1.0"
+projects[views_data_export_phpexcel][patch][] = patches/fix-libraries-version-detection.patch
+projects[views_data_export_phpexcel][patch][] = https://www.drupal.org/files/issues/support_batch-2644866-11.patch
 
-projects[webform_scheduler][subdir] = "contrib"
-projects[webform_scheduler][version] = "1.0-beta9"
-projects[webform_scheduler][patch][] = https://www.drupal.org/files/issues/webform_scheduler-xss-2924894.patch
+; https://webgate.ec.europa.eu/fpfis/wikis/x/1YDBEg
+projects[views_flag_refresh][subdir] = "contrib"
+projects[views_flag_refresh][version] = "1.3"
+projects[views_flag_refresh][patch][] = https://www.drupal.org/files/issues/views_flag_refresh-1967718-3.patch
+
+projects[views_tree][subdir] = "contrib"
+projects[views_tree][version] = "2.0"
+
+projects[webform_references][subdir] = "contrib"
+projects[webform_references][version] = "1.9"
 
 projects[webform_validation][subdir] = "contrib"
 projects[webform_validation][version] = "1.14"
@@ -103,17 +136,20 @@ projects[webform_validation][version] = "1.14"
 ; Libraries
 ; =========
 
-; PHPExcel 1.8.1
-libraries[PHPExcel][download][url] = https://github.com/PHPOffice/PHPExcel/archive/1.8.1.zip
-libraries[PHPExcel][download][type]= "file"
-libraries[PHPExcel][download][request_type]= "get"
-libraries[PHPExcel][download][file_type] = "zip"
+libraries[jquery.rwdimagemaps][download][type] = "git"
+libraries[jquery.rwdimagemaps][download][url] = "https://github.com/stowball/jQuery-rwdImageMaps.git"
+libraries[jquery.rwdimagemaps][destination] = "libraries"
+libraries[jquery.rwdimagemaps][download][tag] = "1.6"
 
-; bootstrap-hover-dropdown 2.2.1
-libraries[bootstrap-hover-dropdown][download][url] = https://github.com/CWSpear/bootstrap-hover-dropdown/archive/v2.2.1.zip
-libraries[bootstrap-hover-dropdown][download][type]= "file"
-libraries[bootstrap-hover-dropdown][download][request_type]= "get"
-libraries[bootstrap-hover-dropdown][download][file_type] = "zip"
+libraries[jquery.mask][download][type] = "git"
+libraries[jquery.mask][download][url] = "https://github.com/igorescobar/jQuery-Mask-Plugin.git"
+libraries[jquery.mask][download][revision] = "be8c1bb3b9f6040ff923ee81f7b57fe12a0f15e4"
+libraries[jquery.mask][destination] = "libraries"
+
+libraries[PHPExcel][download][type] = "git"
+libraries[PHPExcel][download][url] = "https://github.com/PHPOffice/PHPExcel.git"
+libraries[PHPExcel][download][revision] = "1441011fb7ecdd8cc689878f54f8b58a6805f870"
+libraries[PHPExcel][destination] = "libraries"
 
 ; ======
 ; Themes

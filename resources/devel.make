@@ -18,4 +18,4 @@ projects[module_filter][subdir] = "development"
 projects[module_filter][version] = "2.2"
 
 projects[stage_file_proxy][subdir] = "development"
-projects[stage_file_proxy][version] = "1.8"
+projects[stage_file_proxy][version] = "1.9"

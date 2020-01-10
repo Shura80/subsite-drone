@@ -9,14 +9,14 @@ use Behat\Behat\Context\SnippetAcceptingContext;
 use Behat\Gherkin\Node\TableNode;
 use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Exception\ExpectationException;
-use Drupal\DrupalExtension\Context\RawDrupalContext;
+use Drupal\enrd\Context\RawGeneralContext;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 
 /**
  * Contains generic step definitions.
  */
-class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext {
+class FeatureContext extends RawGeneralContext implements SnippetAcceptingContext {
 
   /**
    * Disable Devel and Varnish modules and logincheck before testing.
@@ -117,7 +117,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   /**
    * Checks that the given element is of the given type.
    *
-   * @param Behat\Mink\Element\NodeElement $element
+   * @param \Behat\Mink\Element\NodeElement $element
    *   The element to check.
    * @param string $type
    *   The expected type.

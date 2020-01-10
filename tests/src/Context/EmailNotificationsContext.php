@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\agri\Context;
+namespace Drupal\enrd\Context;
 
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 
@@ -8,14 +8,10 @@ use Drupal\DrupalExtension\Context\RawDrupalContext;
  * Defines application features from the specific context.
  */
 class EmailNotificationsContext extends RawDrupalContext {
+
   public $originalMailSystem;
   public $activeEmail;
-
-  /**
-   * Initializes context.
-   */
-  public function __construct() {
-  }
+  private $mailCollector = array();
 
   /**
    * Prepare environment for TestingMailSystem getting the original mail system.
@@ -25,6 +21,15 @@ class EmailNotificationsContext extends RawDrupalContext {
   public function setupEmailCollector() {
     // Store the original system to restore after the scenario.
     $this->originalMailSystem = variable_get('mail_system', array('default-system' => 'MimeMailSystem'));
+  }
+
+  /**
+   * Cleanup the rules_scheduler table before testing it.
+   *
+   * @BeforeScenario @scheduling
+   */
+  public function cleanRulesSchedulerTable() {
+    db_truncate('rules_scheduler')->execute();
   }
 
   /**
@@ -41,6 +46,31 @@ class EmailNotificationsContext extends RawDrupalContext {
   }
 
   /**
+   * Init property $mailCollector with system var drupal_test_email_collector.
+   *
+   * @Then /^I receive an email$/
+   */
+  public function iReceiveAnEmail() {
+
+    $variable_name = 'drupal_test_email_collector';
+
+    // We can't use variable_get() because $conf is only fetched once per
+    // scenario.
+    $variables = array_map('unserialize',
+      db_query("SELECT name, value FROM {variable} WHERE name = '$variable_name'")->fetchAllKeyed());
+
+    if (empty($variables['drupal_test_email_collector'])) {
+      throw new \Exception(sprintf('no emails in %s', $variable_name));
+    }
+
+    foreach ($variables['drupal_test_email_collector'] as $message) {
+      $this->mailCollector[] = $message;
+    }
+
+    variable_del('drupal_test_email_collector');
+  }
+
+  /**
    * Check the email content during test.
    *
    * @Then /^the email to "([^"]*)" should contain "([^"]*)"$/
@@ -51,17 +81,29 @@ class EmailNotificationsContext extends RawDrupalContext {
     $variables = array_map('unserialize',
       db_query("SELECT name, value FROM {variable} WHERE name = 'drupal_test_email_collector'")->fetchAllKeyed());
     $this->activeEmail = FALSE;
+
+    // Parse $message array to search matching strings.
     foreach ($variables['drupal_test_email_collector'] as $message) {
       if ($message['to'] == $to) {
         $this->activeEmail = $message;
-        if (strpos($message['body'], $contents) !== FALSE ||
-          strpos($message['subject'], $contents) !== FALSE
+        // Clean body from carriage return to search in clean strings.
+        $message['body'] = str_replace(array("\n", "\r"), ' ', $message['body']);
+        $message['subject'] = str_replace(array("\n", "\r"), ' ', $message['subject']);
+        $found_in_body = strpos($message['body'], $contents);
+        $found_in_subject = strpos($message['subject'], $contents);
+
+        // If string is found in body or subject give a positive result.
+        if ($found_in_body !== FALSE || $found_in_subject !== FALSE
         ) {
           return TRUE;
         }
-        throw new \Exception('Did not find expected content in message body or subject.');
+        // If string is not found in body or subject warn about negative result.
+        else {
+          throw new \Exception('Did not find expected content in message body or subject.');
+        }
       }
     }
+    // If recipient is not found in "to" string warn about negative result.
     throw new \Exception(sprintf('Did not find expected message to %s', $to));
   }
 
@@ -73,6 +115,16 @@ class EmailNotificationsContext extends RawDrupalContext {
   public function cleanupEmailCollector() {
     variable_del('drupal_test_email_collector');
     variable_set('mail_system', $this->originalMailSystem);
+  }
+
+  /**
+   * Get private variable $mailCollector.
+   *
+   * @return array
+   *   An array with all sent mails.
+   */
+  public function getMailCollector() {
+    return $this->mailCollector;
   }
 
 }

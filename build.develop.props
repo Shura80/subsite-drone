@@ -1,4 +1,4 @@
-project.id = agri-eip
+project.id = enrd
 db.host = mysql
 solr.host = solr
 behat.browser.name = chrome

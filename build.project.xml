@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="agri-eip" description="Custom EIP-AGRI targets." default="help">
+<project name="ENRD" default="help">
+    <property name="resources.dir" value="${project.basedir}/resources" />
+    <import file="${resources.dir}/build.resources.xml" />
+
     <!-- Subtarget: execute makefiles with the no-core option. -->
     <target name="drush-make-no-core" description="Make a file without core." hidden="true">
         <if>
@@ -33,22 +36,76 @@
                 </if>
             </then>
         </if>
-
-        <!--
-        <phingcall target="copy-homepage-beans-default-images">
+        <phingcall target="clean-libraries-folders">
         </phingcall>
-        -->
     </target>
 
-    <!-- Copy Beans homepage images on new build -->
-    <target name="copy-homepage-beans-default-images" description="Copy default images from theme folder to files directory.">
-        <echo message="Copying default homepage beans images." />
-        <echo message="From dir: ${lib.dir.themes}/agri_theme/images/beans/" />
-        <echo message="To dir: ${build.platform.dir}/${build.subsite.dir.files}" />
-        <copy todir="${build.platform.dir}/${build.subsite.dir.files}">
-            <fileset dir="${lib.dir.themes}/agri_theme/images/beans/">
-                <include name="**"></include>
-            </fileset>
-        </copy>
+    <!-- Append text to .htaccess file -->
+    <target name="project-platform-set-htaccess" hidden="true" description="Append htaccess config to root .htaccess.">
+        <!-- Call target to patch .htaccess file -->
+        <phingcall target="patch-htaccess">
+        </phingcall>
+        <if>
+            <istrue value="${build.platform.htaccess.append.text}"/>
+            <then>
+                <if>
+                    <available file="${build.platform.htaccess.append.text}"/>
+                    <then>
+                        <append file="${build.platform.htaccess.append.text}"
+                                destFile="${build.platform.dir}/.htaccess"/>
+                    </then>
+                    <else>
+                        <append text="${build.platform.htaccess.append.text}"
+                                destFile="${build.platform.dir}/.htaccess"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <echo msg="Appended no text to htaccess."/>
+            </else>
+        </if>
+        <!-- Call target to append text to robots.txt file -->
+        <phingcall target="append-robots">
+        </phingcall>
+    </target>
+    <!-- Clean libraries folder -->
+    <target name="clean-libraries-folders">
+        <echo msg="Cleaning Jquery Mask Plugin folder ${build.${build-type}.dir}/libraries/jquery.mask."/>
+        <if>
+            <available file="${build.${build-type}.dir}/libraries/jquery.mask/dist" type="dir"/>
+            <then>
+                <move file="${build.${build-type}.dir}/libraries/jquery.mask/dist"
+                      tofile="${build.${build-type}.dir}/libraries/dist"/>
+                <delete dir="${build.${build-type}.dir}/libraries/jquery.mask" includeemptydirs="true"
+                        verbose="true"
+                        failonerror="true"/>
+                <move file="${build.${build-type}.dir}/libraries/dist" tofile="${build.${build-type}.dir}/libraries/jquery.mask" includeemptydirs="true" />
+            </then>
+        </if>
+    </target>
+    <!-- Patch .htaccess file -->
+    <target name="patch-htaccess" hidden="true" description="Patch root .htaccess before appending any text to it">
+        <if>
+            <available file="${build.platform.htaccess.patch}" type="file"/>
+            <then>
+                <echo message="Patching the Drupal .htaccess"/>
+                <patch patchfile="${build.platform.htaccess.patch}"
+                       originalfile="${build.platform.dir}/.htaccess"/>
+            </then>
+        </if>
+    </target>
+    <!-- Add custom lines to robots.txt file -->
+    <target name="append-robots" hidden="true" description="Append text to root robots.txt.">
+        <if>
+            <istrue value="${build.platform.robots.append.text}"/>
+            <then>
+                <echo message="Modifying robots.txt"/>
+                <append text="${build.platform.robots.append.text}"
+                        destFile="${build.platform.dir}/robots.txt"/>
+            </then>
+            <else>
+                <echo msg="Appended no text to robots.txt"/>
+            </else>
+        </if>
     </target>
 </project>

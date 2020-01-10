@@ -7,8 +7,8 @@
   "autoload": {
     "psr-4": {
       "Drupal\\nexteuropa\\": "src",
-      "Drupal\\agri\\": "src",
-      "Drupal\\Driver\\": "src/Driver"
+      "Drupal\\enrd\\": "src",
+      "Drupal\\Driver\\": "src/Driver"      
     }
   },
   "prefer-stable": true,

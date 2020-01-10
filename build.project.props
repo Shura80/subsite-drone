@@ -1,13 +1,14 @@
 # Subsite configuration.
 # ----------------------
-project.id = agri-eip
-project.name = EIP-AGRI Agriculture
-project.install.modules = agri_core
-project.url.production = https://ec.europa.eu/eip/agriculture/
+project.id = enrd
+project.name = The European Network for Rural Development (ENRD)
+project.install.modules = enrd_mastermind
+project.url.production = https://enrd.ec.europa.eu
+project.url.playground = https://webgate.ec.europa.eu/playground-multisite/enrd
 
 # Solr configuration.
 # -------------------
-solr.type = d7_apachesolr
+project.solr.type = d7_apachesolr
 
 # Admin configuration.
 # --------------------
@@ -19,11 +20,14 @@ profile = multisite_drupal_communities
 platform.package.version = 2.5
 phpcs.compat.checkreturn = false
 
-devel.mdls.en = dblog
-
 # The location of the .htaccess file in the Drupal root folder.
 build.platform.htaccess.path = ${build.platform.dir}/.htaccess
 
-behat.tags = ~@wip
+# Configuration to append to the .htaccess file in the Drupal root folder.
+build.platform.htaccess.append.text =  ${line.separator}# Legacy prefix substitution.${line.separator}<IfModule mod_rewrite.c>${line.separator}  RewriteEngine on${line.separator}  RewriteRule ^(en|fr|de|it|es|pl)/(.*)$ http%{ENV:protossl}://%{HTTP_HOST}/$2_$1 [L,R=301]${line.separator}</IfModule>${line.separator}
 
-drush.verbose = TRUE
+# Configuration to append to the robots.txt
+build.platform.robots.append.text = ${line.separator}# ENRD Specific directives${line.separator}User-agent: *${line.separator}Disallow: /enrd-static/${line.separator}
+
+behat.tags = ~@wip&&~@clean
+behat.formatter.name = progress
