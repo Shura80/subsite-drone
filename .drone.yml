@@ -38,15 +38,15 @@ steps:
     commands:
       - composer install
       - rm -rf ./.tmp/ ./build
-      - cp ./vendor/ec-europa/toolkit/includes/phing/props/drone.props build.develop.props
+      # - cp ./vendor/ec-europa/toolkit/includes/phing/props/drone.props build.develop.props
       - ./toolkit/phing project-properties-validate
 
   # PHPCS CHECKS #
   # Standard #
-  - name: phpcs
-    image: fpfis/php56-dev
-    commands:
-      - ./toolkit/phing test-run-phpcs
+    # - name: phpcs
+    # image: fpfis/php56-dev
+      # commands:
+      # - ./toolkit/phing test-run-phpcs
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
