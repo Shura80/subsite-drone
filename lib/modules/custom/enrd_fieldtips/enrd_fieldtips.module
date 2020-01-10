@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ * Module file for the enrd_fieldtips.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add tooltips instance settings on the 'edit field instance' form.
+ */
+function enrd_fieldtips_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+
+  $form_widget_settings = $form['#instance']['widget']['settings'];
+  $form['instance']['widget']['settings']['enrd_fieldtips_container'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('ENRD field description tooltip'),
+    '#description' => t('Provides to move the field description (help text) in a tooltip.'),
+  );
+  $form['instance']['widget']['settings']['enrd_fieldtips_container']['enrd_fieldtips_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable'),
+    '#default_value' => isset($form_widget_settings['enrd_fieldtips_enabled']) ? $form_widget_settings['enrd_fieldtips_enabled'] : FALSE,
+    // Manually remove the container to prevent it from being saved as part of
+    // the instance widget settings.
+    '#parents' => array(
+      'instance',
+      'widget',
+      'settings',
+      'enrd_fieldtips_enabled',
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function enrd_fieldtips_form_alter(&$form, &$form_state, $form_id) {
+
+  // Add tooltips to any form which has a known entity type and bundle.
+  if (!empty($form['#entity_type']) && !empty($form['#bundle'])) {
+
+    $entity_type = $form['#entity_type'];
+    $bundle = $form['#bundle'];
+
+    // Lookup field instance information for all of the entity's fields.
+    $instances = field_info_instances($entity_type, $bundle);
+    $add_js = FALSE;
+
+    foreach ($instances as $field_name => $instance) {
+      // If the settings are not set, move to the next field.
+      $instance_settings = $instance['widget']['settings'];
+      if (!isset($instance_settings['enrd_fieldtips_enabled']) || $instance_settings['enrd_fieldtips_enabled'] == FALSE) {
+        continue;
+      }
+
+      // Add custom class to identify the element.
+      $form[$field_name]['#attributes']['class'][] = 'enrd-fieldtips-item';
+      // Boolean for include custom css.
+      $add_js = TRUE;
+    }
+
+    // Include js only if there is at least one field with the ENRD fieldtips
+    // description.
+    if ($add_js) {
+      $form['#attached']['js'][] = array(
+        'data' => drupal_get_path('module', 'enrd_fieldtips') . '/includes/enrd_fieldtips.js',
+        'type' => 'file',
+        'weight' => -20,
+      );
+    }
+  }
+}

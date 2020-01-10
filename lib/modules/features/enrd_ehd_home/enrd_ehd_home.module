@@ -1,0 +1,107 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Evaluation home page feature.
+ */
+
+include_once 'enrd_ehd_home.features.inc';
+
+define('ENRD_EHD_HOME_TWITTER_URL', 'https://twitter.com/');
+
+/**
+ * Create custom ENRD Evaluation beans programmatically.
+ */
+function _enrd_ehd_home_custom_bean() {
+  if (module_exists('nexteuropa_webtools')) {
+    if (!bean_load_delta('ehdtwitterfeeds')) {
+      $bean = bean_create(array('type' => 'webtools'));
+      $bean->label = 'Evaluation Twitter feeds';
+      $bean->title = 'Latest tweets';
+      $bean->delta = 'ehdtwitterfeeds';
+
+      $bean->field_custom_js_status[LANGUAGE_NONE][0]['value'] = '0';
+      $bean->field_json_object[LANGUAGE_NONE][0]['value'] = <<<JSON
+{
+    "service": "smk",
+	"type": "user",
+	"display_user": true,
+	"display_user_pic": true,
+	"auto_expand_photo": false,
+	"auto_expand_video": false,
+	"screen_name": "ENRD_Evaluation",
+	"count": "2",
+	"include_rts": false,
+	"rts_display_original": false,
+	"exclude_replies": true,
+	"tweet_more_btn": false
+}
+JSON;
+      $bean->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function enrd_ehd_home_views_pre_render(&$view) {
+  // Create "Latest publications" footer with "All publications" link.
+  if ($view->name == 'enrd_evaluation_landing_page' && $view->current_display == 'latest_publ_block') {
+    $all_publ_link = array(
+      '#theme_wrappers' => array('container'),
+      '#attributes' => array('class' => array('more-link')),
+      'ehd_all_publications' => array(
+        '#type' => 'link',
+        '#title' => t('All publications'),
+        '#href' => url('evaluation/publications'),
+      ),
+    );
+
+    $view->attachment_after = render($all_publ_link);
+  }
+};
+
+/**
+ * Implements hook_block_view_MODULE_DELTA_alter().
+ */
+function enrd_ehd_home_block_view_bean_ehdtwitterfeeds_alter(&$data, $block) {
+  // Add "More tweets" link below the EHD tweets.
+  if (isset($data['content']['bean']['ehdtwitterfeeds']['field_json_object'][0]['#markup'])) {
+    $twitter_ehd_json = drupal_json_decode($data['content']['bean']['ehdtwitterfeeds']['field_json_object'][0]['#markup']);
+    $twitter_ehd_screen_name = $twitter_ehd_json['screen_name'];
+
+    $options = array(
+      'attributes' => array(
+        'title' => t('Read more on Twitter'),
+        'class' => array('twitter-ehd-link'),
+        'rel' => 'nofollow',
+        'target' => '_blank',
+      ),
+    );
+
+    $more_tweets = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('twitter-ehd')),
+      'twitter-ehd-link' => array(
+        '#type' => 'link',
+        '#title' => t('More tweets'),
+        '#href' => ENRD_EHD_HOME_TWITTER_URL . $twitter_ehd_screen_name,
+        '#options' => $options,
+      ),
+      '#weight' => 2,
+    );
+  }
+
+  $data['content']['bean']['ehdtwitterfeeds']['more_tweets'] = $more_tweets;
+}
+
+/**
+ * Implements hook_last_update_ignore_list().
+ */
+function enrd_ehd_home_last_update_ignore_list() {
+  // Define a list of urls that uses generic fallback message in footer block.
+  return [
+    'evaluation',
+  ];
+}

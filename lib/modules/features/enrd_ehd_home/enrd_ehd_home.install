@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Install file of the enrd_ehd_home feature.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_ehd_home_install() {
+  // Create custom Evaluation Twitter Feeds block.
+  _enrd_ehd_home_custom_bean();
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_ehd_home_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Evaluation home is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_ehd_home_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Evaluation home has been deactivated on your site.'));
+}
+
+/**
+ * Disable "More tweets" link from webtools bean.
+ */
+function enrd_ehd_home_update_7201() {
+  if (module_exists('nexteuropa_webtools')) {
+    if ($bean = bean_load_delta('ehdtwitterfeeds')) {
+      $decoded_ehdtwitterfeeds = drupal_json_decode($bean->field_json_object[LANGUAGE_NONE][0]['value']);
+      $decoded_ehdtwitterfeeds['tweet_more_btn'] = FALSE;
+      $encoded_ehdtwitterfeeds = drupal_json_encode($decoded_ehdtwitterfeeds);
+      $bean->field_json_object[LANGUAGE_NONE][0]['value'] = $encoded_ehdtwitterfeeds;
+      bean_save($bean);
+    }
+  }
+}

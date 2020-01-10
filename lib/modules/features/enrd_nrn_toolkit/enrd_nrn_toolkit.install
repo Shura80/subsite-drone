@@ -1,0 +1,122 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD NRN Toolkit taxonomy terms.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_nrn_toolkit_install() {
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_nrn_toolkit', 'data/enrd_nrn_toolkit_taxonomies');
+
+  // Revert taxonomies, fields bases and instance and other components.
+  features_revert_module('enrd_nrn_toolkit');
+
+  // Clean multisite node types from field_tax_networking instances.
+  $bundles = [
+    'document',
+    'f_a_q',
+    'article',
+    'discussion',
+  ];
+
+  foreach ($bundles as $bundle_name) {
+    $instance = field_info_instance('node', 'field_tax_networking', $bundle_name);
+    field_delete_instance($instance, TRUE);
+  }
+
+  // Delete old ENRD Networking taxonomy terms.
+  if ($vocabulary = taxonomy_vocabulary_machine_name_load('enrd_networking')) {
+    $tree = taxonomy_get_tree($vocabulary->vid);
+    foreach ($tree as $term) {
+      if ($term) {
+        taxonomy_term_delete($term->tid);
+      }
+    }
+  }
+
+  // Imports ENRD Networking data.
+  _enrd_taxonomies_save_taxo(_enrd_nrn_toolkit_enrd_networking(),
+    taxonomy_vocabulary_machine_name_load('enrd_networking'));
+
+  // Imports ENRD Resource Type data.
+  _enrd_taxonomies_save_taxo(_enrd_nrn_toolkit_enrd_resource_type(),
+    taxonomy_vocabulary_machine_name_load('enrd_resource_type'));
+
+  // Pre populate menu "ENRD NRN static pages menu".
+  _enrd_nrn_toolkit_nrn_static_pages_menu_prepopulate();
+
+  // Create NRN Toolkit custom bean.
+  _enrd_nrn_toolkit_custom_bean();
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_nrn_toolkit_enable() {
+  $t = get_t();
+
+  // SolR configuration add bundle.
+  multisite_drupal_toolbox_config_solr_bundle('nrn_resource', 'add');
+
+  drupal_set_message($t('ENRD NRN Toolkit is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_nrn_toolkit_disable() {
+  $t = get_t();
+
+  // SolR configuration remove bundle.
+  multisite_drupal_toolbox_config_solr_bundle('nrn_resource', 'delete');
+
+  drupal_set_message($t('ENRD NRN Toolkit has been deactivated on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_nrn_toolkit_uninstall() {
+  node_type_delete('nrn_resource');
+
+  // Delete the vocabularies created by the feature.
+  $vocabularies = array(
+    'enrd_networking',
+    'enrd_resource_type',
+  );
+
+  foreach ($vocabularies as $machine_name) {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+    if ($vocabulary) {
+      $vid = $vocabulary->vid;
+      taxonomy_vocabulary_delete($vid);
+    }
+  }
+
+  // Delete custom NRN static pages menu.
+  if ($menu = menu_load('menu-enrd-nrn-static-pages')) {
+    menu_delete($menu);
+  };
+
+  $t = get_t();
+  drupal_set_message($t('ENRD NRN Toolkit is now uninstalled on your site.'));
+}
+
+/**
+ * Enable Webform validation module, config. Static pages menu & NRN Intro bean.
+ */
+function enrd_nrn_toolkit_update_7201() {
+  module_enable(array('webform_validation'));
+
+  features_revert_module('enrd_nrn_toolkit');
+  _enrd_nrn_toolkit_nrn_static_pages_menu_prepopulate();
+
+  // Create NRN Toolkit custom bean.
+  _enrd_nrn_toolkit_custom_bean();
+}

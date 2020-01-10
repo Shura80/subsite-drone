@@ -1,0 +1,80 @@
+/* Custom RSS Feed Interface */
+.page-rss-content .view-enrd-custom-rss-feed {
+    .view-header {
+        margin-bottom: 10px;
+    }
+
+    .view-filters {
+        border: 0;
+        margin: 0;
+
+        .views-widget .form-type-select ul.chosen-choices {
+            li.search-choice:not(:first-child) span:before {
+                content: 'or ';
+                color: #999;
+            }
+        }
+
+        .views-widget-filter-term_node_tid_depth_i18n {
+            padding-right: 13px;
+
+            #edit_topics_chosen {
+                margin-right: 0;
+                margin-bottom: 10px;
+
+                @media only screen and (min-width: 321px) {
+                    margin-right: 2px;
+                    transition: 0.9s;
+                }
+            }
+
+            .form-item-topics span.field-suffix {
+                color: #999;
+                margin: 0;
+
+                @media only screen and (min-width: 327px) {
+                    margin-left: 7px;
+                    transition: 0.9s;
+                }
+            }
+        }
+    }
+
+    .attachment-after, .view-empty {
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+    }
+
+    .attachment-after {
+        .feed-sub, .feed-sub-noresults {
+            display: block;
+        }
+
+        a {
+            margin-top: 10px;
+
+            span.icon-rss {
+                border: 0;
+                margin-bottom: 6px;
+                height: 23px;
+                background: none;
+
+                &:before {
+                    top: 4px;
+                }
+            }
+
+            &:hover, &:focus {
+                span.icon-rss:before {
+                    color: #333;
+                }
+            }
+
+            span.rss-text {
+                padding-left: 10px;
+                font-weight: bold;
+                font-size: 18px;
+            }
+        }
+    }
+}

@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * ENRD Notifications install file.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_notifications_enable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Notifications is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_notifications_disable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Notifications is now disabled on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_notifications_uninstall() {
+  variable_del('enrd_notifications_digest_from');
+  variable_del('enrd_notifications_panel_limit');
+  variable_del('enrd_notifications_reminder_last_run');
+  variable_del('enrd_notifications_reminder_scheduled_day');
+  variable_del('enrd_notifications_send_reminder_on_cron');
+}

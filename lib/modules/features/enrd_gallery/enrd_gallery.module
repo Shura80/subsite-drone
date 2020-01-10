@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Gallery feature.
+ */
+
+define('ENRD_GALLERY_CKEDITOR_EMBEDDED_MEDIA_DEFAULT_FILTER_VIEW', 'enrd_embed_gallery_media:default');
+define('ENRD_GALLERY_EMBEDDED_GALLERY_ELEMENTS', 4);
+
+include_once 'enrd_gallery.features.inc';
+
+/**
+ * Implements template_preprocess_field().
+ */
+function enrd_gallery_preprocess_field(&$variables, $hook) {
+  $element = $variables['element'];
+
+  // Add CSS class to Gallery container.
+  if ($element['#field_name'] == 'field_enrd_gallery_media' && $element['#bundle'] == 'gallery') {
+    $variables['classes_array'][] = 'gallery-pictures-container';
+
+    // Render only four elements on "Embedded Media Gallery" display.
+    if (isset($element['#view_mode']) && $element['#view_mode'] == 'embedded_media_gallery') {
+
+      if (!empty($variables['items'])) {
+        $variables['items'] = array_splice($variables['items'], 0, ENRD_GALLERY_EMBEDDED_GALLERY_ELEMENTS);
+      }
+    }
+  }
+}
+
+/**
+ * Implements template_preprocess_node().
+ */
+function enrd_gallery_preprocess_node(&$variables) {
+  if ($variables['type'] == 'gallery' && $variables['view_mode'] == 'embedded_media_gallery') {
+    // Hide title when display is "Embedded Media Gallery".
+    $variables['classes_array'][] = 'embedded-media-gallery';
+
+    // Add "See more" link to the bottom.
+    $see_more = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'class' => array('see-more'),
+      ),
+      'see-more-link' => array(
+        '#type' => 'link',
+        '#title' => t('See more'),
+        '#href' => $variables['path']['source'],
+        '#options' => array(
+          'attributes' => array(
+            'title' => $variables['title'],
+            'alt' => $variables['title'],
+          ),
+        ),
+      ),
+      '#weight' => 99,
+    );
+
+    $variables['content']['see_more'] = $see_more;
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_gallery_menu() {
+  $items = array();
+  $items['nexteuropa/enrd-gallery-ckeditor/%'] = array(
+    'page callback' => 'enrd_gallery_embedding_ckeditor_ajax_callback',
+    'page arguments' => array(2),
+    'access callback' => 'enrd_gallery_embedding_ckeditor_ajax_access_callback',
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'ajax_deliver',
+  );
+
+  return $items;
+}
+
+/**
+ * AJAX ENRD Media Gallery get view callback.
+ *
+ * @see: nexteuropa_token_ckeditor_menu().
+ */
+function enrd_gallery_embedding_ckeditor_ajax_callback($editor_id = '') {
+  // @codingStandardsIgnoreLine: The render is generated from a view and must be displayed as is.
+  return nexteuropa_token_ckeditor_ajax_sub_callback(ENRD_GALLERY_CKEDITOR_EMBEDDED_MEDIA_DEFAULT_FILTER_VIEW, $editor_id);
+}
+
+/**
+ * ENRD Media Gallery CKEditor Menu access callback.
+ *
+ * @see: nexteuropa_token_ckeditor_menu()
+ */
+function enrd_gallery_embedding_ckeditor_ajax_access_callback() {
+  return nexteuropa_token_ckeditor_ajax_access_sub_callback(ENRD_GALLERY_CKEDITOR_EMBEDDED_MEDIA_DEFAULT_FILTER_VIEW);
+}
+
+/**
+ * Implements hook_wysiwyg_editor_settings_alter().
+ */
+function enrd_gallery_wysiwyg_editor_settings_alter(&$settings, $context) {
+  // Add ENRD Gallery JS to exted NEToken plugin if it's active.
+  if ($context['profile']->editor == 'ckeditor') {
+    if (isset($settings['extraPlugins']) && strpos($settings['extraPlugins'], 'nexteuropa_token_ckeditor') !== FALSE) {
+      drupal_add_js(drupal_get_path('module', 'enrd_gallery') . '/js/enrd_gallery_nt_ckeditor.js');
+    }
+  }
+}
+
+/**
+ * Implements hook_media_bulk_upload_edit_multiple_form_alter().
+ */
+function enrd_gallery_media_bulk_upload_edit_multiple_form_alter(&$form) {
+
+  foreach (element_children($form['multiform']) as $multiform_key) {
+    $sub_form = &$form['multiform'][$multiform_key];
+
+    if ($sub_form['#form_id'] == 'media_edit_' . $sub_form['#entity']->fid) {
+      // Hide all additional settings fieldset in bulk upload.
+      $sub_form['settings']['#access'] = FALSE;
+    }
+  }
+}

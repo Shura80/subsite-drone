@@ -1,0 +1,996 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD NRN Profiles feature.
+ */
+
+include_once 'enrd_nrn_profiles.features.inc';
+
+define('ENRD_NRN_PROFILES_NODE_TYPE', 'nrn_profile');
+define('ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME', 'NRN Editor');
+define('ENRD_NRN_PROFILES_INTERNAL_LINKS_FIELD_NAME', 'field_enrd_nrnp_internal_links');
+define('ENRD_NRN_PROFILES_PROFILE_EDITOR_LANDING_PAGE', 'nrn-profiles');
+define('ENRD_NRN_PROFILES_EMAIL_ADDRESS', 'nrn-profiles@enrd.eu');
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_nrn_profiles_permission() {
+  return array(
+    'administer nrn profiles' => array(
+      'title' => t('Administer NRN Profile pages and editors'),
+      'description' => t('Administer NRN Profile pages and NRN editors'),
+      'restrict access' => TRUE,
+    ),
+    'bypass alter form nrn profiles' => array(
+      'title' => t('Bypass on the alter form of NRN Profile'),
+      'description' => t('View all fields in NRN Profile form'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_nrn_profiles_menu() {
+  $items = array();
+
+  $items[ENRD_MASTERMIND_ADMIN_MENU_LINK . '/nrn-profiles'] = array(
+    'title' => 'NRN Profiles',
+    'description' => 'NRN Profile content administration page.',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer nrn profiles'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+    'position' => 'left',
+  );
+  $items['user/%user/nrn-profiles'] = array(
+    'title' => 'NRN Profiles',
+    'description' => 'List of NRN Profiles related to the NRN Editor user.',
+    'page callback' => '_enrd_nrn_profiles_get_user_nrn_profiles',
+    'page arguments' => array(1),
+    'access callback' => '_enrd_nrn_profiles_is_nrn_editor_with_profile',
+    'access arguments' => array(1),
+    'weight' => -5,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items[ENRD_NRN_PROFILES_PROFILE_EDITOR_LANDING_PAGE] = array(
+    'title' => 'NRN Profiles',
+    'page callback' => '_enrd_nrn_profiles_redirect_callback',
+    'access callback' => '_enrd_nrn_profiles_is_nrn_editor_with_profile',
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'user-menu',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_nrn_profiles_menu_link_alter(&$item) {
+
+  // Rewrite links for the menu-enrd-tools menu.
+  if (isset($item['menu_name']) && $item['menu_name'] == 'user-menu') {
+    if ($item['link_path'] == ENRD_NRN_PROFILES_PROFILE_EDITOR_LANDING_PAGE && !isset($item['customized'])) {
+      $item['options']['attributes']['data-display-title'] = 1;
+      $item['options']['attributes']['title'] = '';
+      $item['options']['attributes']['data-image'] = 'edit';
+      $item['options']['alter'] = TRUE;
+    }
+  }
+}
+
+/**
+ * Page callback: render "My NRN Profile" field.
+ *
+ * @param mixed $account
+ *   The account to check, if not given use currently logged in user.
+ *
+ * @return string
+ *   The rendered element for the field value.
+ */
+function _enrd_nrn_profiles_get_user_nrn_profiles($account) {
+  $field_nrnp_access_node = field_view_field('user', $account, 'field_enrd_nrnp_access_node', 'full');
+  return render($field_nrnp_access_node);
+}
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function enrd_nrn_profiles_override_multisite_components() {
+  module_load_include('inc', 'enrd_nrn_profiles', 'includes/enrd_nrn_profiles.permissions');
+
+  // Override Multisite permissions.
+  _enrd_nrn_profiles_overrides_permission();
+
+  watchdog('enrd_nrn_profiles', 'Override multisite components');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrn_profiles_form_nrn_profile_node_form_alter(&$form, &$form_state, $form_id) {
+
+  // Customizations on "Contact persons" collection:
+  if (isset($form['field_enrd_nrnp_contact_persons'][LANGUAGE_NONE])) {
+    $contact_persons_group = &$form['field_enrd_nrnp_contact_persons'][LANGUAGE_NONE];
+
+    // Apply conditions to each field collection.
+    foreach ($contact_persons_group as $key => &$contact_persons) {
+      if (is_array($contact_persons) && is_numeric($key)) {
+        // Remove (all languages) next to field labels.
+        // Note: (all languages) is added because field collection
+        // isn't translatable.
+        if (field_collection_item_is_translatable() && variable_get('entity_translation_shared_labels', TRUE)) {
+          foreach (element_children($contact_persons) as $key) {
+            if (isset($contact_persons[$key]['#process'])) {
+              $process_callback = $contact_persons[$key]['#process'];
+              if (($process_key = array_search('entity_translation_element_translatability_clue', $process_callback)) !== FALSE) {
+                unset($contact_persons[$key]['#process'][$process_key]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (isset($form['field_enrd_nrnp_documents'][LANGUAGE_NONE])) {
+    $form['field_enrd_nrnp_documents'][LANGUAGE_NONE]['#file_upload_title'] = t('Attach documents');
+  }
+
+  // Custom access to the field based on permission.
+  if (!user_access('bypass alter form nrn profiles')) {
+    // Access denied for the administrative fields.
+    $fiels_access_deny = array(
+      'title_field',
+      'field_enrd_nrnp_brief_intro',
+      'field_enrd_nrnp_country_page',
+      'field_enrd_nrnp_logo',
+      'field_enrd_nrnp_objectives',
+      'field_enrd_nrnp_membership',
+      'field_enrd_nrnp_nsu_rdp',
+      'field_enrd_nrnp_reg_repres',
+      'field_enrd_nrnp_governance',
+      'field_enrd_nrnp_finan_resources',
+    );
+
+    foreach ($fiels_access_deny as $field) {
+      $form[$field]['#access'] = FALSE;
+    }
+
+    // Hide revision information.
+    $form['revision_information']['#access'] = FALSE;
+
+    // Create EU Legal notice / Publish Legal notice checkboxes.
+    $form['actions']['legal_notice'] = array(
+      '#type' => 'fieldset',
+      '#weight' => -50,
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
+    );
+
+    // Add EU Legal notice checkbox to the form.
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+
+    // Publish Legal notice.
+    $form['actions']['legal_notice']['field_publish_legal_notice'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('I confirm that the data I have added in my NRN profile can be published by the ENRD CP.'),
+      '#description' => t('Please double check the submitted information before proceeding. After checking this box and saving your changes you will not be able to create a new or edit this draft until the revision has been approved/rejected by the ENRD CP administrator. If you want to return and edit your draft save your draft without checking this box'),
+    );
+  }
+  else {
+    // Disable the "mandatory" property for the administrator.
+    $form['field_enrd_nrnp_phone'][LANGUAGE_NONE]['#required'] = FALSE;
+    $form['field_enrd_nrnp_email'][LANGUAGE_NONE]['#required'] = FALSE;
+    $form['field_enrd_nrnp_contact_persons'][LANGUAGE_NONE]['#required'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function enrd_nrn_profiles_node_presave($node) {
+  if ($node->type == ENRD_NRN_PROFILES_NODE_TYPE) {
+    if (isset($node->field_publish_legal_notice) && $node->field_publish_legal_notice) {
+      // Force moderation state to "ready_to_be_published".
+      $node->workbench_moderation_state_new = enrd_mastermind_workbench_moderation_state_ready_to_be_published();
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function enrd_nrn_profiles_field_widget_form_alter(&$element, &$form_state, $context) {
+  if (isset($element['#field_name'])) {
+    if (user_access('bypass alter form nrn profiles')) {
+      // Disable the "mandatory" property for the administrator.
+      switch ($element['#field_name']) {
+        case 'field_enrd_nrnp_phone':
+        case 'field_enrd_nrnp_contact_name':
+          $element['#required'] = FALSE;
+          $element['value']['#required'] = FALSE;
+          break;
+
+        case 'field_enrd_nrnp_email':
+        case 'field_enrd_nrnp_contact_email':
+          $element['#required'] = FALSE;
+          $element['email']['#required'] = FALSE;
+          break;
+
+      }
+    }
+    else {
+      // Enable the "mandatory" property for the NRN Editor.
+      switch ($element['#field_name']) {
+        case 'field_enrd_nrnp_website':
+          $element['#required'] = TRUE;
+          break;
+
+        case 'field_enrd_nrnp_address':
+          $element['#required'] = TRUE;
+          $element['country']['#required'] = TRUE;
+          break;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrn_profiles_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  // Hide the reference field if it does not have administrative privilege.
+  $form['field_enrd_nrnp_access_node']['#access'] = user_access('administer nrn profiles');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see workbench_moderation_moderate_form()
+ */
+function enrd_nrn_profiles_form_workbench_moderation_moderate_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  if (isset($form['node']['#value'])) {
+    $node = $form['node']['#value'];
+
+    $nrn_editor = FALSE;
+    if (_enrd_nrn_profiles_check_user_editor($node)) {
+      $nrn_editor = TRUE;
+    }
+    $form_state['nrn_editor'] = $nrn_editor;
+
+    if ($node->type == ENRD_NRN_PROFILES_NODE_TYPE) {
+      if ($nrn_editor) {
+
+        // Add EU Legal notice checkbox to the form.
+        $options = array(
+          '#states' => array(
+            'visible' => array(
+              ':input[name="state"]' => array('value' => enrd_mastermind_workbench_moderation_state_ready_to_be_published()),
+            ),
+            'required' => array(
+              ':input[name="state"]' => array('value' => enrd_mastermind_workbench_moderation_state_ready_to_be_published()),
+            ),
+          ),
+        );
+        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+        $form['eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox($options);
+
+        // Substitute select and button with single action button
+        // if there is only one state change.
+        if (!empty($form['state']['#options']) && count($form['state']['#options']) == 1) {
+
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'workbench_moderation_transition')
+            ->propertyCondition('from_name', $node->workbench_moderation['current']->state)
+            ->propertyCondition('to_name', key($form['state']['#options']));
+
+          $result = $query->execute();
+          if (!empty($result['workbench_moderation_transition'])) {
+            if ($transition = workbench_moderation_transition_load(key($result['workbench_moderation_transition']))) {
+              $form['submit']['#value'] = $transition->name;
+
+              $form['state'] = array(
+                '#type' => 'value',
+                '#value' => key($form['state']['#options']),
+              );
+
+            }
+          }
+        }
+      }
+      else {
+        // Add the "Moderation Notes" when the node is rejected.
+        $form['revision_log'] = array(
+          '#type' => 'textarea',
+          '#title' => t('Moderation notes'),
+          '#default_value' => t('Rejected by !user.', array('!user' => format_username($user))),
+          '#description' => t('This message will be sent to the NRN Editors to request changes.'),
+          '#states' => array(
+            'visible' => array(
+              ':input[name="state"]' => array('value' => workbench_moderation_state_none()),
+            ),
+            'required' => array(
+              ':input[name="state"]' => array('value' => workbench_moderation_state_none()),
+            ),
+          ),
+        );
+      }
+
+      $form['submit']['#weight'] = 99;
+
+      // Add custom validate and submit.
+      $form['#validate'][] = 'enrd_nrn_profiles_moderate_form_validate';
+      array_unshift($form['#submit'], 'enrd_nrn_profiles_moderate_form_submit');
+    }
+  }
+}
+
+/**
+ * Process variables for nexteuropa-multilingual-message.tpl.php.
+ *
+ * @param array $variables
+ *   An associative array containing template variables:
+ *     - message: the message text.
+ *     - message_attributes: The HTML attributes of the message text.
+ */
+function enrd_nrn_profiles_preprocess_nexteuropa_multilingual_message(&$variables) {
+  global $user;
+
+  // Hide the warning nexteuropa multilingual message for NRN editor.
+  if (in_array(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME, array_values($user->roles))) {
+    $variables['message_attributes'] = array();
+    $variables['message'] = '';
+  }
+}
+
+/**
+ * Custom validation for the workbench_moderation_moderate_form().
+ *
+ * @param array $form
+ *   A Drupal Forms API array.
+ * @param array $form_state
+ *   A Drupal Forms API array.
+ */
+function enrd_nrn_profiles_moderate_form_validate(array $form, array &$form_state) {
+
+  $state = $form_state['values']['state'];
+  $nrn_editor = $form_state['nrn_editor'];
+
+  if ($nrn_editor) {
+    // If the NRN editor asks you to publish the node, the "EU Legal notice"
+    // must be flagged.
+    if ($state == enrd_mastermind_workbench_moderation_state_ready_to_be_published() && empty($form_state['values']['eu_legal_notice'])) {
+      form_set_error('eu_legal_notice', t('You must agree with the EU Legal notice statement to proceed.'));
+    }
+  }
+  else {
+    // If the node is rejected, moderation notes cannot be empty.
+    if ($state == workbench_moderation_state_none() && empty($form_state['values']['revision_log'])) {
+      form_set_error('revision_log', t('Please, enter a message with the change requests that will be sent to the NRN Editor.'));
+    }
+  }
+}
+
+/**
+ * Custom submit to save a reject message into $node->log property.
+ *
+ * @param array $form
+ *   A Drupal Forms API array.
+ * @param array $form_state
+ *   A Drupal Forms API array.
+ *
+ * @see workbench_moderation_moderate_form_submit()
+ */
+function enrd_nrn_profiles_moderate_form_submit(array $form, array &$form_state) {
+  if (isset($form_state['values']['revision_log']) && !empty($form_state['values']['revision_log'])) {
+    if (_workbench_moderation_moderate_access($form_state['values']['node'], $form_state['values']['state'])) {
+      $node = node_load($form_state['values']['node']->nid, $form_state['values']['node']->vid);
+      // Perform only if the revision is rejected.
+      if ($form_state['values']['state'] == workbench_moderation_state_none()) {
+        $node->log = $form_state['values']['revision_log'];
+        node_save($node);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_view_alter().
+ */
+function enrd_nrn_profiles_user_view_alter(&$build) {
+  if (isset($build['field_enrd_nrnp_access_node'])) {
+    // Show the link to NRN Profile based on permission.
+    $build['field_enrd_nrnp_access_node']['#access'] = user_access('administer nrn profiles');
+  }
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function enrd_nrn_profiles_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+
+  $is_nrn_profiles = ($type == ENRD_NRN_PROFILES_NODE_TYPE) ? TRUE : FALSE;
+  $is_user_editor = _enrd_nrn_profiles_check_user_editor($node, $account);
+  $is_op_update = ($op == 'update') ? TRUE : FALSE;
+
+  if ($is_nrn_profiles && $is_user_editor && $is_op_update) {
+    $current_state = $node->workbench_moderation['current']->state;
+    // Allow access to a node if current revision is draft or published.
+    if ($current_state == workbench_moderation_state_none() || $current_state == workbench_moderation_state_published()) {
+      return NODE_ACCESS_ALLOW;
+    }
+  }
+
+  return NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Implements hook_workbench_moderation_access_alter().
+ */
+function enrd_nrn_profiles_workbench_moderation_access_alter(&$access, $op, $node) {
+  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+  if ($type == ENRD_NRN_PROFILES_NODE_TYPE && _enrd_nrn_profiles_check_user_editor($node)) {
+
+    switch ($op) {
+      case 'update':
+        $current_state = $node->workbench_moderation['current']->state;
+        if ($current_state == workbench_moderation_state_none() || $current_state == workbench_moderation_state_published()) {
+          $access = TRUE;
+        }
+        break;
+
+      case 'view revisions':
+        $access = TRUE;
+        break;
+    }
+
+  }
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function enrd_nrn_profiles_field_extra_fields() {
+  $extra = array();
+
+  // Extra field that show a list of internal links as "Country page",
+  // Solr LAG page and Solr Project page.
+  $extra['node']['nrn_profile']['display'][ENRD_NRN_PROFILES_INTERNAL_LINKS_FIELD_NAME] = array(
+    'label' => t('Internal links'),
+    'description' => t('List of the internal links by country page selected.'),
+    'weight' => 0,
+  );
+  return $extra;
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function enrd_nrn_profiles_node_view($node, $view_mode, $langcode) {
+
+  if ($node->type === ENRD_NRN_PROFILES_NODE_TYPE) {
+
+    // Show moderation state messages if we're on a node page.
+    if ($view_mode == 'full' && _enrd_nrn_profiles_check_user_editor($node)) {
+      _enrd_nrn_profiles_workbench_moderation_messages('view', $node);
+    }
+
+    // Extra fields with the internal links to LAG, Project and Country pages.
+    $extra_fields = field_info_extra_fields('node', $node->type, 'display');
+    if (!empty($extra_fields[ENRD_NRN_PROFILES_INTERNAL_LINKS_FIELD_NAME]['display'][$view_mode]['visible'])) {
+      $node->content[ENRD_NRN_PROFILES_INTERNAL_LINKS_FIELD_NAME] = _enrd_nrn_profiles_field_enrd_nrnp_internal_links_callback($node);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function enrd_nrn_profiles_node_view_alter(&$build) {
+  // Adds custom JS on NRN Profile page (full node).
+  if ($build['#node']->type == ENRD_NRN_PROFILES_NODE_TYPE && $build['#view_mode'] == 'full') {
+    $build['#attached']['js'] = array(
+      drupal_get_path('module', 'enrd_nrn_profiles') . '/enrd_nrn_profiles.js' => array(
+        'type' => 'file',
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_nrn_profiles_module_implements_alter(&$module_list, $context) {
+  // Make sure enrd_nrn_profiles's hook implementations
+  // are called after all other modules.
+  if ($context == 'workbench_moderation_states_next_alter') {
+    $temp = $module_list['enrd_nrn_profiles'];
+    unset($module_list['enrd_nrn_profiles']);
+    $module_list['enrd_nrn_profiles'] = $temp;
+  }
+}
+
+/**
+ * Implements hook_workbench_moderation_states_next_alter().
+ */
+function enrd_nrn_profiles_workbench_moderation_states_next_alter(&$states, $current_state, $context) {
+
+  // Enable only determinate moderation states for specific bundle.
+  $nrn_profile_bundles = enrd_nrn_profiles_enrd_workbench_get_bundles_custom_state();
+  if (in_array($context['node']->type, $nrn_profile_bundles)) {
+
+    // Remove not proper state.
+    if ($states) {
+      $states = array_intersect_key($states, drupal_map_assoc(array(
+        'draft',
+        'ready_to_be_published',
+        'validated',
+        'published',
+        'archived',
+      )));
+    }
+
+    // Force a 'ready_to_be_published' state.
+    if ($current_state == workbench_moderation_state_none()) {
+      $all_states = workbench_moderation_state_labels();
+      $rtbp_state = enrd_mastermind_workbench_moderation_state_ready_to_be_published();
+      $states[$rtbp_state] = $all_states[$rtbp_state];
+    }
+
+  }
+}
+
+/**
+ * Implements hook_enrd_workbench_get_bundles_custom_state().
+ */
+function enrd_nrn_profiles_enrd_workbench_get_bundles_custom_state() {
+  return array(ENRD_NRN_PROFILES_NODE_TYPE => ENRD_NRN_PROFILES_NODE_TYPE);
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function enrd_nrn_profiles_action_info() {
+  return array(
+    'enrd_nrn_profiles_action_remove_nrn_editor' => array(
+      'type' => 'user',
+      'label' => t('Remove NRN Editor'),
+      'configurable' => FALSE,
+      'vbo_configurable' => FALSE,
+      'triggers' => array('any'),
+      'permissions' => array('administer nrn profiles'),
+    ),
+  );
+}
+
+/**
+ * VBO Action: remove NRN Editor role.
+ *
+ * @param object $user
+ *   The LAG node object.
+ * @param mixed $context
+ *   Array with components.
+ *
+ * @ingroup actions
+ */
+function enrd_nrn_profiles_action_remove_nrn_editor(&$user, $context) {
+  // Remove "NRN Editor" role.
+  $role = user_role_load_by_name(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME);
+  user_multiple_role_edit(array($user->uid), 'remove_role', $role->rid);
+
+  // Remove entity reference.
+  $user_wrapper = entity_metadata_wrapper('user', $user);
+  $user_wrapper->field_enrd_nrnp_access_node->set(NULL);
+  $user_wrapper->save();
+}
+
+/**
+ * Custom callback to create a list items for extra field.
+ *
+ * @param object $entity
+ *   The entity object.
+ *
+ * @return array
+ *   A render array.
+ */
+function _enrd_nrn_profiles_field_enrd_nrnp_internal_links_callback($entity) {
+
+  $items_list = array();
+
+  try {
+    $wrapper = entity_metadata_wrapper('node', $entity);
+
+    $enrd_country_term = $wrapper->field_enrd_nrnp_country_page->field_enrd_rdp_info_country->value();
+    $country_page_id = $wrapper->field_enrd_nrnp_country_page->getIdentifier();
+
+    // Country page link.
+    $path = 'node/' . $country_page_id;
+    $links['country_page_link'] = _enrd_nrn_profiles_build_internal_link('Country page', $path);
+
+    // Solr page for LAGs Database.
+    $solr_page = array(
+      'id' => 'lag_database',
+      'faced_name' => 'im_field_enrd_lag_country',
+      'faced_value' => $enrd_country_term->tid,
+    );
+    $links['lag_search_page_link'] = _enrd_nrn_profiles_build_internal_link('LAGs database', '', $solr_page);
+
+    // Solr page for Projects Database.
+    $solr_page = array(
+      'id' => 'projects_database',
+      'faced_name' => 'sm_enrd_eu_countries',
+      'faced_value' => $enrd_country_term->name,
+    );
+    $links['proj_search_page_link'] = _enrd_nrn_profiles_build_internal_link('Projects database', '', $solr_page);
+
+    $items = array();
+    foreach ($links as $link) {
+      if (!empty($link)) {
+        $items[] = drupal_render($link);
+      }
+    }
+
+    $items_list = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'class' => array(
+          'field',
+          'field-name-' . str_replace('_', '-', ENRD_NRN_PROFILES_INTERNAL_LINKS_FIELD_NAME),
+          'field-item',
+        ),
+      ),
+    );
+    $items_list['internal_links'] = array(
+      '#theme' => 'item_list',
+      '#items' => $items,
+      '#attributes' => array(
+        'class' => 'internal-links',
+      ),
+    );
+
+  }
+  catch (EntityMetadataWrapperException $exc) {
+    watchdog('enrd_nrn_profiles', 'EntityMetadataWrapper exception in %function() <pre>@trace</pre>', array(
+      '%function' => __FUNCTION__,
+      '@trace' => $exc->getTraceAsString(),
+    ), WATCHDOG_ERROR);
+  }
+
+  return $items_list;
+}
+
+/**
+ * Create the internal links for NRN profile content.
+ *
+ * @param string $link_name
+ *   The link name.
+ * @param string $path
+ *   The link path. If exists a $solr_page, this will be overrides with solr.
+ * @param array $solr_page
+ *   The information of the solr page with follow structure:
+ *   array(
+ *     'id' => The Solr page ID.
+ *     'faced_name' => The faced name in the search page.
+ *     'faced_value' => The value of the filter.
+ *   )
+ *
+ * @return array
+ *   A render array of the type 'link'.
+ */
+function _enrd_nrn_profiles_build_internal_link($link_name, $path = '', array $solr_page = array()) {
+
+  $param = array(
+    'absolute' => TRUE,
+  );
+
+  if (isset($solr_page['id']) && !empty($solr_page['id'])) {
+    $search_page = apachesolr_search_page_load($solr_page['id']);
+
+    if ($search_page) {
+      // Overrides the $path if there is a Solr page.
+      $path = $search_page['search_path'];
+
+      // Set the query string.
+      if ($search_page && isset($solr_page['faced_name']) && isset($solr_page['faced_value'])) {
+        $query = array(
+          'f' => array(
+            $solr_page['faced_name'] . ':' . $solr_page['faced_value'],
+          ),
+        );
+
+        $param['query'] = $query;
+      }
+    }
+  }
+
+  $url = url($path, $param);
+
+  $page_link = array(
+    '#theme' => 'link',
+    '#text' => t('@link_name', array('@link_name' => $link_name)),
+    '#path' => $url,
+    '#options' => array(
+      'attributes' => array(
+        'title' => t('@link_name', array('@link_name' => $link_name)),
+        'target' => '_blank',
+      ),
+      'html' => FALSE,
+    ),
+  );
+
+  return $page_link;
+}
+
+/**
+ * Validate function for EU Legal Notice field.
+ *
+ * @param array $element
+ *   Drupal form array element.
+ * @param array $form_state
+ *   Drupal form state array.
+ */
+function _enrd_nrn_profiles_validate_eu_legal_notice(array $element, array &$form_state) {
+  if (empty($element['#value'])) {
+    form_error($element, t('You must agree with the EU Legal notice statement to proceed.'));
+  }
+}
+
+/**
+ * Check if the logged user is the editor of the "NRN profile page".
+ *
+ * @param mixed $node
+ *   The node object.
+ * @param object $account
+ *   The account object.
+ *
+ * @return bool
+ *   TRUE if the logged user can edit the node. Otherwise FALSE.
+ */
+function _enrd_nrn_profiles_check_user_editor($node, $account = NULL) {
+
+  if (!is_object($node)) {
+    return FALSE;
+  }
+
+  global $user;
+  if (empty($account)) {
+    $account = clone $user;
+  }
+
+  if (in_array(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME, $account->roles)) {
+    try {
+      $wrapper = entity_metadata_wrapper('user', $account);
+      foreach ($wrapper->field_enrd_nrnp_access_node->getIterator() as $node_wrapper) {
+        $nrn_profile_nid = $node_wrapper->getIdentifier();
+
+        if (isset($node->nid) && $nrn_profile_nid == $node->nid) {
+          return TRUE;
+        }
+      }
+    }
+    catch (EntityMetadataWrapperException $exc) {
+      watchdog('enrd_nrn_profiles', 'EntityMetadataWrapper exception in %function() <pre>@trace</pre>', array(
+        '%function' => __FUNCTION__,
+        '@trace' => $exc->getTraceAsString(),
+      ), WATCHDOG_ERROR);
+    }
+  }
+
+  return FALSE;
+
+}
+
+/**
+ * Sets custom status messages for the NRN Profile page.
+ *
+ * Note that these status messages do not replace the
+ * workbench_moderation_messages for administrator role. This concerns only the
+ * NRN Editors.
+ *
+ * @param string $context
+ *   A string, either 'view' or 'edit'.
+ * @param object $node
+ *   A node object. The current menu object will be used if it is a node and
+ *   this variable was not set.
+ *
+ * @see workbench_moderation_messages()
+ */
+function _enrd_nrn_profiles_workbench_moderation_messages($context, $node = NULL) {
+  static $workbench_moderation_messages_set;
+
+  if (!workbench_moderation_node_type_moderated($node->type) || $workbench_moderation_messages_set) {
+    return;
+  }
+
+  $revision_published = FALSE;
+  $revision_current = FALSE;
+  $current_draft = FALSE;
+  $current_rtbp = FALSE;
+  $workbench_moderation_messages_set = TRUE;
+
+  // For new content, this property will not be set.
+  if (isset($node->workbench_moderation)) {
+    $state = $node->workbench_moderation;
+    if ($state['my_revision']->published) {
+      $revision_published = TRUE;
+    }
+    if ($state['my_revision']->vid == $state['current']->vid) {
+      $revision_current = TRUE;
+    }
+    if ($node->workbench_moderation['current']->state == workbench_moderation_state_none()) {
+      $current_draft = TRUE;
+    }
+    if ($node->workbench_moderation['current']->state == enrd_mastermind_workbench_moderation_state_ready_to_be_published()) {
+      $current_rtbp = TRUE;
+    }
+  }
+
+  // An array of messages to add to the general workbench block.
+  $info_block_messages = array();
+
+  if ($context == 'view') {
+    if (workbench_moderation_messages_shown($context, $node)) {
+      // Prevent multiple moderation status.
+      return;
+    }
+    $info_block_messages[] = array(
+      'label' => t('Revision state'),
+      'message' => check_plain(workbench_moderation_state_label($state['my_revision']->state)),
+    );
+
+    // Add a moderation form.
+    $moderate_form = array();
+    if ($revision_current && !$revision_published) {
+      $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision");
+
+      if ($current_draft) {
+        $info_block_messages[] = array(
+          'label' => t('Moderation notes'),
+          'message' => $node->log,
+        );
+      }
+    }
+
+    $info_block_messages[] = array(
+      'label' => t('Most recent revision'),
+      'message' => (!empty($revision_current) ? t('Yes') : t('No')) . drupal_render($moderate_form),
+    );
+
+    if ($current_rtbp) {
+      $show_note = FALSE;
+
+      if (!$revision_current && $revision_published) {
+        $show_note = TRUE;
+        $message_text = t('A most recent revision of this NRN Profile has been submitted for publication and is currently under evaluation by the ENRD CP. You will be able to edit it again after the revision has been approved/rejected. If you want to contact the website administrator please send an email to !email.', array(
+          '!email' => l(t('nrn-profiles@enrd.eu'), 'mailto:nrn-profiles@enrd.eu', array('absolute' => TRUE)),
+        ));
+      }
+      elseif ($revision_current && !$revision_published) {
+        $show_note = TRUE;
+        $message_text = t('This draft version is the most recent revision of this NRN Profile, it has been submitted for publication and is currently under evaluation by the ENRD CP. You will be able to create a new draft again after the revision has been approved/rejected. If you want to contact the website administrator please sent an email to !email.', array(
+          '!email' => l(t('nrn-profiles@enrd.eu'), 'mailto:nrn-profiles@enrd.eu', array('absolute' => TRUE)),
+        ));
+      }
+
+      if ($show_note) {
+        $label = theme('html_tag', array(
+          'element' => array(
+            '#tag' => 'strong',
+            '#value' => t('Note'),
+          ),
+        ));
+
+        $message = theme('html_tag', array(
+          'element' => array(
+            '#tag' => 'strong',
+            '#value' => $message_text,
+          ),
+        ));
+        $info_block_messages[] = array(
+          'label' => '<em>' . $label . '</em>',
+          'message' => $message,
+        );
+      }
+    }
+
+  }
+
+  // Send the info block array to a static variable.
+  workbench_moderation_set_message($info_block_messages);
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function enrd_nrn_profiles_query_rolefilter_alter(QueryAlterableInterface $query) {
+  // Get retrieved users having the "NRN Editor" role.
+  $nrn_editor_role_name = $query->getMetaData('nrn_editor_role');
+
+  $role_subquery = db_select('role', 'role');
+  $role_subquery->condition('role.name', $nrn_editor_role_name, '=');
+  $role_subquery->join('users_roles', 'ur', 'role.rid = ur.rid');
+  $role_subquery->fields('ur', array('uid' => 'uid'));
+  $role_subquery->where('ur.uid = users.uid');
+  $query->exists($role_subquery);
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function enrd_nrn_profiles_mail_alter(&$message) {
+  // Don't send W. Email transition emails for NRN Profile bundle.
+  if ($message['id'] == 'workbench_email_we_transition') {
+    if ($message['params']['node']->type == ENRD_NRN_PROFILES_NODE_TYPE) {
+      $message['send'] = NULL;
+    }
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function enrd_nrn_profiles_user_login(&$edit, $account) {
+  $is_nrn_editor = _enrd_nrn_profiles_is_nrn_editor_with_profile($account);
+
+  if ($is_nrn_editor) {
+    if (!isset($_GET['destination'])) {
+      // Log in to the "My NRN Profiles" User's page.
+      $GLOBALS['destination'] = ENRD_NRN_PROFILES_PROFILE_EDITOR_LANDING_PAGE;
+    }
+  }
+}
+
+/**
+ * Page callback: redirect to "NRN Profiles" page.
+ */
+function _enrd_nrn_profiles_redirect_callback() {
+  global $user;
+  drupal_goto('user/' . $user->uid . '/nrn-profiles');
+}
+
+/**
+ * Helper function that checks if a user can manage at least one NRN Profile.
+ *
+ * @param mixed $account
+ *   (optional) The account to check, if not given use currently logged in user.
+ *
+ * @return bool
+ *   returns TRUE if user is NRN Editor & has NRN Profiles.
+ */
+function _enrd_nrn_profiles_is_nrn_editor_with_profile($account = NULL) {
+  global $user;
+  if (empty($account)) {
+    $account = user_load($user->uid);
+  }
+
+  $user_roles = array_values($account->roles);
+
+  // Check that user is NRN Editor.
+  $is_nrn_editor = !empty($user_roles) && in_array(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME, $user_roles);
+  // Check that user has NRN Profiles.
+  $has_nrn_profile = isset($account->field_enrd_nrnp_access_node[LANGUAGE_NONE]) && !empty($account->field_enrd_nrnp_access_node[LANGUAGE_NONE][0]['target_id']);
+
+  return $is_nrn_editor && $has_nrn_profile;
+}
+
+/**
+ * Implements hook_last_update_ignore_list().
+ */
+function enrd_nrn_profiles_last_update_ignore_list() {
+  // Define a list of urls that uses generic fallback message in footer block.
+  return [
+    'networking/nrn-profiles',
+  ];
+}

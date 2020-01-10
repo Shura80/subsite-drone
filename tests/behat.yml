@@ -1,0 +1,75 @@
+default:
+  suites:
+    subsite:
+      paths:
+        - '/Users/alessiodepisi/Sites/enrd_clone/tests/features/CustomFeatures'
+      contexts:
+        - FeatureContext
+        - Drupal\enrd\Context\DrupalContext
+        - Drupal\enrd\Context\GeneralContext
+        - Drupal\enrd\Context\EmailNotificationsContext
+        - Drupal\enrd\Context\TaxonomiesContext
+        - Drupal\enrd\Context\CommunityContext
+        - Drupal\enrd\Context\SolrContext
+        - Drupal\enrd\Context\FieldCollectionContext
+        - Drupal\enrd\Context\InviteContext
+        - Drupal\enrd\Context\MediaContext
+        - Drupal\nexteuropa\Context\MultilingualContext
+        - Drupal\nexteuropa\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
+        - Drupal\DrupalExtension\Context\MarkupContext
+        - Drupal\DrupalExtension\Context\BatchContext
+      filters:
+        tags: "~@wip&&~@online"
+  extensions:
+    Behat\MinkExtension:
+      browser_name: 'chrome'
+      goutte: ~
+      selenium2:
+        wd_host: 'localhost:4444/wd/hub'
+        capabilities:
+          browser: 'chrome'
+          extra_capabilities:
+            chromeOptions:
+              w3c: false
+              args:
+                - "--headless"
+                - "--disable-gpu"
+                - "--window-size=1280,800"
+      javascript_session: 'selenium2'
+      base-url: 'http://host.docker.internal/enrd_clone/build'
+      files_path: '/Users/alessiodepisi/Sites/enrd_clone/tests/resources'
+    Drupal\DrupalExtension:
+      api_driver: 'drupal'
+      blackbox: ~
+      drupal:
+        drupal_root: '/Users/alessiodepisi/Sites/enrd_clone/build'
+      region_map:
+        title: "#page-title"
+        content: ".region-content"
+        right content: ".region-content-right"
+        bottom content: ".region-content-bottom"
+        featured: ".region-featured"
+        tools: ".region-tools"
+        tools buttons: "#main.container .region-tools-buttons"
+        og contextual links: "#block-multisite-og-button-og-contextual-links"
+        left sidebar: ".region-sidebar-left"
+        right sidebar: ".region-sidebar-right"
+        top header: ".region-header-top"
+        right header: ".region-header-right"
+        footer: ".region-footer"
+        footer top: ".region-footer-top"
+      selectors:
+        message_selector: '.messages'
+        error_message_selector: '.messages.error'
+        success_message_selector: '.messages.status'
+      drush:
+        alias: 'default'
+        binary: '/Users/alessiodepisi/Sites/enrd_clone/vendor/ec-europa/toolkit/bin/drush'
+      subcontexts:
+        paths:
+          - '/Users/alessiodepisi/Sites/enrd_clone/build/sites/default'
+          - '/Users/alessiodepisi/Sites/enrd_clone/build'
+  formatters:
+    progress: ~

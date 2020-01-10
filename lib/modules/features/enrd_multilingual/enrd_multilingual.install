@@ -1,0 +1,233 @@
+<?php
+
+/**
+ * @file
+ * Install file of the ENRD Multilingual module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_multilingual_install() {
+
+  // Force entity translation activation on Multisite Content Types.
+  foreach (_enrd_multilingual_content_type_languages_override() as $variable => $value) {
+    variable_set($variable, $value);
+  }
+
+  // Includes the file to manage translations of single strings.
+  module_load_include('inc', 'enrd_multilingual', 'data/enrd_multilingual.strings');
+
+  // Update strings.
+  _enrd_multilingual_translate_strings();
+
+  // Revert Multisite CCE_BASIC_CONFIG, FAQ, E_LIBRARY,
+  // EVENTS_CORE, NEWS_CORE, MULTISITE_FORUM_CORE feature with our new values
+  // during module enable.
+  features_revert(array(
+    'cce_basic_config' => array(
+      'field_base',
+      'field_group',
+    ),
+    'f_a_q' => array(
+      'field_group',
+    ),
+    'e_library_core' => array(
+      'field_base',
+      'field_group',
+    ),
+    'events_core' => array(
+      'field_base',
+      'field_group',
+    ),
+    'multisite_forum_core' => array(
+      'field_group',
+    ),
+    'news_core' => array(
+      'field_base',
+      'field_group',
+    ),
+    'enrd_news' => array(
+      'field_base',
+    ),
+  ));
+
+  // Revert component to add field_collection_item on entity_translation.
+  features_revert(array(
+    'enrd_multilingual' => array(
+      'variable',
+    ),
+  ));
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_multilingual_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Multilingual is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_multilingual_disable() {
+  drupal_flush_all_caches();
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Multilingual has been deactivated on you site'));
+}
+
+/**
+ * Add language selector page block's string translations for "not available".
+ */
+function enrd_multilingual_update_7201() {
+
+  // Includes the file to manage translations of single strings.
+  module_load_include('inc', 'enrd_multilingual', 'data/enrd_multilingual.strings');
+
+  // Update strings.
+  _enrd_multilingual_translate_strings();
+}
+
+/**
+ * Clean disabled languages components and remove relative languages.
+ */
+function enrd_multilingual_update_7202(&$sandbox) {
+
+  $t = get_t();
+
+  // Get disabled languages.
+  $lang_list = array_diff(locale_language_list('name', TRUE), locale_language_list());
+  $languages = array_keys($lang_list);
+
+  // Tables with rows to delete for each language.
+  $tables_to_clean = [
+    'languages',
+    'locales_target',
+    'variable_store',
+    'entity_translation',
+    'entity_translation_revision',
+    'metatag',
+    'url_alias',
+    'xmlsitemap',
+  ];
+
+  // Tables with rows to update for each language.
+  $tables_to_update = [
+    'users',
+    'og_membership',
+  ];
+
+  // Get count of components and nodes to clean.
+  $components = _enrd_multilingual_get_components_to_clean(array_merge($tables_to_clean, $tables_to_update), $languages);
+  $nodes = _enrd_multilingual_get_entities_to_delete('node', $languages);
+
+  // Initialize sandbox and counters.
+  if (!isset($sandbox['progress'])) {
+
+    // Set starting values for sandbox.
+    $sandbox['progress'] = 0;
+    $sandbox['#finished'] = 0;
+
+    // Count total sandbox elements.
+    $sandbox['max'] = array_sum($components) + $nodes['total'];
+
+    // Starting message.
+    $sandbox['message'] = $t('Starting cleaning languages.');
+  }
+
+  // Clear components for each disabled language.
+  if (!empty($languages)) {
+
+    // Delete components for given language.
+    $lang = array_pop($languages);
+
+    // Delete node fields for given languages.
+    $deleted_fields = _enrd_multilingual_delete_fields_rows('node', $lang);
+    $sandbox['progress'] += $deleted_fields;
+
+    // Delete rows in component tables for given language.
+    foreach ($tables_to_clean as $table) {
+      $deleted_count = _enrd_multilingual_clean_component_table($table, $lang, 'delete');
+
+      // Increment sandbox progress when deleting table rows.
+      if ($deleted_count) {
+        $sandbox['progress'] += $deleted_count;
+        if ($table == 'locales_target') {
+          cache_clear_all('locale:' . $lang, 'cache');
+          _locale_rebuild_js($lang);
+        }
+        watchdog('enrd_multilingual', "Deleted %count rows in %table table for '%lang' language.",
+          [
+            '%count' => $deleted_count,
+            '%table' => $table,
+            '%lang' => $lang,
+          ]);
+      }
+    }
+
+    // Update rows in component tables for given language.
+    foreach ($tables_to_update as $table) {
+      $updated_count = _enrd_multilingual_clean_component_table($table, $lang, 'update');
+
+      // Increment sandbox progress when updating table rows.
+      if ($updated_count) {
+        $sandbox['progress'] += $updated_count;
+        watchdog('enrd_multilingual', "Updated %count rows in %table table for '%lang' language.",
+          [
+            '%count' => $updated_count,
+            '%table' => $table,
+            '%lang' => $lang,
+          ]);
+      }
+    }
+
+    // Delete nodes for given language.
+    $nodes = _enrd_multilingual_get_entities_to_delete('node', [$lang]);
+    $count_nodes = $nodes['total'];
+    if ($count_nodes) {
+      $nids = array_keys($nodes['result']['node']);
+      entity_delete_multiple('node', $nids);
+      foreach ($nids as $nid) {
+        // Mark entities to be removed later from Solr.
+        apachesolr_mark_entity_for_removal('node', $nid);
+      }
+      $sandbox['progress'] += $count_nodes;
+      watchdog('enrd_multilingual', "Deleted %count nodes for '%lang' language.",
+        ['%count' => $count_nodes, '%lang' => $lang]);
+    }
+
+    // Reset languages static variable.
+    drupal_static_reset('language_list');
+  }
+
+  // Update batch status.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+
+  // If batch is finished perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    // Uninstall old disabled xmlsitemap_user module.
+    drupal_uninstall_modules(array('xmlsitemap_user'));
+    // Call other modules if operations on languages have to be done.
+    module_invoke_all('multilingual_settings_changed');
+    // Clear language_list static variable.
+    drupal_static_reset('language_list');
+
+    return $t('Finished cleaning language components.');
+  }
+}
+
+/**
+ * ENRDPORTAL-397.
+ */
+function enrd_multilingual_update_7203() {
+  // Revert component to add files on entity_translation.
+  features_revert(array(
+    'enrd_multilingual' => array(
+      'variable',
+      'field_instance',
+    ),
+  ));
+}

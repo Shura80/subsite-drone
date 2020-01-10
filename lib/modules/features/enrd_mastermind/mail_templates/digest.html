@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+</head>
+<body style="font-family: Verdana, 'Helvetica Neue';font-size: 14px;background:#e3e1d9;margin: 0;padding: 0;">
+<table style="margin:0 auto;padding: 0;min-width:574px;max-width:900px;background-color:#ffffff;">
+    <tr>
+        <td style="padding: 0 10px 10px;">
+            <img align="left" style="display:block;width: auto;height: auto;float: left;margin: 10px 10px 30px;" src="https://enrd.ec.europa.eu/sites/enrd/themes/enrd/images/logo-enrd-w208.png" alt=""/>
+            <h1 style="font-size: 22px; padding-top: 42px; color: #0065a2;">THE EUROPEAN NETWORK FOR RURAL DEVELOPMENT (ENRD)</h1>
+        </td>
+    </tr>
+    <tr>
+        <td style="border-top: 2px solid #005952; padding: 20px 10px 10px; background: url(https://enrd.ec.europa.eu/sites/enrd/themes/enrd/images/home_background.png) #ffffff no-repeat top right;">
+            Greetings, [current-user:name].</br></br>
+            Your subscriptions on [site:name] notify you of the following changes since the previous digest:</br></br>
+        </td>
+    </tr>
+
+    {{[subs:items:count]#
+    <!-- Start news -->
+    <tr>
+        <td style="padding: 0 10px 10px;">
+            <div style="border-top: 1px solid #B8E1D3;">
+                <h2 style="font-size: 18px; color:rgb(0,89,82); margin-bottom: 0px;"><span>[subs:items:index:#0:as-node:content-type:name]</span> - <a style="color:rgb(0,89,82)" href="[subs:items:index:#0:as-node:url:absolute]">[subs:items:index:#0:as-node:title]</a>{{[subs:items:index:#0:subs:is-new]?<span> (new)</span>:}}{{[subs:items:index:#0:subs:is-updated]?<span> (updated)</span>:}}{{[subs:items:index:#0:subs:is-old]?<span> (new comment(s))</span>:}}</h2>
+                <p style="margin-top: 3px;"><em>([subs:items:index:#0:as-node:og-group-ref])</em></p>
+            </div>
+            <div style="margin-bottom: 10px; line-height: 1.3em;">[subs:items:index:#0:as-node:summary]</div>
+            <div style="padding-bottom: 10px; margin: 0 40px 10px 0; float: right;">
+                <a style="color:rgb(0,89,82)" href="[subs:items:index:#0:as-node:url:absolute]">Read more</a>
+            </div>
+        </td>
+    </tr>
+    <!-- End news -->
+    }}
+    <tr style="background: #f0f8eb;color: #716b7a;font-size: 12px;border-top: #005952 2px solid;">
+        <td style="padding: 0 10px 10px;">
+            <p>This is an automated message. Please do NOT reply to the sender address!
+                <a style="color:rgb(0,89,82)" href="[subs:manage-url]">Manage your subscriptions</a>
+            </p>
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+// Project node page.
+.node-type-project .field-name-field-enrd-prj-full-proj-summary .field-label,
+.node-type-project .field-name-field-enrd-prj-results .field-label {
+  font-size: 16px;
+  color: #009193;
+}
+
+.node-type-project .row.project-top {
+  margin-bottom: 15px;
+}
+
+#block-ds-extras-project-details .field {
+  margin-bottom: 10px;
+}
+
+// Projects Database Solr page.
+.facet-advanced-projects-facets.collapse-text-fieldset.collapsible {
+  a.fieldset-title::before {
+    height: 27px;
+    width: 27px;
+    left: -33px;
+    line-height: normal;
+  }
+
+  legend {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+}

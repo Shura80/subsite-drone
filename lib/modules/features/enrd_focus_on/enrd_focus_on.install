@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Install file of the ENRD Focus On module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_focus_on_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Focus On is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_focus_on_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Focus On has been deactivated on your site.'));
+}
+
+/**
+ * Enable the Entityqueue module.
+ */
+function enrd_focus_on_update_7101() {
+  module_enable(array('entityqueue'));
+}

@@ -1,0 +1,1462 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD LAG Dashboard feature.
+ */
+
+include_once 'enrd_lag_dashboard.features.inc';
+
+// Define tag applied on module's rules.
+define('ENRD_LAG_DASHBOARD_WORKFLOW_ACTIONS_TAG', 'ENRD LAG DASHBOARD');
+define('ENRD_LAG_DASHBOARD_MENU', 'user-menu');
+define('ENRD_LAG_DASHBOARD_NSU_REDIRECT', 'lag-dashboard');
+define('ENRD_LAG_DASHBOARD_LAG_REDIRECT', 'my-lags');
+
+// Contact the Webmaster contact form.
+define('ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID', '420e5009-ae60-48de-b46c-166ef46627d7');
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_lag_dashboard_menu() {
+
+  $items['my-lags/%/manage/lag-profile'] = array(
+    'title' => array('LAG profile'),
+    'file' => 'enrd_lag_dashboard.form.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard') . '/includes',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_lag_dashboard_lag_profile_form', 1),
+    'access callback' => '_enrd_lag_dashboard_check_access',
+    'access arguments' => array(
+      1,
+      'access lag dashboards',
+      'access lag dashboards',
+    ),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'weight' => 5,
+  );
+
+  $items['my-lags/%'] = array(
+    'title callback' => 'og_ui_menu_title_callback',
+    'title arguments' => array('Manage my LAG: @group', 'node', 1),
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
+  ) + $items['my-lags/%/manage/lag-profile'];
+
+  $items['my-lags/%/manage/cooperation-offers'] = array(
+    'title' => 'Cooperation offers',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'page callback' => 'enrd_lag_dashboard_contextual_dashboard',
+    'page arguments' => array(1),
+    'access callback' => '_enrd_lag_dashboard_og_context_views_page_access',
+    'access arguments' => array(
+      'node',
+      'access lag dashboards',
+      '1',
+    ),
+    'file' => 'enrd_lag_dashboard.form.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard') . '/includes',
+    'weight' => 10,
+  );
+
+  $items['my-lags/%/manage/cooperation-offers/add'] = array(
+    'title' => 'Create a new Cooperation Offer',
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'node_add',
+    'page arguments' => array(ENRD_LAG_DATABASE_COOP_OFFER_NODE),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', ENRD_LAG_DATABASE_COOP_OFFER_NODE),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+  );
+
+  $items['my-lags/%node/manage/contact-form'] = array(
+    'title' => 'Replies to my Cooperation offers',
+    'page callback' => 'enrd_lag_dashboard_results_submissions',
+    'page arguments' => array(1),
+    'access callback' => '_enrd_lag_dashboard_check_access',
+    'access arguments' => array(
+      1,
+      'access group webform results',
+      'access group webform results',
+    ),
+    'file' => 'includes/enrd_lag_dashboard.webforms.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+    'weight' => 15,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+
+  $items['my-lags/%node/manage/contact-form/submissions'] = array(
+    'title' => 'Submissions',
+    'page callback' => 'enrd_lag_dashboard_results_submissions',
+    'page arguments' => array(1),
+    'access callback' => '_enrd_lag_dashboard_check_access',
+    'access arguments' => array(
+      1,
+      'access group webform results',
+      'access group webform results',
+    ),
+    'file' => 'includes/enrd_lag_dashboard.webforms.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+    'weight' => 2,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['my-lags/%node/manage/contact-webmaster'] = array(
+    'title' => 'Contact the Webmaster',
+    'page callback' => '_enrd_lag_database_load_contact_webmaster_form',
+    'page arguments' => array(ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID),
+    'access callback' => '_enrd_lag_dashboard_check_og_lag_access',
+    'access arguments' => array(
+      1,
+      'access lag dashboards',
+      FALSE,
+    ),
+    'weight' => 22,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+
+  $items['lag-dashboard/contact-webmaster'] = array(
+    'title' => 'Contact the Webmaster',
+    'page callback' => '_enrd_lag_database_load_contact_webmaster_form',
+    'page arguments' => array(ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID),
+    'access callback' => '_enrd_lag_dashboard_check_esi_fund_perm',
+    'access arguments' => array(NULL, 'access lag dashboards', NULL, NULL),
+    'weight' => 22,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['lag-dashboard/cooperation-offers/add'] = array(
+    'title' => 'Create a new Cooperation Offer',
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'node_add',
+    'page arguments' => array(ENRD_LAG_DATABASE_COOP_OFFER_NODE),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', ENRD_LAG_DATABASE_COOP_OFFER_NODE),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+  );
+
+  $items['lag-dashboard/cooperation-offers/expired/add'] = $items['lag-dashboard/cooperation-offers/add'];
+
+  $items['lag-dashboard/lag-profiles/add'] = array(
+    'title' => 'Create a new LAG',
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'node_add',
+    'page arguments' => array(ENRD_LAG_DATABASE_LAG_GROUP_NODE),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', ENRD_LAG_DATABASE_LAG_GROUP_NODE),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+  );
+
+  $items['lag-dashboard/contact-form'] = array(
+    'title' => 'Form submissions',
+    'page callback' => 'enrd_lag_dashboard_results_submissions_top',
+    'access arguments' => array('access lag dashboards'),
+    'file' => 'includes/enrd_lag_dashboard.webforms.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+    'weight' => 20,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'menu_name' => ENRD_LAG_DASHBOARD_MENU,
+  );
+
+  $items['lag-dashboard/contact-form/top-lags'] = array(
+    'title' => 'Top LAGs',
+    'page callback' => 'enrd_lag_dashboard_results_submissions_top',
+    'access arguments' => array('access lag dashboards'),
+    'file' => 'includes/enrd_lag_dashboard.webforms.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'menu_name' => ENRD_LAG_DASHBOARD_MENU,
+  );
+
+  $items['admin/config/lag-database/dashboard'] = array(
+    'title' => 'Dashboard',
+    'description' => 'Dashboard configuration form for LAG users redirects.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_lag_dashboard_redirect_form'),
+    'access arguments' => array('administer lag dashboard login redirects'),
+    'weight' => 15,
+    'file' => 'includes/enrd_lag_dashboard.admin.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_lag_dashboard_menu_alter(&$items) {
+  if (isset($items['lag-dashboard/lag-profiles'])) {
+    $items['lag-dashboard/lag-profiles']['type'] |= MENU_DEFAULT_LOCAL_TASK;
+
+    // Admin/NSU Dashboard menu item (as default local task of lag-profiles).
+    $items['lag-dashboard'] = array(
+      'title' => 'LAG dashboard',
+      'description' => 'Dashboard for Admins and NSU',
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => 4,
+      'menu_name' => ENRD_LAG_DASHBOARD_MENU,
+    ) + $items['lag-dashboard/lag-profiles'];
+  }
+
+  // Add context to show views menu item in contextual links.
+  if (isset($items['my-lags/%views_arg/manage/contacts'])) {
+    $items['my-lags/%views_arg/manage/contacts']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+  }
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_lag_dashboard_menu_link_alter(&$item) {
+  // Add link icon to the dashboard user menu item.
+  if (isset($item['menu_name']) && $item['menu_name'] == ENRD_LAG_DASHBOARD_MENU) {
+    if ($item['link_path'] == 'lag-dashboard') {
+      $item['options']['attributes']['data-image'] = 'dashboard';
+    }
+    if ($item['link_path'] == 'my-lags') {
+      $item['options']['attributes']['data-image'] = 'dashboard';
+    }
+  }
+}
+
+/**
+ * Implements hook_og_context_negotiation_info().
+ */
+function enrd_lag_dashboard_og_context_negotiation_info() {
+  $providers = array();
+
+  $providers['lag_dashboard'] = array(
+    'name' => t('LAG Dashboard'),
+    'description' => t('Determine context by checking My LAGs section.'),
+    'callback' => 'enrd_lag_dashboard_og_context_handler',
+    // Invoke the context handler only on the following path.
+    'menu path' => array('my-lags/%/manage'),
+  );
+
+  return $providers;
+}
+
+/**
+ * Context handler; Get lag from path.
+ */
+function enrd_lag_dashboard_og_context_handler() {
+  $item = menu_get_item();
+  if (isset($item['original_map'][1]) && is_numeric($item['original_map'][1])) {
+    $domain = _enrd_lag_database_get_lag_domain();
+    if (in_array($item['original_map'][1], $domain['lags'])) {
+      return og_context_handler_node(node_load($item['original_map'][1]));
+    }
+  }
+}
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function enrd_lag_dashboard_override_multisite_components() {
+  $og_negociations = variable_get('og_context_negotiation_group_context', array('url' => -5, 'node' => -4));
+
+  // Ensure lag_dashboard og context negotiation is enabled.
+  if (!isset($og_negociations["lag_dashboard"])) {
+    $og_negociations["lag_dashboard"] = array();
+    variable_set('og_context_negotiation_group_context', $og_negociations);
+  }
+
+  watchdog('enrd_lag_dashboard', 'Override multisite components');
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function enrd_lag_dashboard_page_alter(&$page) {
+  $menu = menu_get_item();
+  // Remove sidebar left for dashboard pages.
+  if (isset($menu['map'][0]) && ($menu['map'][0] == 'lag-dashboard' || ($menu['map'][0] == 'my-lags' &&  isset($menu['map'][1])))) {
+    $page['sidebar_left'] = NULL;
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_lag_dashboard_module_implements_alter(&$module_list, $context) {
+  // Make sure enrd_lag_dashboard's hook implementations
+  // are called after views module.
+  if ($context === "menu_alter") {
+    $temp = $module_list['enrd_lag_dashboard'];
+    unset($module_list['enrd_lag_dashboard']);
+    $module_list['enrd_lag_dashboard'] = $temp;
+  }
+}
+
+/**
+ * Implements hook_og_permission().
+ */
+function enrd_lag_dashboard_og_permission() {
+  $perms = array();
+
+  $perms['access group webform results'] = array(
+    'title' => t('Access the "Contact form" tab inside LAG groups.'),
+    'description' => t('Allow users with this permission to see webform results pages (OG).'),
+    'roles' => array(OG_AUTHENTICATED_ROLE),
+    'default role' => array(),
+  );
+
+  $perms['access lag dashboards'] = array(
+    'title' => t('Access the LAG Dashboards (OG)'),
+    'description' => t('Allow users with this permission to access LAG Dashboards (OG).'),
+    'roles' => array(OG_AUTHENTICATED_ROLE),
+    'default role' => array(),
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_lag_dashboard_permission() {
+  $perms = array();
+
+  $perms['access group webform results'] = array(
+    'title' => t('Access the "Contact form" tab inside LAG groups.'),
+    'description' => t('Allow users with this permission to see webform results pages.'),
+  );
+
+  $perms['access lag dashboards'] = array(
+    'title' => t('Access the LAG Dashboards'),
+    'description' => t('Allow users with this permission to access LAG Dashboards.'),
+  );
+
+  $perms['administer lag dashboard login redirects'] = array(
+    'title' => t('Administer LAG Dashboard login redirects'),
+    'description' => t('Allow users with this permission to manage LAG Dashboard login redirect form.'),
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function enrd_lag_dashboard_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+
+  global $user;
+
+  // List of views with LAG Workflow VBO actions.
+  $dashboards = array(
+    'lags' => 'views_form_enrd_lag_database_custom_dashboard_lag_profiles_page',
+    'coop_active' => 'views_form_enrd_lag_database_cooperation_offers_dashboard_coop_offers_page_active',
+    'coop_expired' => 'views_form_enrd_lag_database_cooperation_offers_dashboard_coop_offers_page_expired',
+    'coop_contextual' => 'views_form_enrd_lag_database_cooperation_offers_dashboard_coop_offers_contextual',
+    'pending_lags' => 'views_form_enrd_lag_database_custom_dashboard_pending_lags',
+    'pending_coops' => 'views_form_enrd_lag_database_cooperation_offers_dashboard_pending_page',
+    'users' => 'views_form_enrd_lag_database_lag_users_dashboard_lag_users_page',
+    'nsu' => 'views_form_enrd_lag_dashboard_manage_lag_nsu_lag_users_page',
+  );
+
+  if (in_array($form['#form_id'], $dashboards)) {
+
+    // Don't show all vbo operations if views had no results.
+    if (empty($vbo->view->result)) {
+      $form['select']['#access'] = FALSE;
+    }
+    elseif (isset($vbo->view->exposed_data['state'])) {
+      $state = reset($vbo->view->exposed_data['state']);
+
+      switch ($form['#form_id']) {
+        // LAGs.
+        case $dashboards['lags']:
+        case $dashboards['pending_lags']:
+          $states = _enrd_lag_dashboard_workflow_list_states_by_content_type(ENRD_LAG_DATABASE_LAG_GROUP_NODE, $state, $user);
+          break;
+
+        // Cooperation Offers.
+        case $dashboards['coop_active']:
+        case $dashboards['coop_expired']:
+        case $dashboards['pending_coops']:
+          $states = _enrd_lag_dashboard_workflow_list_states_by_content_type(ENRD_LAG_DATABASE_COOP_OFFER_NODE, $state, $user);
+          break;
+
+        case $dashboards['coop_contextual']:
+          $states = _enrd_lag_dashboard_workflow_list_states($state, $vbo->view->args[0]);
+          break;
+
+      }
+
+      // Force button text to the have transition name instead state name.
+      foreach (_enrd_lag_dashboard_get_rules_by_tag(ENRD_LAG_DASHBOARD_WORKFLOW_ACTIONS_TAG) as $possibile_state => $action) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'workbench_moderation_transition')
+          ->propertyCondition('from_name', $state)
+          ->propertyCondition('to_name', $possibile_state);
+
+        $result = $query->execute();
+        if (!empty($result['workbench_moderation_transition'])) {
+          if ($transition = workbench_moderation_transition_load(key($result['workbench_moderation_transition']))) {
+            $form['select'][$action]['#value'] = $transition->name;
+          }
+        }
+      }
+
+      $actions = _enrd_lag_dashboard_vbo_operations_filter($states);
+
+      // Show Delete button only in draft state.
+      if ($state != 'draft') {
+        unset($form['select']['action::enrd_lag_dashboard_action_delete_coop_offer_draft']);
+      }
+      // Filter VBO options.
+      foreach ($actions as $action) {
+        unset($form['select'][$action]);
+      }
+    }
+
+    if ($form['#form_id'] == $dashboards['users'] || $form['#form_id'] == $dashboards['nsu']) {
+      // Format send Email to the user as a mail.
+      if (isset($form['parameter']['mail_subject'])) {
+        $form['parameter']['mail_subject']['settings']['mail_subject']['#type'] = 'textfield';
+        $form['parameter']['mail_subject']['settings']['help']['token']['#access'] = FALSE;
+        $form['parameter']['mail_body']['settings']['help']['token']['#access'] = FALSE;
+        $form['parameter']['mail_body']['settings']['mail_body']['#rows'] = 8;
+        $form['actions']['submit']['#value'] = t('Send email');
+      }
+    }
+
+    // Remove Operations if there isn't an operation available.
+    if (isset($form['select'])) {
+      $visible_operations = element_get_visible_children($form['select']);
+      if (empty($visible_operations)) {
+        $form['select']['#access'] = FALSE;
+      }
+    }
+
+  }
+
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function enrd_lag_dashboard_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+
+  if (strpos($root_path, 'node/%') === 0) {
+    $is_lag = isset($router_item['page_arguments'][0]->type) && $router_item['page_arguments'][0]->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE;
+    $is_lag_edit = $root_path == 'node/%/edit' && isset($router_item['page_arguments'][1]->type) && $router_item['page_arguments'][1]->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE;
+    $is_coop_offer = isset($router_item['page_arguments'][0]->type) && $router_item['page_arguments'][0]->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE;
+    $is_coop_offer_edit = $root_path == 'node/%/edit' && isset($router_item['page_arguments'][1]->type) && $router_item['page_arguments'][1]->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE;
+
+    if ($is_lag || $is_lag_edit || $is_coop_offer || $is_coop_offer_edit) {
+
+      foreach ($data['tabs'] as $key1 => &$tabs) {
+        foreach ($tabs['output'] as $key2 => &$item) {
+          if (isset($item['#link']['path'])) {
+
+            switch ($item['#link']['path']) {
+              case 'node/%/view':
+                // Get content workbench moderation state.
+                $state = isset($router_item['page_arguments'][0]->workbench_moderation)
+                  ? $router_item['page_arguments'][0]->workbench_moderation['current']->state : $router_item['page_arguments'][1]->workbench_moderation['current']->state;
+                // Rename some state labels.
+                if ($state == 'ready_to_be_published') {
+                  $state = 'pending';
+                }
+                if ($state == 'draft') {
+                  $state = 'update';
+                }
+                if ($router_item['page_callback'] == 'workbench_moderation_node_view_draft') {
+                  $item['#link']['title'] = t('Currently online');
+                  $data['tabs'][0]['output'][1]['#link']['title'] = t('View @state', ['@state' => $state]);
+                }
+                elseif ($router_item['page_callback'] == 'node_page_view'
+                  || $router_item['page_callback'] == 'entity_translation_edit_page'
+                  || $router_item['page_callback'] == 'workbench_moderation_node_history_view') {
+                  $status = isset($router_item['page_arguments'][0]->status)
+                    ? $router_item['page_arguments'][0]->status : $router_item['page_arguments'][1]->status;
+                  if ($status == 1) {
+                    $item['#link']['title'] = t('Currently online');
+                    $data['tabs'][0]['output'][1]['#link']['title'] = t('View @state', ['@state' => $state]);
+                  }
+                  else {
+                    $item['#link']['title'] = t('View @state', ['@state' => $state]);
+                  }
+                }
+                break;
+
+              case 'node/%/edit':
+                if ($is_lag || $is_lag_edit) {
+                  $item['#link']['title'] = t('Update LAG profile');
+                }
+                elseif ($is_coop_offer || $is_coop_offer_edit) {
+                  $item['#link']['title'] = t('Update offer');
+                }
+                break;
+
+              case 'node/%/moderation':
+              case 'node/%/revisions':
+              case 'node/%/group':
+                if (!user_access('access lag dashboards')) {
+                  unset($data['tabs'][$key1]['output'][$key2]);
+                }
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+  elseif (strpos($root_path, 'my-lags/%') === 0) {
+    $data['tabs'][0]['output'][] = array(
+      '#theme' => 'menu_local_task',
+      '#link' => array(
+        'title' => '<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>',
+        'href' => 'my-lags',
+        'localized_options' => array(
+          'attributes' => array(
+            'title' => t('My LAGs'),
+          ),
+          'html' => TRUE,
+        ),
+      ),
+    );
+  }
+
+  switch ($root_path) {
+    case 'lag-dashboard':
+      // LAG draft state.
+      $state = 1;
+      break;
+
+    case 'lag-dashboard/cooperation-offers':
+      // Cooperation offer draft state.
+      $state = 3;
+      break;
+  }
+
+  switch ($root_path) {
+    case 'my-lags/%/manage/contacts':
+    case 'my-lags/%/manage/contacts/pending-invites':
+    case 'lag-dashboard':
+    case 'lag-dashboard/cooperation-offers':
+
+      $path = $_GET['q'];
+      $query_parameters = drupal_get_query_parameters();
+      if (!empty($state)) {
+        $query_parameters['state'] = $state;
+      }
+      $query = drupal_http_build_query($query_parameters);
+      if ($query != '') {
+        $path .= '?' . $query;
+      }
+      $data['actions']['output'][0]['#link']['localized_options']['query'] = array('destination' => $path);
+      break;
+
+    case 'lag-dashboard/cooperation-offers/add':
+    case 'lag-dashboard/lag-profiles/add':
+      foreach ($data['tabs'][0]['output'] as &$item) {
+        $item['#access'] = FALSE;
+      }
+      break;
+  }
+
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function enrd_lag_dashboard_node_view($node, $view_mode, $langcode) {
+  $view_moderation_messages = FALSE;
+
+  // LAG.
+  if ($node->type === ENRD_LAG_DATABASE_LAG_GROUP_NODE && $view_mode == 'full') {
+    $view_moderation_messages = _enrd_lag_database_check_permission_user($node);
+  }
+
+  // Cooperation offers.
+  if ($node->type === ENRD_LAG_DATABASE_COOP_OFFER_NODE && $view_mode == 'full') {
+    $entity = entity_metadata_wrapper('node', $node);
+    $lag_node = $entity->og_lag_group_ref->value();
+    $view_moderation_messages = _enrd_lag_database_check_permission_user($lag_node);
+  }
+
+  // Show moderation state messages.
+  if ($view_moderation_messages && !user_access('skip alter moderation form')) {
+    _enrd_lag_dashboard_workbench_moderation_messages('view', $node);
+  }
+}
+
+/**
+ * Sets custom status messages for the Lag and Cooperation offer pages.
+ *
+ * Note that these status messages do not replace the
+ * workbench_moderation_messages for administrator role. This concerns only the
+ * LAG contact/member and NSU roles.
+ *
+ * @param string $context
+ *   A string, either 'view' or 'edit'.
+ * @param object $node
+ *   A node object. The current menu object will be used if it is a node and
+ *   this variable was not set.
+ *
+ * @see workbench_moderation_messages()
+ */
+function _enrd_lag_dashboard_workbench_moderation_messages($context, $node = NULL) {
+  static $workbench_moderation_messages_set;
+
+  if (!workbench_moderation_node_type_moderated($node->type) || $workbench_moderation_messages_set) {
+    return;
+  }
+
+  $revision_published = FALSE;
+  $revision_current = FALSE;
+  $current_rtbp = FALSE;
+  $workbench_moderation_messages_set = TRUE;
+
+  // For new content, this property will not be set.
+  if (isset($node->workbench_moderation)) {
+    $state = $node->workbench_moderation;
+    if ($state['my_revision']->published) {
+      $revision_published = TRUE;
+    }
+    if ($state['my_revision']->vid == $state['current']->vid) {
+      $revision_current = TRUE;
+    }
+    if ($node->workbench_moderation['current']->state == enrd_mastermind_workbench_moderation_state_ready_to_be_published()) {
+      $current_rtbp = TRUE;
+    }
+  }
+
+  // An array of messages to add to the general workbench block.
+  $info_block_messages = array();
+
+  if ($context == 'view') {
+    if (workbench_moderation_messages_shown($context, $node)) {
+      // Prevent multiple moderation status.
+      return;
+    }
+    $info_block_messages[] = array(
+      'label' => t('Update status'),
+      'message' => check_plain(workbench_moderation_state_label($state['my_revision']->state)),
+    );
+
+    // Add a moderation form.
+    $moderate_form = array();
+    if ($revision_current && !$revision_published) {
+      $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision");
+    }
+
+    $info_block_messages[] = array(
+      'label' => t('Most recent update'),
+      'message' => (!empty($revision_current) ? t('Yes') : t('No')) . drupal_render($moderate_form),
+    );
+
+    if ($current_rtbp) {
+
+      // Define target node for contact link based on node type.
+      if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+        $target_nid = $node->nid;
+      }
+      else {
+        $target_nid = $node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'];
+      }
+
+      $show_note = FALSE;
+      $contact_path = '/my-lags/' . $target_nid . '/manage/contact-webmaster';
+      $type_name = node_type_get_name($node);
+
+      if (!$revision_current && $revision_published) {
+        $show_note = TRUE;
+        $message_text = t('A most recent updates of this @type_name has been submitted for publication and is currently under evaluation by the Webmaster. You will be able to edit it again after the update has been approved/rejected. If needed, you can !contact.', array(
+          '@type_name' => $type_name,
+          '!contact' => l(t('Contact the Webmaster'), $contact_path),
+        ));
+      }
+      elseif ($revision_current && !$revision_published) {
+        $show_note = TRUE;
+        $message_text = t('This update is the most recent revision of this @type_name, it has been submitted for publication and is currently under evaluation by the Webmaster. You will be able to create a new update again after the revision has been approved/rejected. If needed, you can !contact.', array(
+          '@type_name' => $type_name,
+          '!contact' => l(t('Contact the Webmaster'), $contact_path),
+        ));
+      }
+
+      if ($show_note) {
+        $label = theme('html_tag', array(
+          'element' => array(
+            '#tag' => 'strong',
+            '#value' => t('Note'),
+          ),
+        ));
+
+        $message = theme('html_tag', array(
+          'element' => array(
+            '#tag' => 'strong',
+            '#value' => $message_text,
+          ),
+        ));
+        $info_block_messages[] = array(
+          'label' => '<em>' . $label . '</em>',
+          'message' => $message,
+        );
+      }
+    }
+
+  }
+
+  // Send the info block array to a static variable.
+  workbench_moderation_set_message($info_block_messages);
+}
+
+/**
+ * Helper function that check if a user has access to a LAG.
+ *
+ * @param object $node
+ *   The node used to check OG permission.
+ *
+ * @return bool
+ *   returns TRUE if access is granted, otherwise returns FALSE.
+ */
+function _enrd_lag_dashboard_is_my_lag($node) {
+  // Check for both OG and external permission.
+  // Allow access if content type is lag and user has og_permission.
+  // Otherwise still allow access if user has an external permission.
+  $og_perm = 'access lag dashboards';
+
+  switch ($node->type) {
+    case ENRD_LAG_DATABASE_LAG_GROUP_NODE:
+      return og_user_access('node', $node->nid, $og_perm, NULL, FALSE, TRUE);
+
+    case ENRD_LAG_DATABASE_COOP_OFFER_NODE:
+      return og_user_access('node', $node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'], $og_perm, NULL, FALSE, TRUE);
+
+    default:
+      return FALSE;
+  }
+}
+
+/**
+ * Helper function that check if a user has access or OG access to a node path.
+ *
+ * @param object $node
+ *   The node used to check OG permission.
+ * @param string $perm
+ *   The string representing the global permission to check.
+ * @param string $og_perm
+ *   The string representing the og permission to check.
+ * @param bool $deep
+ *   (Optional) Check for same og permission in the main esi fund.
+ *
+ * @return bool
+ *   returns TRUE if access is granted, otherwise returns FALSE.
+ */
+function _enrd_lag_dashboard_check_access($node, $perm, $og_perm, $deep = FALSE) {
+
+  if (!is_object($node)) {
+    $node = entity_load_single('node', $node);
+  }
+
+  if (isset($node->type) && $node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+
+    $access = user_access($perm) ||
+      og_user_access('node', $node->nid, $og_perm);
+
+    if ($deep) {
+      if (isset($node->og_group_ref[LANGUAGE_NONE][0]['target_id'])) {
+        $node_group = $node->og_group_ref[LANGUAGE_NONE][0]['target_id'];
+      }
+      $access = $access || og_user_access('node', $node_group, $og_perm);
+    }
+
+    return $access;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Callback to allow NSU/LAG man/contacts to access "Contact the Webform" area.
+ *
+ * @param object $node
+ *   The node used to check OG permission.
+ * @param string $og_perm
+ *   The string representing the og permission to check.
+ * @param bool $deep
+ *   (Optional) Check for same og permission in the main esi fund.
+ *
+ * @return bool
+ *   returns TRUE if access is granted, otherwise returns FALSE.
+ */
+function _enrd_lag_dashboard_check_og_lag_access($node, $og_perm, $deep = FALSE) {
+  // Exclude the LAG Webmaster & Allow only LAG man./con. & NSUs.
+  return !user_access('access lag dashboards') && _enrd_lag_dashboard_check_access($node, '', $og_perm, $deep);
+}
+
+/**
+ * Custom access callback for Admin/NSU dashboards.
+ *
+ * @param string $perm
+ *   The permission, such as "administer nodes", being checked for.
+ * @param string $esi_fund_perm
+ *   The og permission, such as "edit node", being checked for esi fund og.
+ * @param string $lag_perm
+ *   The og permission, such as "edit node", being checked for lag content type.
+ * @param mixed $account
+ *   (optional) The account to check, if not given use currently logged in user.
+ *
+ * @return bool
+ *   Boolean TRUE if the user has the global or og requested permission.
+ */
+function _enrd_lag_dashboard_check_esi_fund_perm($perm = NULL, $esi_fund_perm = NULL, $lag_perm = NULL, $account = NULL) {
+
+  if (!empty($perm) && user_access($perm, $account)) {
+    return TRUE;
+  }
+
+  $domain = _enrd_lag_database_get_lag_domain($account);
+
+  if (!empty($esi_fund_perm) && $domain['nsu']) {
+    foreach ($domain['esi_funds_og'] as $gid) {
+      if (og_user_access('node', $gid, $esi_fund_perm, $account)) {
+        return TRUE;
+      }
+    }
+  }
+
+  if (!empty($lag_perm) && !empty($domain['lags'])) {
+    foreach ($domain['lags'] as $gid) {
+      if (og_user_access('node', $gid, $lag_perm, $account)) {
+        return TRUE;
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Helper function to unset action buttons in VBO operations.
+ *
+ * @param mixed $possible_states
+ *   Array positions to exclude.
+ *
+ * @return array
+ *   Return an array of actions to remove from VBO actions.
+ */
+function _enrd_lag_dashboard_vbo_operations_filter($possible_states) {
+
+  // List of module rules' action sets.
+  $actions = _enrd_lag_dashboard_get_rules_by_tag(ENRD_LAG_DASHBOARD_WORKFLOW_ACTIONS_TAG);
+
+  $buttons = array_diff_key($actions, $possible_states);
+
+  // This array will be used to filter available vbo buttons.
+  return $buttons;
+}
+
+/**
+ * Helper function to create basic node object to pass to Workbench Moderation.
+ *
+ * @param string $bundle
+ *   The node type machine name.
+ * @param string $moderation_state
+ *   Moderation state machine name label.
+ * @param mixed $account
+ *   (optional) The user object to fetch info. Defaults to the acting user.
+ *
+ * @return mixed
+ *   Return an array of possible status.
+ */
+function _enrd_lag_dashboard_workflow_list_states_by_content_type($bundle, $moderation_state, $account = NULL) {
+
+  global $user;
+  if (empty($account)) {
+    $account = clone $user;
+  }
+
+  // Add some basic info to node object.
+  $node = new StdClass();
+  $node->type = $bundle;
+  $node->workbench_moderation['current'] = new StdClass();
+  $node->workbench_moderation['current']->state = $moderation_state;
+
+  $states = workbench_moderation_states_next($moderation_state, $account, $node);
+
+  if (empty($states)) {
+    switch ($bundle) {
+      case ENRD_LAG_DATABASE_LAG_GROUP_NODE:
+        $domain = _enrd_lag_database_get_lag_domain();
+        $groups = $domain['esi_funds_og'];
+        break;
+
+      case ENRD_LAG_DATABASE_COOP_OFFER_NODE:
+        $groups = array();
+        break;
+    }
+
+    $states = array();
+    foreach ($groups as $gid) {
+      $states += _enrd_lag_dashboard_workflow_list_states($moderation_state, $gid);
+    }
+  }
+
+  return $states;
+}
+
+/**
+ * Helper function to create basic node object to pass to Workbench Moderation.
+ *
+ * @param string $current_state
+ *   The current moderation state.
+ * @param int $nid
+ *   The node id. Leave it to default value.
+ *
+ * @return array
+ *   An array of possible states.
+ */
+function _enrd_lag_dashboard_workflow_list_states($current_state, $nid) {
+
+  $possible_states = workbench_moderation_state_labels();
+  $group = entity_load_single('node', $nid);
+
+  $states = array();
+  foreach ($possible_states as $state_key => $state_name) {
+
+    if (!strcmp($state_key, $current_state)) {
+      continue;
+    }
+
+    $permission = t('moderate content from @from_state to @to_state',
+      array('@from_state' => $current_state, '@to_state' => $state_key));
+
+    if (og_user_access_entity($permission, 'node', $group)) {
+      $states[$state_key] = $state_name;
+    }
+  }
+
+  return $states;
+}
+
+/**
+ * Helper function to get a list of rules by tag.
+ *
+ * @param string $tag
+ *   The tag name.
+ *
+ * @return array
+ *   Returns an array made of states as keys and rules names as values.
+ */
+function _enrd_lag_dashboard_get_rules_by_tag($tag) {
+  $query = db_select('rules_config', 'rc');
+  $query->join('rules_tags', 'rt', 'rt.id = rc.id');
+  $result = $query
+    ->fields('rc')
+    ->condition('rt.tag', $tag)
+    ->execute()->fetchAllAssoc('id');
+
+  $rules = array();
+  $delimiter = 'rules_enrd_moderate_content_to_';
+  $prefix = 'rules_component::';
+  foreach ($result as $rule) {
+    $rule_key = explode($delimiter, $rule->name);
+    $rule_key = array_pop($rule_key);
+    $rules[$rule_key] = $prefix . $rule->name;
+  }
+
+  return $rules;
+}
+
+/**
+ * Implements hook_views_post_build().
+ */
+function enrd_lag_dashboard_views_pre_build(&$view) {
+
+  if (!user_access('skip lag country restriction')) {
+    switch ($view->name) {
+      case 'enrd_lag_database_custom_dashboard':
+      case 'enrd_lag_database_cooperation_offers_dashboard':
+      case 'enrd_lag_database_lag_users_dashboard':
+      case 'enrd_lag_invite_dashboard':
+
+        $user_filter = _enrd_lag_database_get_lag_domain();
+
+        if (isset($view->filter['field_enrd_lag_country_tid'])) {
+          $view->filter['field_enrd_lag_country_tid']->options['exposed'] = FALSE;
+          $view->filter['field_enrd_lag_country_tid']->value = array($user_filter['country']);
+          if (isset($view->field['field_enrd_lag_country'])) {
+            $view->field['field_enrd_lag_country']->options['exclude'] = TRUE;
+          }
+        }
+
+        if (isset($view->filter['field_enrd_main_esi_fund_tid'])) {
+          $view->filter['field_enrd_main_esi_fund_tid']->options['exposed'] = FALSE;
+          $view->filter['field_enrd_main_esi_fund_tid']->value = $user_filter['esi_funds'];
+        }
+        break;
+    }
+  }
+
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_dashboard_form_views_exposed_form_alter(&$form, &$form_state) {
+  // Filtered Country filter for EU countries.
+  if (isset($form['field_enrd_lag_country_tid'])) {
+    $form['field_enrd_lag_country_tid']['#options'] = array_intersect_key($form['field_enrd_lag_country_tid']['#options'], array('All' => '') + _enrd_lag_database_get_eu_countries_options());
+  }
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function enrd_lag_dashboard_views_query_alter(&$view, &$query) {
+  // Fix Search in combine revision fields of Cooperation Offers.
+  if ($view->name == 'enrd_lag_database_cooperation_offers_dashboard') {
+    if ($view->current_display == 'coop_offers_page_active'
+      || $view->current_display == 'coop_offers_page_expired'
+      || $view->current_display == 'pending_page'
+      || $view->current_display == 'views_data_export_coop_offers_active'
+      || $view->current_display == 'views_data_export_coop_offers_expired') {
+
+      if (isset($query->where[1]['conditions'][1]) && strpos($query->where[1]['conditions'][1]['field'], 'CONCAT_WS') !== FALSE) {
+        $query->where[1]['conditions'][1]['field']
+          = "CONCAT_WS(' ', field_revision_title_field.title_field_value,' ', field_revision_field_enrd_coop_context.field_enrd_coop_context_value, ' ', field_revision_field_enrd_coop_brief_summary.field_enrd_coop_brief_summary_value, ' ', field_revision_field_enrd_coop_objectives.field_enrd_coop_objectives_value, ' ', field_revision_field_enrd_coop_partner_region.field_enrd_coop_partner_region_value, ' ', field_revision_field_enrd_coop_type_of_partner.field_enrd_coop_type_of_partner_value) LIKE :views_combine";
+      }
+    }
+  }
+  // Fix Search in combine revision fields of LAGs.
+  if ($view->name == 'enrd_lag_database_custom_dashboard') {
+    if ($view->current_display == 'lag_profiles_page'
+      || $view->current_display == 'pending_lags'
+      || $view->current_display == 'views_data_export_lag_profiles') {
+
+      if (isset($query->where[1]['conditions'][1]) && strpos($query->where[1]['conditions'][1]['field'], 'CONCAT_WS') !== FALSE) {
+        $query->where[1]['conditions'][1]['field']
+          = "CONCAT_WS(' ', field_revision_title_field.title_field_value, ' ', field_revision_field_enrd_lag_code.field_enrd_lag_code_value, ' ', field_revision_field_enrd_lag_email.field_enrd_lag_email_email) LIKE :views_combine";
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function enrd_lag_dashboard_user_login(&$edit, $account) {
+  _enrd_lag_dashboard_check_redirect_domains($account);
+}
+
+/**
+ * Check user permissions to define landing pages after login.
+ *
+ * @param mixed $account
+ *   The user loaded info object.
+ */
+function _enrd_lag_dashboard_check_redirect_domains($account = NULL) {
+
+  $domain = _enrd_lag_database_get_lag_domain($account, TRUE);
+  $destination = FALSE;
+
+  // Redirects NSU Managers to global LAG dashboards if redirect path is set.
+  if (!user_access('access lag dashboards') && $domain['nsu'] == TRUE) {
+    // Get configured NSU redirect paths.
+    $nsu_redirect = variable_get('enrd_lag_dashboard_nsu_redirect', ENRD_LAG_DASHBOARD_NSU_REDIRECT);
+    if (!empty($nsu_redirect)) {
+      $destination = $nsu_redirect;
+    }
+  }
+  // Redirects LAG Managers/LAG Contacts to their lag dashboards
+  // if redirect path is set.
+  elseif (!user_access('access lag dashboards') && count($domain['lags'])) {
+    // Get configured LAG redirect paths.
+    $lag_redirect = variable_get('enrd_lag_dashboard_lag_redirect', ENRD_LAG_DASHBOARD_LAG_REDIRECT);
+    if (!empty($lag_redirect)) {
+      $destination = $lag_redirect;
+    }
+  }
+  // Redirects for common users and admin.
+  elseif (!isset($GLOBALS['destination'])) {
+    $common_redirect = variable_get('enrd_lag_dashboard_common_redirect', '<front>');
+    if (!empty($common_redirect)) {
+      $destination = $common_redirect;
+    }
+  }
+
+  if (!empty($destination)) {
+    if (!isset($_GET['destination'])) {
+      $GLOBALS['destination'] = $destination;
+    }
+  }
+}
+
+/**
+ * Menu callback: generates array for rendering "Contact the Webmaster" webform.
+ *
+ * @param string $contact_webform_uuid
+ *   A Webform node uuid.
+ *
+ * @return array
+ *   An array as expected by drupal_render().
+ */
+function _enrd_lag_database_load_contact_webmaster_form($contact_webform_uuid) {
+
+  $domain = _enrd_lag_database_get_lag_domain();
+
+  // Check that the Webform exists.
+  if ($contact_webform_nids = entity_get_id_by_uuid('node', array($contact_webform_uuid))) {
+    $contact_webform_nid = reset($contact_webform_nids);
+    $contact_webform_node = node_load($contact_webform_nid);
+
+    // Render entire node page or generate node array without setting node title
+    // based on the type of user viewing the node (NSU or LAG manager/contact).
+    if (!user_access('access lag dashboards') && $domain['nsu'] == TRUE) {
+      return node_page_view($contact_webform_node);
+    }
+    elseif (!user_access('access lag dashboards') && count($domain['lags'])) {
+      return node_view($contact_webform_node, 'full');
+    }
+  }
+
+  // If Webform does not exist, show 404 page.
+  drupal_not_found();
+
+}
+
+/**
+ * Implements hook_drupal_goto_alter().
+ */
+function enrd_lag_dashboard_drupal_goto_alter(&$path, &$options, &$http_response_code) {
+
+  if (!isset($GLOBALS['destination'])) {
+    return;
+  }
+
+  // Alter drupal_goto.
+  $destination = $GLOBALS['destination'];
+
+  if (is_array($destination)) {
+    $path = $destination[0];
+    $options = array();
+    if (count($destination) > 1) {
+      $options = $destination[1];
+    }
+  }
+  else {
+    $path = $destination;
+  }
+
+}
+
+/**
+ * Implements hook_action_info().
+ *
+ * @see _views_bulk_operations_entity_access()
+ */
+function enrd_lag_dashboard_action_info() {
+  return array(
+    'enrd_lag_dashboard_action_delete_coop_offer_draft' => array(
+      'type' => 'node',
+      'label' => t('Delete update'),
+       // A valid VBO access operation must be given as behavior.
+      'behavior' => array(VBO_ACCESS_OP_DELETE),
+      'configurable' => FALSE,
+      'vbo_configurable' => FALSE,
+      'triggers' => array('any'),
+      'permissions' => array('view revisions'),
+    ),
+  );
+}
+
+/**
+ * VBO Action: delete the current cooperation offer draft.
+ *
+ * @param object $node
+ *   The specific revision object.
+ * @param mixed $context
+ *   Array with components.
+ *
+ * @ingroup actions
+ */
+function enrd_lag_dashboard_action_delete_coop_offer_draft(&$node, $context) {
+  if ($node->vid == $node->workbench_moderation['current']->vid) {
+    if (node_access('update', $node) && $node->workbench_moderation['current']->state == 'draft') {
+      if (entity_revision_delete('node', $node->vid) === FALSE) {
+        $revisions = node_revision_list($node);
+        if (count($revisions) == 1) {
+          // Only one revision in draft, proceed deleting entire node.
+          entity_delete('node', $node->nid);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * Manage formatting of expired cooperation offer field in my-lags views.
+ */
+function enrd_lag_dashboard_preprocess_views_view_field(&$variables) {
+  $view = $variables['view'];
+
+  switch ($view->name) {
+    case 'enrd_lag_dashboard_published_cooperation_offers':
+    case 'enrd_lag_dashboard_contextual_cooperation_offers':
+      switch ($variables['field']->field) {
+        case 'field_enrd_coop_expiry_date':
+        case 'field_enrd_coop_expiry_date-revision_id':
+          $row_field = 'field_' . $variables['field']->field;
+          // Identify expired cooperation offers.
+          $expiry_date = $variables['row']->{$row_field}[0]['raw']['value'];
+
+          if (strtotime('today midnight') > $expiry_date) {
+            $glyphicon = array(
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => array(
+                'class' => array(
+                  'glyphicon',
+                  'glyphicon-alert',
+                  'coop-offer-expired',
+                ),
+                'title' => t('Expired'),
+              ),
+            );
+
+            $variables['output'] .= render($glyphicon);
+          }
+          break;
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * Manage formatting of expired cooperation offer node.
+ */
+function enrd_lag_dashboard_preprocess_node(&$variables) {
+  // Turn the offer background colour to "light grey" as soon as it expires.
+  if (($variables['type'] == ENRD_LAG_DATABASE_COOP_OFFER_NODE) && ($variables['view_mode'] == 'full') && $variables['status']) {
+    if (isset($variables['field_enrd_coop_expiry_date']) && !empty($variables['field_enrd_coop_expiry_date'][0]['value'])) {
+      if (strtotime('today midnight') > $variables['field_enrd_coop_expiry_date'][0]['value']) {
+        $variables['classes_array'][] = 'node-cooperation-offer-expired';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_dashboard_form_workbench_moderation_moderate_form_alter(&$form, &$form_state, $form_id) {
+
+  if (isset($form['node']['#value'])) {
+    $node = $form['node']['#value'];
+    if ($node->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE || $node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+
+      if (!user_access('skip alter moderation form')) {
+        // Add EU Legal notice checkbox to the form.
+        $options = array(
+          '#states' => array(
+            'visible' => array(
+              ':input[name="state"]' => array('value' => enrd_mastermind_workbench_moderation_state_ready_to_be_published()),
+            ),
+            'required' => array(
+              ':input[name="state"]' => array('value' => enrd_mastermind_workbench_moderation_state_ready_to_be_published()),
+            ),
+          ),
+        );
+        // Load node.admin.inc from the node module.
+        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+        $form['eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox($options);
+
+        $form['submit']['#weight'] = 99;
+
+      }
+
+      // Substitute select and button with single action button
+      // if there is only one state change.
+      if (!empty($form['state']['#options']) && count($form['state']['#options']) == 1) {
+
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'workbench_moderation_transition')
+          ->propertyCondition('from_name', $node->workbench_moderation['current']->state)
+          ->propertyCondition('to_name', key($form['state']['#options']));
+
+        $result = $query->execute();
+        if (!empty($result['workbench_moderation_transition'])) {
+          if ($transition = workbench_moderation_transition_load(key($result['workbench_moderation_transition']))) {
+            $form['submit']['#value'] = $transition->name;
+
+            $form['state'] = array(
+              '#type' => 'value',
+              '#value' => key($form['state']['#options']),
+            );
+
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function enrd_lag_dashboard_form_webform_client_form_alter(&$form, &$form_state, $form_id) {
+  // Custom behaviors for the "Contact the Webmaster" webform.
+  if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID) {
+
+    // Disclaimer msg below "Submit" btn of the "Contact the Webmaster" Webform.
+    if ($form['actions']['submit']['#type'] == 'submit') {
+      $form['actions']['submit']['#suffix'] = '<div class="webform-lag-dashboard-contact-webmaster-disclaimer">' .
+        t('The information you provide will be directly forwarded to the LAG Webmaster.') . '</div>';
+    }
+
+  }
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function enrd_lag_dashboard_field_formatter_info() {
+  return array(
+    'enrd_lag_dashboard_file_name_path' => array(
+      'label' => t('ENRD LAG Dashboard: File info for export'),
+      'field types' => array('file'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function enrd_lag_dashboard_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  if ($display['type'] == 'enrd_lag_dashboard_file_name_path') {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array('#markup' => empty($item['uri']) ? '' : $item['filename'] . '|' . file_create_url($item['uri']));
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function enrd_lag_dashboard_block_info() {
+  $blocks = array(
+    'enrd_menu_local_tasks' => array(
+      'info' => t('ENRD LAG Dashboard local tasks'),
+    ),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function enrd_lag_dashboard_block_view($delta = '') {
+
+  // Load the node object to check access.
+  $node = menu_get_object();
+
+  // Node types in which "LAG Management" block can be rendered.
+  $is_lag_or_coop = isset($node) && in_array($node->type,
+      [
+        ENRD_LAG_DATABASE_LAG_GROUP_NODE,
+        ENRD_LAG_DATABASE_COOP_OFFER_NODE,
+      ]
+    );
+
+  // Check if current path is at least a node, then further check OG permission.
+  if ($is_lag_or_coop) {
+
+    // Show block to user with global or OG permission 'access_lag_dashboards'.
+    if (_enrd_lag_dashboard_is_my_lag($node)) {
+      // Load id of LAG or id of container LAG in case of Cooperation offer.
+      switch ($node->type) {
+        case ENRD_LAG_DATABASE_LAG_GROUP_NODE:
+          $param = $node->nid;
+          break;
+
+        case ENRD_LAG_DATABASE_COOP_OFFER_NODE:
+          $param = $node->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}[LANGUAGE_NONE][0]['target_id'];
+          break;
+      }
+
+      $block['subject'] = t('LAG Management');
+
+      // Load menu items defined as MENU_CONTEXTUAL_INLINE under 'my-lags'.
+      $links = menu_contextual_links('block', ENRD_LAG_DASHBOARD_LAG_REDIRECT, [$param]);
+
+      // Add title attribute to contextual links.
+      foreach ($links as &$link) {
+        $link['attributes']['title'] = $link['title'];
+      }
+
+      // Build the render array for contextual links list.
+      $block['content']['contextual_links'] = [
+        '#theme' => 'links',
+        '#links' => $links,
+        '#attributes' => [
+          'class' => ['enrd-lag-dashboard-contextual'],
+        ],
+      ];
+
+      return $block;
+    }
+  }
+}
+
+/**
+ * Helper function to handle views page access.
+ *
+ * Variant of _og_context_views_page_access.
+ * Try to determine if user has og access also when arg return a group content
+ * instead of a group id.
+ *
+ * @param string $group_type
+ *   The group type.
+ * @param string $perm
+ *   The group permission to search for.
+ * @param bool|int $group_id_arg
+ *   Optional; The position in arg() where the group ID can be found.
+ *
+ * @return bool
+ *   TRUE if user is allowed access to the page.
+ *
+ * @see _og_context_views_page_access()
+ */
+function _enrd_lag_dashboard_og_context_views_page_access($group_type, $perm, $group_id_arg = FALSE) {
+  if ($group_id_arg !== '') {
+    $gid = arg($group_id_arg);
+    if (is_numeric($gid)) {
+      $group_access = og_user_access($group_type, $gid, $perm);
+      // If gid is not in arg, try to go get it from content id in arg.
+      if (!$group_access) {
+        $item = menu_get_item();
+        $gid = $item['page_arguments'][0]->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}[LANGUAGE_NONE][0]['target_id'];
+        $group_content_access = og_user_access($group_type, $gid, $perm);
+      }
+    }
+    return $group_access || $group_content_access;
+  }
+  elseif ($group = og_context($group_type)) {
+    // Try to get context.
+    return og_user_access($group_type, $group['gid'], $perm);
+  }
+}

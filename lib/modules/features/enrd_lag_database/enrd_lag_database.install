@@ -1,0 +1,506 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD lag database taxonomy terms.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_lag_database_install() {
+
+  // Revert taxonomies, fields bases and instance and other components.
+  features_revert_module('enrd_lag_database');
+
+  // Create vocabularies and import taxonomy terms.
+  _enrd_lag_database_import_taxonomies();
+  _enrd_lag_database_save_fund_long_name();
+
+  // Once taxonomies are imported, create ESI Funds OG nodes.
+  _enrd_lag_database_add_esi_funds_og_nodes('esi_funds_og', 'enrd_esi_funds');
+
+  // Override multisite default permissions and OG permissions.
+  enrd_lag_database_override_multisite_components();
+
+  _enrd_lag_database_set_admin_rids(ENRD_LAG_DATABASE_LAG_GROUP_NODE);
+  _enrd_lag_database_set_admin_rids(ENRD_LAG_DATABASE_ESI_FUND_GROUP_NODE);
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_lag_database_enable() {
+  $t = get_t();
+
+  // SolR configuration add bundle.
+  multisite_drupal_toolbox_config_solr_bundle('lag', 'add');
+
+  drupal_set_message($t('ENRD LAG Database is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_lag_database_disable() {
+  $t = get_t();
+
+  // SolR configuration remove bundle.
+  multisite_drupal_toolbox_config_solr_bundle('lag', 'delete');
+
+  drupal_set_message($t('ENRD LAG Database has been deactivated on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_lag_database_uninstall() {
+  node_type_delete('lag');
+  node_type_delete('cooperation_offer');
+  node_type_delete('esi_funds_og');
+
+  // Deletes the vocabularies created by the feature.
+  $vocabularies = array(
+    'enrd_assets',
+    'enrd_esi_funds',
+    'enrd_esif_programme',
+    'enrd_key_themes_of_strategy',
+    'enrd_physical_demographic_characteristics_of_lag_area',
+    'enrd_project_types',
+    'enrd_additional_keywords',
+  );
+
+  foreach ($vocabularies as $machine_name) {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+    if ($vocabulary) {
+      $vid = $vocabulary->vid;
+      taxonomy_vocabulary_delete($vid);
+    }
+  }
+
+  $t = get_t();
+  drupal_set_message($t('ENRD LAG Database is now uninstalled on your site.'));
+}
+
+/**
+ * Components cleanup, added ESI Funds related stuff and custom feeds plugin.
+ */
+function enrd_lag_database_update_7201() {
+
+  // Enable new custom module for feeds importer.
+  module_enable(array('enrd_feeds_taxonomy_hierarchy'));
+
+  $vocabulary = 'enrd_lag_municipalities';
+  if ($voc = taxonomy_vocabulary_machine_name_load($vocabulary)) {
+    taxonomy_vocabulary_delete($voc->vid);
+  }
+
+  // Remove the feeds tamper Municipalities settings.
+  db_delete('feeds_tamper')
+    ->condition('source', 'Municipalities covered')
+    ->execute();
+
+  // Revert taxonomies, fields bases and instances.
+  features_revert(array(
+    'enrd_lag_database' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  $vocabularies = array(
+    'enrd_esi_funds',
+    'enrd_esif_programme',
+  );
+
+  _enrd_lag_database_import_taxonomies($vocabularies);
+
+  // Once taxonomies are imported, create ESI Funds OG nodes.
+  _enrd_lag_database_add_esi_funds_og_nodes('esi_funds_og', 'enrd_esi_funds');
+
+  // Delete RDP OG field instances.
+  $instances = field_info_instances('taxonomy_term', 'enrd_rdps');
+  $instance = $instances['group_access'];
+  field_delete_instance($instance);
+  $instance = $instances['group_group'];
+  field_delete_instance($instance);
+  $instance = $instances['og_roles_permissions'];
+  field_delete_instance($instance);
+
+  // Delete the listed old fields (bases and instances).
+  $fields = array(
+    'og_enrd_rdps_group_ref',
+    'field_enrd_lag_funded_by',
+  );
+
+  foreach ($fields as $field) {
+    field_delete_field($field);
+    field_purge_batch(50);
+  }
+
+  // Get and delete the old views ENRD LAG Database.
+  if ($view = views_get_view('enrd_lag_database')) {
+    // Delete the view.
+    views_delete_view($view);
+  }
+
+  // Revert the feature after update operations.
+  features_revert_module('enrd_lag_database');
+}
+
+/**
+ * Remove old group audience field from account fields, LAG & Coop. clean-up.
+ */
+function enrd_lag_database_update_7202() {
+
+  module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.permissions');
+
+  // Delete the listed old fields (bases and instances).
+  $fields = array(
+    'og_user_taxonomy_term',
+    'field_enrd_coop_lang_lag_staff',
+  );
+  foreach ($fields as $field) {
+    field_delete_field($field);
+  }
+
+  field_purge_batch(50);
+
+  // Override default permissions.
+  _enrd_lag_database_overrides_permission();
+
+  // Remove obsolete fields and field collection of LAG content type.
+  $field_instances = field_info_instances('node', 'lag');
+
+  $lag_instances = array(
+    'field_enrd_lag_name_english',
+    // "Coop. offers" replaced by a Block view to be displayed on the LAG page.
+    'field_enrd_lag_coop_offers',
+    'field_enrd_lag_manager_account',
+    'field_enrd_lag_manager_contact',
+    'field_enrd_lag_other_contacts',
+  );
+
+  foreach ($lag_instances as $instance) {
+    if (isset($field_instances[$instance])) {
+      field_delete_instance($field_instances[$instance], TRUE);
+    }
+  }
+
+  // Remove obsolete fields of Cooperation offer content type.
+  $field_instances = field_info_instances('node', 'cooperation_offer');
+
+  $coop_instances = array(
+    // Removed "Additional keywords" field with old configurations.
+    'field_enrd_coop_add_keywords',
+    // Removed "Key themes of strategy" field.
+    'field_enrd_coop_key_themes',
+    // "Looking for" field replaced by "Type of partner".
+    'field_enrd_coop_looking_for',
+    // "Third countries" field replaced by "Non-EU country".
+    'field_enrd_coop_partner_thirdcou',
+    // "Physical & demographic..." field replaced by "Type of area".
+    'field_enrd_coop_physical_demog',
+    // Remove "Sea basins" field and "ENRD Sea basins" vocabulary.
+    'field_enrd_coop_sea_basins',
+    // Partner "Region" field with old configurations.
+    'field_enrd_coop_partner_region',
+    // Removed "Status" field.
+    'field_enrd_coop_status',
+  );
+
+  foreach ($coop_instances as $instance) {
+    if (isset($field_instances[$instance])) {
+      field_delete_instance($field_instances[$instance], TRUE);
+    }
+  }
+
+  $vocabulary = 'enrd_sea_basins';
+  if ($voc = taxonomy_vocabulary_machine_name_load($vocabulary)) {
+    taxonomy_vocabulary_delete($voc->vid);
+  }
+  // Remove obsolete field groups from the LAG Default and Full displays.
+  $modes = array(
+    'default',
+    'full',
+  );
+
+  $fieldgroups = array(
+    'group_enrd_lag_basic_lag_data',
+    'group_enrd_lag_geo_info',
+    'group_enrd_lag_contacts',
+    'group_enrd_lag_detailed_lag_info',
+    'group_enrd_lag_budgets',
+    'group_enrd_lag_clld_coop',
+    'group_enrd_lag_additional_doc',
+  );
+
+  foreach ($modes as $mode) {
+    foreach ($fieldgroups as $group_name) {
+      if ($group = field_group_load_field_group($group_name, 'node', 'lag', $mode)) {
+        ctools_include('export');
+        field_group_group_export_delete($group, FALSE);
+      }
+    }
+  }
+
+  // Delete old "Filter LAG profiles by RDP" and "Partner Search Tool" views.
+  if (($view = views_get_view('enrd_lag_database_filter_lag_profiles_by_rdp'))
+  || ($view = views_get_view('enrd_partner_search_tool'))) {
+    views_delete_view($view);
+  }
+
+  // Remove Unpublished(+Ready), Ready to be archived and Expired states+trans.
+  $moderation_states = workbench_moderation_states();
+
+  foreach ($moderation_states as $state) {
+    switch ($state->name) {
+      case 'unpublished':
+      case 'ready_to_be_unpublished':
+      case 'ready_to_be_archived':
+      case 'expired':
+        workbench_moderation_state_delete($state);
+        break;
+    }
+  }
+
+  // Remove obsolete WF transitions.
+  $moderation_transitions = workbench_moderation_transitions();
+
+  foreach ($moderation_transitions as $trans) {
+    switch ($trans->name) {
+      case 'draft-published':
+      case 'archived-ready_published':
+      case 'archived-published':
+        workbench_moderation_transition_delete($trans);
+        break;
+    }
+  }
+
+  // Remove old Cooperation supporter, National manager and Webmaster roles.
+  user_role_delete('Cooperation Supporter');
+  user_role_delete('LAG Webmaster');
+
+  if ($nsu = multisite_config_service('og')->getOgRole('node', 'lag', 'National manager')) {
+    og_role_delete($nsu->rid);
+  }
+
+  if ($webmaster = multisite_config_service('og')->getOgRole('node', 'lag', 'Webmaster')) {
+    og_role_delete($webmaster->rid);
+  }
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_lag_database', 'data/enrd_lag_database_taxonomies');
+
+  if ($vocabulary = taxonomy_vocabulary_machine_name_load('enrd_esi_funds')) {
+    $tree = taxonomy_get_tree($vocabulary->vid);
+    foreach ($tree as $term) {
+      $names = _enrd_lag_database_enrd_esi_funds();
+      foreach ($names as $name) {
+        db_update('taxonomy_term_data')
+          ->fields(array('name' => $name))
+          ->condition('name', '%' . $name . '%', 'LIKE')
+          ->condition('tid', $term->tid, '=')
+          ->execute();
+      }
+    }
+  }
+
+  // Revert LAG taxonomies, fields bases and instances.
+  features_revert(array(
+    'enrd_lag_database' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Set Long Name for ENRD ESI Funds taxonomy terms.
+  _enrd_lag_database_save_fund_long_name();
+
+}
+
+/**
+ * Clean field_item_collection orphan instances.
+ *
+ * Add LAGs to rules_scheduler table for the periodic solicit notification rule.
+ */
+function enrd_lag_database_update_7203(&$sandbox) {
+
+  // Execute one time db_deletes and initialize the sandbox for next batches.
+  if (!isset($sandbox['progress'])) {
+    // Field to clean.
+    $field_name = 'field_enrd_lag_other_contacts';
+
+    // Clean field_collection_item and field_collection_item_revision tables.
+    $item_id = db_select('field_collection_item', 'fci')
+      ->condition('field_name', $field_name)
+      ->fields('fci', array('item_id'))
+      ->execute()->fetchCol();
+    if (!empty($item_id)) {
+      db_delete('field_collection_item_revision')
+        ->condition('item_id', $item_id)
+        ->execute();
+      db_delete('field_collection_item')
+        ->condition('field_name', $field_name)
+        ->execute();
+    }
+
+    // Clean field_config and field_config_instance tables.
+    $field_config = db_select('field_config', 'fc')
+      ->condition('field_name', $field_name)
+      ->fields('fc', array('field_name'))
+      ->execute()->fetchCol();
+    if (!empty($field_config)) {
+      db_delete('field_config')
+        ->condition('field_name', $field_name)
+        ->execute();
+    }
+    $field_config_instance = db_select('field_config_instance', 'fci')
+      ->condition('field_name', $field_name)
+      ->fields('fci', array('field_name'))
+      ->execute()->fetchCol();
+    if (!empty($field_config_instance)) {
+      db_delete('field_config_instance')
+        ->condition('field_name', $field_name)
+        ->execute();
+    }
+
+    // Clean all scheduled enrd_lag_database scheduled tasks.
+    db_delete('rules_scheduler')
+      ->condition('config',
+        array(
+          'rules_enrd_lag_database_solicit_manager_notification',
+          'rules_enrd_lag_database_solicit_nsu_notification',
+        ), 'IN')
+      ->execute();
+
+    // Rebuild rules components defined in code.
+    entity_defaults_rebuild(array('rules_config'));
+
+    // Get count and list of LAGs/ESI Funds OG nodes.
+    $sandbox['data'] = _enrd_lag_database_get_group_nodes(array('lag', 'esi_funds_og'));
+
+    $sandbox['progress'] = 0;
+    $sandbox['limit'] = 100;
+    $sandbox['#finished'] = 0;
+    $sandbox['max'] = $sandbox['data']['total'];
+
+    // Initialize rules components machine names for LAG and NSU managers.
+    $sandbox['lag_component'] = 'rules_enrd_lag_database_solicit_manager_notification';
+    $sandbox['esi_component'] = 'rules_enrd_lag_database_solicit_nsu_notification';
+
+    // Node tokens and time delay for rules_action executed in every chunk.
+    $sandbox['lag_token'] = '[node:field-enrd-lag-code]';
+    $sandbox['esi_token'] = '[node:field-enrd-main-esi-fund]';
+    $sandbox['delay'] = '+6 months';
+  }
+
+  // Process LAG nodes to add them to rules_scheluder table.
+  $chunk = node_load_multiple(array_slice(array_keys($sandbox['data']['result']['node']), $sandbox['progress'], $sandbox['limit'], TRUE));
+
+  if (!empty($chunk)) {
+    foreach ($chunk as $node) {
+      if ($node->type == 'lag') {
+        $token = $sandbox['lag_token'];
+        $component = $sandbox['lag_component'];
+      }
+      else {
+        $token = $sandbox['esi_token'];
+        $component = $sandbox['esi_component'];
+      }
+      $task_identifier = token_replace($token,
+          ['node' => $node]) . '-lag-notification';
+      // Call the rule to schedule notifications.
+      rules_action('schedule', ['component' => $component])->executeByArgs([
+        'param_node' => $node,
+        'date' => strtotime($sandbox['delay'], $node->created),
+        'identifier' => $task_identifier,
+      ]);
+
+      // Update progress.
+      $sandbox['progress']++;
+      $sandbox['current_node'] = $node->nid;
+    }
+  }
+
+  // Update batch status.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+
+  // If batch is finished perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    return t("Finished field collection cleaning and LAGs scheduling.");
+  }
+
+}
+
+/**
+ * ENRDPORTAL-204, ENRDPORTAL-272.
+ */
+function enrd_lag_database_update_7204() {
+  // Delete field_tax_networking instances.
+  $bundles = [
+    'lag',
+    'cooperation_offer',
+    'esi_funds_og',
+  ];
+
+  foreach ($bundles as $bundle_name) {
+    $instance = field_info_instance('node', 'field_tax_networking', $bundle_name);
+    if (!empty($instance) && isset($instance)) {
+      field_delete_instance($instance, TRUE);
+    }
+  }
+
+  // Update "Cooperation within the country" term for Project Types vocabulary.
+  $cooperation_term_array = taxonomy_get_term_by_name('Cooperation within the MS', 'enrd_project_types');
+  $cooperation_term = reset($cooperation_term_array);
+
+  if (!empty($cooperation_term)) {
+    $cooperation_term->name = 'Cooperation within the country';
+    // Save the updated taxonomy term.
+    taxonomy_term_save($cooperation_term);
+  }
+}
+
+/**
+ * Remove the captcha configuration for the Cooperation Offer's contact form.
+ */
+function enrd_lag_database_update_7205() {
+  module_load_include('inc', 'uuid', 'uuid.entity');
+  $ids = entity_get_id_by_uuid('node', array(ENRD_LAG_DATABASE_LAG_CONTACT_UUID));
+
+  if (!empty($ids)) {
+    $contact_this_id = reset($ids);
+    $form_id = 'webform_client_form_' . $contact_this_id;
+
+    // Remove CAPTCHA to the "Contact this LAG" form.
+    module_load_include('inc', 'captcha');
+    captcha_set_form_id_setting($form_id, NULL);
+  }
+}
+
+/**
+ * ENRDPORTAL-183, ENRDPORTAL-185, ENRDPORTAL-194, ENRDPORTAL-242.
+ */
+function enrd_lag_database_update_7206() {
+  features_revert(array(
+    'enrd_lag_database' => array(
+      'field_instance',
+      'field_group',
+    ),
+  ));
+}
+
+/**
+ * ENRDPORTAL-371.
+ */
+function enrd_lag_database_update_7207() {
+  features_revert(array(
+    'enrd_lag_database' => array(
+      'user_permission',
+    ),
+  ));
+}

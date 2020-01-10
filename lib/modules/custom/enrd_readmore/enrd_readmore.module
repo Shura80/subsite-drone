@@ -1,0 +1,246 @@
+<?php
+/**
+ * @file
+ * Field formatter to expand and collapse text of a field.
+ */
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function enrd_readmore_field_formatter_info() {
+  $settings = _enrd_readmore_default_formatter_settings();
+  return array(
+    'enrd_readmore_text_trimmed' => array(
+      'label' => t('ENRD Readmore (Trimmed)'),
+      'field types' => array('text', 'text_long', 'text_with_summary'),
+      'settings' => $settings,
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function enrd_readmore_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $settings += _enrd_readmore_default_formatter_settings();
+  $element = array();
+
+  if ($display['type'] == 'enrd_readmore_text_trimmed') {
+    $element['trim_length'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Trim length'),
+      '#description' => t('If @break appears in the text, then it gets priority over the trim length.', array(
+        '@break' => '<!--break-->',
+      )),
+      '#size' => 10,
+      '#default_value' => $settings['trim_length'],
+      '#element_validate' => array('element_validate_integer_positive'),
+      '#required' => TRUE,
+    );
+    $element['trim_ellipsis'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Append ellipsis on trimmed content'),
+      '#default_value' => $settings['trim_ellipsis'],
+    );
+    $element['trigger_expanded_label'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Trigger expanded label'),
+      '#description' => t('Enter text to make the content expanded.'),
+      '#default_value' => $settings['trigger_expanded_label'],
+      '#required' => TRUE,
+    );
+    $element['trigger_collapsed_label'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Trigger collapsed label'),
+      '#description' => t('Enter text to make the content collapsible.'),
+      '#default_value' => $settings['trigger_collapsed_label'],
+      '#required' => TRUE,
+    );
+    $element['trigger_extra_classes'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Extra trigger CSS classes'),
+      '#description' => t('Add extra CSS classes for the trigger links.'),
+      '#default_value' => $settings['trigger_extra_classes'],
+      '#required' => FALSE,
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function enrd_readmore_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $settings += _enrd_readmore_default_formatter_settings();
+  $return = array();
+
+  if ($display['type'] == 'enrd_readmore_text_trimmed') {
+    $return['Trim length'] = $settings['trim_length'] . ($settings['trim_ellipsis'] ? ' (' . t('with ellipsis') . ')' : '');
+    $return['Trigger expanded label'] = $settings['trigger_expanded_label'];
+    $return['Trigger collapsed label'] = $settings['trigger_collapsed_label'];
+    if (!empty($settings['trigger_extra_classes'])) {
+      $return['Extra trigger CSS classes'] = $settings['trigger_extra_classes'];
+    }
+  }
+
+  $output = '';
+  foreach ($return as $label => $value) {
+    $output .= '<strong>' . $label . '</strong>: ' . check_plain($value) . '<br />';
+  }
+
+  return $output;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function enrd_readmore_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, &$items, $display) {
+  $settings = $display['settings'];
+  $settings += _enrd_readmore_default_formatter_settings();
+
+  $element = array();
+  if ($display['type'] == 'enrd_readmore_text_trimmed') {
+
+    $field_name = $instance['field_name'];
+    $bundle = $instance['bundle'];
+
+    foreach ($items as $delta => $item) {
+
+      $original = $item['value'];
+
+      // Create an unique element ID.
+      $id = drupal_html_id('enrd-readmore--' . $entity_type . '--' . $bundle . '--' . $field_name . '--' . $delta);
+
+      // If summary is set, sanitize it.
+      if (isset($item['summary']) && !empty($item['summary'])) {
+        $summary = _text_sanitize($instance, $langcode, $item, 'summary');
+      }
+      else {
+
+        // Find where the delimiter is in the body.
+        // If there is no delimiter, the entire body is the
+        // summary.
+        if (strpos($original, '<!--break-->') === FALSE) {
+          $trim_length = $display['settings']['trim_length'];
+        }
+        else {
+          $trim_length = drupal_strlen($original);
+        }
+
+        // Generate a trimmed, formatted version of a text field value.
+        $summary = expanding_formatter_text_summary($original, $instance['settings']['text_processing'] ? $item['format'] : NULL, $trim_length);
+      }
+
+      // If summary is not included in the value.
+      if (drupal_strlen($summary) != drupal_strlen($original)) {
+
+        // Build the trigger CSS classes.
+        $trigger_classes = array(
+          'enrd-readmore-trigger',
+          'element-hidden',
+        );
+        if (!empty($settings['trigger_extra_classes'])) {
+          $trigger_extra_classes = explode(' ', $settings['trigger_extra_classes']);
+          $trigger_classes = array_merge($trigger_classes, $trigger_extra_classes);
+        }
+
+        $trigger_classes_collapsed = array_merge($trigger_classes, array('enrd-readmore-trigger-collapsed'));
+        $trigger_classes_expanded = array_merge($trigger_classes, array('enrd-readmore-trigger-expanded'));
+
+        // Build the summery element.
+        $content_summary = $summary;
+        if ($settings['trim_ellipsis']) {
+          $ellipsis['ellipsis'] = array(
+            '#theme' => 'expanding_formatter_ellipsis',
+            '#settings' => $settings,
+          );
+          $content_summary .= drupal_render($ellipsis);
+        }
+        $element_summary[$delta]['summary']['content'] = array(
+          '#markup' => _filter_htmlcorrector($content_summary),
+        );
+        $element_summary[$delta]['summary']['trigger'] = array(
+          '#theme' => 'link',
+          '#text' => $settings['trigger_expanded_label'],
+          '#path' => '#',
+          '#options' => array(
+            'html' => FALSE,
+            'attributes' => array(
+              'class' => $trigger_classes_expanded,
+            ),
+          ),
+        );
+
+        // Define the settings of the JS with element ID and summary text.
+        $js_settings['enrdReadmore']['#' . $id] = drupal_render($element_summary[$delta]);
+
+        // Build the full content element.
+        $original = _text_sanitize($instance, $langcode, $item, 'value');
+        $element[$delta]['original'] = array(
+          '#theme_wrappers' => array('container'),
+          '#attributes' => array(
+            'id' => $id,
+            'class' => array(
+              'enrd-readmore',
+            ),
+          ),
+        );
+        $element[$delta]['original']['content'] = array(
+          '#markup' => $original,
+        );
+        $element[$delta]['original']['trigger'] = array(
+          '#theme' => 'link',
+          '#text' => $settings['trigger_collapsed_label'],
+          '#path' => '#',
+          '#options' => array(
+            'html' => FALSE,
+            'attributes' => array(
+              'class' => $trigger_classes_collapsed,
+            ),
+          ),
+        );
+
+        // Initialization of JS script.
+        if (isset($js_settings) && !empty($js_settings)) {
+          // Include JS.
+          $module_path = drupal_get_path('module', 'enrd_readmore');
+          $element['#attached'] = array(
+            'js' => array(
+              $module_path . '/js/enrd_readmore.js',
+              array(
+                'type' => 'setting',
+                'data' => $js_settings,
+              ),
+            ),
+          );
+        }
+      }
+      else {
+        // If the summary is not available, then print the full item value.
+        $element[$delta] = array(
+          '#markup' => _text_sanitize($instance, $langcode, $item, 'value'),
+        );
+      }
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Provide default settings for the formatter.
+ */
+function _enrd_readmore_default_formatter_settings() {
+  return array(
+    'trim_length' => 200,
+    'trim_ellipsis' => FALSE,
+    'trigger_expanded_label' => t('Read more'),
+    'trigger_collapsed_label' => t('Read less'),
+    'trigger_extra_classes' => '',
+  );
+}

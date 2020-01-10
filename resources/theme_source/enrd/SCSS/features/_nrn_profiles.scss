@@ -1,0 +1,314 @@
+// NRN Profile node page.
+.node-type-nrn-profile {
+
+  .field-name-field-enrd-nrnp-highlights,
+  .field-name-field-enrd-nrnp-activities,
+  .field-name-field-enrd-nrnp-cooperation,
+  .field-name-field-enrd-nrnp-documents {
+    margin: 15px 0;
+
+    .label-above {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #009193;
+    }
+  }
+
+  .nrnp-ds-region-side-left {
+    .field-name-field-enrd-nrnp-logo {
+      margin-bottom: 20px;
+
+      @media(max-width: 1200px) {
+        margin-top: 10px;
+      }
+    }
+
+    .field-name-field-enrd-nrnp-documents ul {
+      padding: 0;
+    }
+
+    .field-name-field-enrd-nrnp-image img,
+    .field-name-field-enrd-nrnp-video div.file-video {
+      margin-bottom: 10px;
+      margin-top: 5px;
+    }
+
+    .field-name-field-enrd-nrnp-image,
+    .field-name-field-enrd-nrnp-video {
+      .label-above {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #555;
+      }
+    }
+  }
+
+  .nrnp-ds-region-main {
+    margin-bottom: 20px;
+
+    .gruop-enrd-nrnp-contacts-ds {
+      .field-label {
+        width: 30%;
+        margin-bottom: 10px;
+      }
+
+      div.field-type-addressfield .field-item.even {
+        .street-block *,
+        .locality-block,
+        .country {
+          display: block;
+        }
+
+        & > * {
+          margin: 0;
+        }
+      }
+    }
+
+    .field-name-field-enrd-nrnp-contact-persons {
+      .field-items > .field-item {
+
+        .entity-field-collection-item.field-collection-item-field-enrd-nrnp-contact-persons {
+          margin-bottom: 0;
+          line-height: 15px;
+        }
+
+        span.glyphicon {
+          margin-right: 5px;
+        }
+      }
+
+      .field-name-field-enrd-nrnp-contact-name,
+      .field-name-field-enrd-nrnp-contact-position,
+      .field-name-field-enrd-nrnp-contact-email,
+      .field-name-field-enrd-nrnp-contact-phone {
+        display: inline-block;
+      }
+    }
+  }
+
+  .nrnp-ds-region-links {
+    padding-bottom: 18px;
+
+    .group-enrd-nrnp-links-ds {
+      .field-name-field-enrd-nrnp-social-media {
+        margin-top: 0.5em;
+
+        ul {
+          li[class*="service-"] {
+            line-height: 5px;
+            .icon {
+              display: block;
+              font-size: 30px;
+              width: 40px;
+              height: 40px;
+              padding: 5px;
+              -moz-border-radius: 4px;
+              -webkit-border-radius: 4px;
+              border-radius: 4px;
+
+              &:before {
+                margin: 0;
+                padding: 0;
+              }
+
+              &.icon-facebook {
+                background: #3b5999;
+              }
+
+              &.icon-instagram {
+                background: -webkit-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -webkit-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+                background: -moz-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -moz-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+                background: -ms-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -ms-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+                background: -o-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -o-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+                background: radial-gradient(circle farthest-corner at 32% 106%, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), linear-gradient(135deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+                filter: saturate(80%);
+              }
+
+              &.icon-twitter {
+                background: #00a0d2;
+              }
+
+              &.icon-linkedin {
+                background: #0073b2;
+              }
+
+              &.icon-youtube-play {
+                background: #e0423f;
+              }
+            }
+          }
+        }
+      }
+      .field-name-field-enrd-nrnp-internal-links,
+      .field-name-field-enrd-nrnp-website {
+        ul {
+          margin-bottom: 0;
+        }
+      }
+      li {
+        margin-left: 5px;
+        a {
+          margin-right: 5px;
+        }
+        span {
+          color: #009193;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .nrnp-ds-region-links,
+  .nrnp-ds-region-nsu-operation {
+    border-top: 1px solid #ddd;
+    padding-top: 14px;
+  }
+
+  .nrnp-ds-region-nsu-operation {
+    .field {
+      margin-left: 25px;
+
+      .enrd-collapse-field {
+        a {
+          font-size: 1.2em;
+          font-weight: bold;
+
+          &:before {
+            content: "\2b";
+            color: white;
+            width: 25px;
+            height: 25px;
+            background: #009193;
+            position: absolute;
+            font-size: 1.2em;
+            padding: 2px 0 0 6px;
+            transform: scale(0.7);
+            margin-left: -25px;
+          }
+        }
+
+        &.active {
+          a:before {
+            content: "\2212";
+          }
+        }
+      }
+    }
+
+    .field-type-text-long {
+      padding-bottom: 5px;
+    }
+  }
+
+  .gruop-enrd-nrnp-contacts-ds,
+  .group-enrd-nrnp-links-ds,
+  .group-enrd-nrnp-nsu-operation-ds {
+    margin-top: 10px;
+
+    p > span {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #009193;
+    }
+  }
+
+  form.node-nrn_profile-form .form-legal-notice-disclaimer {
+    border: 1px solid #c0c0c0;
+    margin-bottom: 15px;
+  }
+
+  // Workbench Moderation block.
+  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
+    display: block;
+    margin-top: 0;
+
+    label.option {
+      padding-left: 5px;
+    }
+  }
+}
+
+// NRN Profile node form.
+.node-nrn_profile-form {
+  .field-name-field-enrd-nrnp-documents,
+  .field-name-field-enrd-nrnp-image,
+  .field-name-field-enrd-nrnp-video,
+  .field-name-field-enrd-nrnp-address {
+    .fieldset-description {
+      font-size: 0.85em;
+    }
+
+    .form-item label {
+      margin: 0 0 5px;
+    }
+  }
+
+  .field-name-field-enrd-nrnp-social-media {
+    .description {
+      font-size: 0.85em;
+      margin-top: -10px;
+    }
+  }
+
+  .field-name-field-enrd-nrnp-contact-persons {
+    .field-type-text {
+      margin-bottom: 10px;
+    }
+  }
+
+  fieldset.form-legal-notice-disclaimer {
+    label {
+      padding-left: 5px;
+    }
+    .form-item-field-publish-legal-notice .description {
+      font-style: italic;
+    }
+  }
+
+  // Social Media icons.
+  .icon {
+    font-size: 30px;
+    padding: 4px 5px 4px 6px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+
+    &::before {
+      margin: 0;
+      padding: 0;
+    }
+
+    &.icon-facebook {
+      background: #3b5999;
+    }
+
+    &.icon-instagram {
+      background: -webkit-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -webkit-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+      background: -moz-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -moz-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+      background: -ms-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -ms-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+      background: -o-radial-gradient(32% 106%, circle cover, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), -o-linear-gradient(-45deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+      background: radial-gradient(circle farthest-corner at 32% 106%, rgb(255, 225, 125) 0%, rgb(255, 205, 105) 10%, rgb(250, 145, 55) 28%, rgb(235, 65, 65) 42%, transparent 82%), linear-gradient(135deg, rgb(35, 75, 215) 12%, rgb(195, 60, 190) 58%);
+      filter: saturate(80%);
+    }
+
+    &.icon-twitter {
+      background: #00a0d2;
+    }
+
+    &.icon-linkedin {
+      background: #0073b2;
+    }
+
+    &.icon-youtube-play {
+      background: #e0423f;
+    }
+  }
+
+}
+
+article.node-nrn-profile.node-teaser {
+  .field-name-field-enrd-nrnp-brief-intro {
+    text-align: justify;
+  }
+}

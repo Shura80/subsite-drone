@@ -1,0 +1,732 @@
+div.node-lag.node-full {
+  fieldset {
+    margin-top: 20px;
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  legend {
+    color: $lblue;
+    border: none;
+    margin-top: 30px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+}
+
+div.node-cooperation-offer-expired.node-full {
+  background-color: #f5f5f5;
+  padding: 10px;
+}
+
+.page-node.node-type-lag {
+  h1.title {
+    margin-bottom: 10px !important;
+  }
+  .main-content {
+    .tabs {
+      margin-bottom: 0;
+    }
+  }
+  .additional-info-heading,
+  .lag-funding-heading{
+    position: relative;
+    margin-left: 30px;
+    a::before {
+      content: "\2b";
+      color: white;
+      width: 25px;
+      height: 25px;
+      background: #009193;
+      position: absolute;
+      bottom: 0px;
+      left: -30px;
+      font-size: 25px;
+      padding-left: 5.5px;
+      transform: scale(0.7);
+    }
+  }
+  .additional-info-heading.active,
+  .lag-funding-heading.active{
+    a::before {
+      content: "\2212";
+    }
+  }
+  .expanding-formatter.expanding-formatter-processed.expanded, .expanding-formatter.expanding-formatter-processed.collapsed {
+    height: auto !important;
+  }
+  h1.title {
+    color: #009193;
+    margin-top: 15px;
+    font-size: 20px;
+    margin-bottom: 0px;
+    font-weight: bold;
+    word-wrap: break-word;
+  }
+  span.title-prefix.lag {
+    font-size: 24px;
+    font-weight: bold;
+    color: #555;
+  }
+  .field-name-field-enrd-lag-code {
+    .field-items {
+      width: auto;
+    }
+  }
+  section#block-ds-extras-enrd-lag-cooperation-details,
+  section#block-ds-extras-enrd-lag-other-useful-info {
+    margin-top: 20px;
+    .block-title {
+      height: auto;
+      width: 100%;
+      margin-bottom: 0 !important;
+      display: inline-block;
+      padding-bottom: 0 !important;
+      h3 {
+        border: none;
+        font-size: 18px;
+        font-weight: bold;
+        padding-bottom: 2px;
+        margin-bottom: 0;
+      }
+    }
+    ul.shs-hierarchy {
+      * {
+        color: #d5a74c;
+        white-space: inherit;
+      }
+    }
+    .field-name-field-enrd-lag-clld-name,
+    .field-name-field-enrd-lag-interested-in {
+      .field-item.even {
+        color: #d5a74c;
+      }
+    }
+    .field-name-field-enrd-lag-themes-interests {
+      ul.links {
+        ul.shs-hierarchy {
+          li {
+            float: none;
+          }
+        }
+      }
+    }
+    .field-name-field-enrd-lag-project-examples {
+      .field-label {
+        margin-bottom: 10px;
+      }
+    }
+  }
+
+  div.field-name-field-enrd-lag-size-territory, div.field-name-field-enrd-lag-inhabitants, div.field-name-field-enrd-lag-entities-num, div.field-name-field-enrd-lag-staff-num {
+    position: relative;
+    .field-label {
+      width: 40%;
+    }
+    .field-items {
+      width: 57%;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+    }
+  }
+
+  div.region-sidebar-right {
+    div.block-title {
+      margin-bottom: 9px !important;
+      padding-bottom: 9px !important;
+      h3 {
+        text-transform: none;
+        font-size: 18px;
+      }
+      span.filter {
+        background: none;
+        color: #009193;
+      }
+    }
+    /* LAGs Sidebar right lists style */
+    ul, ul.enrd-list {
+      padding-left: 20px;
+
+      &.contextual-links {
+        padding-left: 0;
+      }
+    }
+    .block-lag-database.enrd-list {
+      a:first-child {
+        display: block;
+        padding-left: 20px;
+
+        &:before {
+          display: inline-block;
+          content: "\e080";
+          font-size: 12px;
+          font-style: normal;
+          margin-right: 5px;
+          font-family: 'Glyphicons Halflings';
+          -webkit-font-smoothing: antialiased;
+          color: $lblue;
+          position: relative;
+          left: -5px;
+        }
+      }
+    }
+    div.field-name-field-enrd-lag-interested-in, div.field-name-field-enrd-lag-themes-interests, div.field-name-field-enrd-lag-clld-email, div.field-name-field-enrd-lag-project-examples, div.field-name-field-enrd-lag-documentation {
+      margin-bottom: 10px;
+    }
+  }
+  .ds-additional .field {
+    margin-bottom: 10px;
+  }
+
+  // Workbench Moderation block.
+  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
+    display: block;
+    margin-top: 0;
+
+    label.option {
+      padding-left: 5px;
+    }
+  }
+}
+
+/* Cooperation Offers Sidebar right lists style */
+.page-node.node-type-cooperation-offer {
+  div.region-sidebar-right {
+    ul, ul.enrd-list  {
+      padding-left: 20px;
+
+      &.contextual-links {
+        padding-left: 0;
+      }
+    }
+  }
+}
+
+.page-node.page-node-add.page-node-add-cooperation-offer {
+  .filter-wrapper {
+    padding: 5px 0;
+  }
+  .shs-select {
+    margin-right: 15px;
+  }
+}
+
+.page-node.page-node-add.page-node-add-lag, .page-node.page-node-edit.node-type-lag {
+  .shs-select{
+    @media(max-width: 564px) {
+      margin-right: 15px;
+      margin-left: 0px;
+    }
+  }
+
+  div.field-name-field-enrd-lag-logo.field-type-image {
+    float: none;
+    margin-top: 0;
+    margin-bottom: 20px;
+    // overflow: auto;
+  }
+  h1.title {
+    color: #555;
+    margin-top: 0;
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  fieldset.vertical-tabs-pane {
+    padding-top: 15px;
+    fieldset {
+      legend {
+        padding-top: 20px;
+        margin-bottom: 0px;
+      }
+    }
+  }
+  div#field-enrd-lag-geo-coverage-sub-add-more-wrapper {
+    position: relative;
+    div.form-item-field-enrd-lag-geo-coverage-sub-und-0-value {
+    }
+  }
+
+  /* Style rules for LAG phone numbers validation & formatting */
+  div.field-name-field-enrd-lag-phone {
+
+    input.lag-phone-number-warning {
+      background: #f7ffbe;
+      border: 3px solid #ff9900;
+    }
+
+    span.lag-phone-number-warning-message {
+      font-size: 0.85em;
+
+      &:before {
+        content:"\e107";
+        font-family: 'Glyphicons Halflings';
+        font-size: 15px;
+        margin: 2px;
+        text-decoration: none;
+        display: inline-block;
+      }
+    }
+  }
+
+  fieldset.form-legal-notice-disclaimer {
+    border: 1px solid #c0c0c0;
+    margin-bottom: 15px;
+    padding-right: 10px;
+
+    label {
+      padding-left: 5px;
+    }
+    .form-item-field-publish-legal-notice .description {
+      font-style: italic;
+    }
+  }
+
+}
+
+.page-lag-dashboard.page-lag-dashboard-cooperation-offers,
+.page-lag-dashboard.page-lag-dashboard-lag-profiles,
+.page-my-lags,
+.page-lag-dashboard {
+  div.ajax-progress.ajax-progress-throbber {
+    position: absolute;
+    right: -10px;
+    top: 0;
+  }
+  div.action-links {
+    margin: 1em 0;
+    padding: 0 20px 0 20px;
+    list-style-type: none;
+    overflow: hidden;
+    a {
+      line-height: 30px;
+      color: #009193;
+      text-decoration: none;
+      font-size: 15px;
+    }
+    a:hover,
+    a:active,
+    a:focus {
+      color: #005f60;
+      text-decoration: underline;
+    }
+    a::before {
+      content: '+';
+      display:inline-block;
+      padding-right: 4px;
+      font-size: 25px;
+      margin-right: 2px;
+      vertical-align: bottom;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  }
+  #views-form-enrd-lag-database-cooperation-offers-dashboard-coop-offers-page-active,
+  #views-form-enrd-lag-database-cooperation-offers-dashboard-coop-offers-page-expired,
+  #views-form-enrd-lag-database-custom-dashboard-lag-profiles-page,
+  #views-form-enrd-lag-database-custom-dashboard-pending-lags,
+  #views-form-enrd-lag-database-cooperation-offers-dashboard-pending-page,
+  #views-form-enrd-lag-dashboard-manage-lag-nsu-lag-users-page,
+  #views-form-enrd-lag-database-lag-users-dashboard-lag-users-page,
+  #views-form-enrd-lag-database-cooperation-offers-dashboard-coop-offers-contextual,
+  #views-form-enrd-lag-dashboard-contextual-cooperation-offers-coop-offers-draft {
+    fieldset#edit-select {
+      input[type="submit"] {
+        margin-right: 1em;
+        margin-bottom: 1em;
+      }
+    }
+  }
+  div.views-exposed-widget.views-widget-filter-state {
+    div.form-item {
+      div.form-item.form-type-bef-link {
+        a {
+          background: #e6e6e6;
+          color: #000;
+          padding: 10px;
+          border: 1px solid #adadad;
+          text-decoration: none;
+        }
+        a.active {
+          color: #fff;
+          background: #009193;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  #edit-state-wrapper {
+    .views-widget {
+      position: initial;
+      margin-bottom: 25px;
+    }
+  }
+
+  select.shs-select {
+    border: 1px solid #ccc;
+  }
+
+  select:focus {
+    border-color: #66afe9;
+  }
+  .chosen-container.chosen-container-single.shs-select.chosen-container-active {
+    border-color: #66afe9;
+  }
+
+  #edit-filter-project-topic-wrapper {
+    max-width: 100%;
+    #edit-filter-project-topic-select-1 {
+      max-width: 100%;
+    }
+  }
+  .btn-default.progress-disabled[disabled] {
+    color: #fff !important;
+  }
+}
+
+.page-lag-dashboard.page-lag-dashboard-users {
+  select.shs-select {
+    border: 1px solid #ccc;
+  }
+}
+
+.page-my-lags.page-my-lags-manage-cooperation-offers {
+  #edit-state-wrapper {
+    .views-widget {
+      position: initial;
+      margin-bottom: 0px;
+      .form-type-bef-link {
+        margin-left: 0.5em;
+      }
+    }
+  }
+
+  span.coop-offer-expired {
+    color: #d5a74c;
+    margin-left: 0.5em;
+  }
+}
+.page-my-lags {
+  #enrd-lag-dashboard-lag-profile-form {
+    caption {
+      text-transform: uppercase;
+      font-size: 20px;
+      font-weight: bold;
+      color: #555;
+    }
+    table.draft-revision {
+      tr {
+        background: #eee;
+      }
+      select{
+        background-color: #fff;
+      }
+      thead {
+        tr {
+          background-color: #fff;
+        }
+      }
+    }
+    table.published-revision {
+      tr {
+        background-color: #aaffaa;
+        td {
+          background-color: #aaffaa;
+        }
+      }
+      thead,
+      tr {
+        background: #fff;
+      }
+    }
+
+    table.draft-revision, table.published-revision {
+      overflow: -moz-hidden-unscrollable;
+      display: -moz-groupbox;
+      overflow: hidden;
+      caption {
+        position: relative;
+        width: -moz-max-content;
+        width: max-content;
+      }
+
+      caption::after {
+        content: "";
+        overflow: hidden;
+        background-image: url("../img/dotbg.gif");
+        height: 22px;
+        display: inline-block;
+        width: 440%;
+        position: absolute;
+        left: 105%;
+      }
+    }
+  }
+}
+
+.view-enrd-lag-database-custom-dashboard #edit-state-wrapper.views-exposed-widget,
+.view-enrd-lag-database-cooperation-offers-dashboard #edit-state-wrapper.views-exposed-widget {
+  clear: right;
+  width: 100%;
+}
+
+.view-enrd-lag-database-custom-dashboard #edit-state-wrapper.views-exposed-widget .views-widget,
+.view-enrd-lag-database-cooperation-offers-dashboard #edit-state-wrapper.views-exposed-widget .views-widget {
+  float: right;
+}
+
+.view-enrd-lag-database-custom-dashboard {
+  #edit-state-wrapper {
+    .views-widget {
+      position: initial;
+    }
+  }
+}
+
+.page-lag-dashboard-cooperation-offers.page-lag-dashboard-cooperation-offers-pending {
+  #edit-state-wrapper {
+    .views-widget {
+      position: initial;
+    }
+  }
+}
+
+.page-lag-dashboard-cooperation-offers {
+  .views-exposed-widgets.views-exposed-fields.clearfix > * {
+    display: inline-block;
+    float: none;
+    vertical-align: top;
+  }
+}
+
+.view-enrd-lag-dashboard-published-cooperation-offers,
+.view-enrd-lag-dashboard-contextual-cooperation-offers {
+  .views-field-edit-node,
+  .views-field-view-node {
+    a {
+      display: list-item;
+      list-style: none;
+
+      &:before {
+        content: "\e080";
+        font-family: 'Glyphicons Halflings';
+        font-size: 9px;
+        margin: 2px;
+        text-decoration: none;
+        display:inline-block;
+      }
+    }
+  }
+}
+
+.view-enrd-lag-database-custom-dashboard #edit-state-wrapper.views-exposed-widget .form-type-bef-link,
+.view-enrd-lag-database-cooperation-offers-dashboard #edit-state-wrapper.views-exposed-widget .form-type-bef-link {
+  float: left;
+  margin-left: 1em;
+}
+
+.node-type-cooperation-offer {
+
+  .captcha {
+    legend {
+      margin-bottom: 0px;
+      border: none;
+      .fieldset-legend {
+        font-size: 15px;
+      }
+    }
+    margin-top: 15px;
+    .fieldset-description {
+      font-size: 13px;
+    }
+    .fieldset-wrapper {
+      img {
+        width: 50%;
+        height: auto;
+        display: inline;
+        margin-top: 10px;
+      }
+    }
+  }
+
+  .webform-client-form {
+    .form-actions {
+      .webform-contact-this-lag-disclaimer {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .title-prefix.cooperation_offer {
+    color: #555;
+    font-weight: bold;
+    font-size: 24px;
+    margin: 30px 0 15px;
+  }
+  #page-title {
+    display: none;
+  }
+  .grippie {
+    display: none;
+  }
+  #edit-submitted-enrd-lag-database-contact-this-lag-message {
+    resize: none;
+  }
+
+  .field {
+    margin-bottom: 15px;
+  }
+
+  .field-name-title, .field-name-title-field, .field-name-field-enrd-coop-expiry-date {
+    .field-label {
+      width: 25%;
+    }
+    .field-items {
+      width: 72%;
+      .field-item.even {
+        font-weight: bold;
+        color: #5a5a5a;
+      }
+    }
+  }
+
+  .field-name-field-enrd-coop-partner-region {
+    .field-items {
+      width: 72%;
+    }
+  }
+  .field-name-field-enrd-lag-country, .field-name-field-enrd-lag-spoken-languages, .field-name-field-enrd-coop-partner-country, .field-name-field-enrd-coop-partner-region, .field-name-field-enrd-coop-type-of-area, .field-name-field-enrd-coop-assets-area, .field-name-field-enrd-coop-type, .field-name-field-enrd-coop-topic-of-project, .field-name-field-enrd-coop-addit-keywords {
+    .field-label {
+      width: 25%;
+    }
+    .links.inline {
+      display: inline-block;
+      width: 74%;
+    }
+    *[class^='taxonomy-term-reference-'] {
+      width: 100%;
+    }
+  }
+
+  // Workbench Moderation block.
+  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
+    display: block;
+    margin-top: 0;
+
+    label.option {
+      padding-left: 5px;
+    }
+  }
+}
+
+.node-cooperation_offer-form {
+  fieldset.form-legal-notice-disclaimer {
+    border: 1px solid #c0c0c0;
+    margin-bottom: 15px;
+    padding-right: 10px;
+
+    label {
+      padding-left: 5px;
+    }
+    .form-item-field-publish-legal-notice .description {
+      font-style: italic;
+    }
+  }
+}
+
+#block-ds-extras-enrd-lag-extended-profile {
+  .field-name-field-enrd-lag-extended-profile {
+    background-color: #e6e6e6;
+    color: #333;
+    padding-top: 7px;
+    a{
+      vertical-align:middle;
+      color: #5a5a5a;
+    }
+  }
+  .field-name-field-enrd-lag-extended-profile:hover {
+    background: #009193;
+    border-color: #adadad;
+    a{
+      text-decoration:none;
+      color: #fff;
+    }
+  }
+  .field-name-field-enrd-lag-extended-profile a:hover {
+    text-decoration: none;
+  }
+}
+
+
+
+
+
+/* Ask for publishing node view button for LAG Users */
+div.field-name-enrd-lag-database-ask-for-publishing {
+  position: relative;
+  top: 48px;
+}
+
+/* LAG && CLLD Solr Search Pages intro text */
+.page-leader-clld-lag-database div.lag-intro,
+.page-leader-clld-clld-partner-search div.clld-intro {
+  background: #E9F5F5;
+  border-radius: 5px;
+  padding: 5px;
+  margin-bottom: 10px;
+
+  span.glyphicon {
+    color: #009193;
+    margin-right: 3px;
+  }
+}
+
+/* LAG node add/edit: Documentation field */
+.page-node-add-lag, .node-type-lag {
+  .group-enrd-lag-additional-doc .field-name-field-enrd-lag-documentation fieldset div.fieldset-description {
+    margin-top: 10px;
+  }
+}
+
+.page-lag-dashboard.page-lag-dashboard-cooperation-offers {
+  .views-exposed-widget{
+
+    .shs-select-level-2{
+      @media(max-width: 564px) {
+        margin-right: 15px;
+        margin-left: 0px;
+      }
+    }
+  }
+}
+.page-lag-dashboard,
+.page-lag-dashboard.page-lag-dashboard-lag-profiles {
+  .views-exposed-widget{
+
+    select#edit-field-enrd-lag-country-tid {
+      width: 140px !important;
+    }
+    .shs-select-level-1{
+      width: 150px !important;
+    }
+
+    .shs-select-level-2{
+      @media(max-width: 544px) {
+        margin-right: 15px;
+        margin-left: 0px;
+      }
+    }
+  }
+}
+
+/* Contact this LAG submission */
+.page-node-submission {
+  .webform-submission {
+    .webform-component--enrd-lag-database-contact-this-lag-lag{
+      margin-bottom: 0;
+    }
+  }
+}

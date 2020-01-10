@@ -1,0 +1,117 @@
+.media {
+
+  .thumbnail{
+    img{
+      margin:0;
+    }
+  }
+
+  &.img-50, &.img-100, &.img-150, &.img-200, &.img-250 {
+    .thumbnail {
+      float: left !important;
+      padding: 0 20px 0 0;
+      margin:0;
+    }
+
+    // aggiungere questa classe al .media per allineare a destra le immagini nell'elemento della lista.
+    &.img-right{
+
+      .thumbnail{
+        float:right !important;
+        padding-right:0;
+        padding-left:20px;
+        margin:0;
+      }
+    }
+  }
+  // le classi sottostanti determinano la larghezza della thumbnail
+  &.img-50{
+
+    .thumbnail{
+      img{width:50px;height:auto;}
+    }
+  }
+
+  &.img-100{
+
+    .thumbnail{
+      img{width:100px;height:auto;}
+    }
+  }
+
+  &.img-150{
+    .thumbnail{
+      img{width:150px;height:auto;}
+    }
+  }
+
+  &.img-200{
+    .thumbnail{
+      img{width:200px;height:auto;}
+    }
+  }
+
+  &.img-250{
+    .thumbnail{
+      img{width:250px;height:auto;}
+    }
+  }
+
+}
+#footer {
+    .footer-enrd-ipg {
+        display: inline;
+        li {
+            margin: 0;
+            padding: 0;
+        &.first {
+            width: auto;
+            margin: 0;
+            padding: 0 10px 0 0;
+            border-right: 1px solid #118a85;
+        }
+        &.last {
+            border-left: 1px solid #118a85;
+            padding: 0 0 0 5px;
+        }
+            a {
+                margin: 0;
+                border-right: none;
+            }
+        }
+     }
+}
+
+.page-my-lags.page-my-lags-manage.page-my-lags-manage-cooperation-offers {
+    #edit-state-wrapper {
+        .views-widget {
+            .form-type-bef-link {
+                margin-left: 1em;
+            }
+        }
+    }
+}
+
+.node-type-rdp-information {
+    .national-rural-network {
+        .col-md-2 {
+            width: 15%;
+        }
+    }
+}
+
+// NRN Toolkit nodes display.
+.page-networking-nrn-toolkit .thumbnail .ds-thumb {
+    width: 200px;
+    height: 200px;
+}
+
+// NRN Toolkit: ENRD NRN Classification facet.
+.facetapi-facet-im-field-tax-networking div.dropdown:nth-child(2n+2) {
+    margin-right: 0;
+
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+}

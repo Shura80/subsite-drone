@@ -1,0 +1,7 @@
+name = ENRD Field tips
+description = Provides to move the field description in an tooltip.
+package = ENRD
+core = "7.x"
+php = 5.5.9
+dependencies[] = field
+multisite_version = 2.5

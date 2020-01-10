@@ -1,0 +1,29 @@
+/* LAG Dashboards */
+
+/* LAG Invites dashboard */
+#views-exposed-form-enrd-lag-invite-dashboard-page #edit-date-filter-wrapper {
+  clear: both;
+}
+
+/* Contact the Webmaster webform. */
+.node-webform .webform-client-form .webform-lag-dashboard-contact-webmaster-disclaimer {
+  margin-top: 8px;
+}
+
+/* ENRD LAG local tasks */
+.page-node.node-type-lag, .page-node.node-type-cooperation-offer {
+  #block-enrd-lag-dashboard-enrd-menu-local-tasks {
+    div.block-title {
+      h3 {
+        text-transform: none;
+        font-size: 18px;
+
+        &:before {
+          content: "\e811";
+          font-family: "enrd-icons";
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+}

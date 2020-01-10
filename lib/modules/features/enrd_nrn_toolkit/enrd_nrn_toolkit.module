@@ -1,0 +1,919 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD NRN Toolkit feature.
+ */
+
+include_once 'enrd_nrn_toolkit.features.inc';
+
+// NRN Toolkit contact form.
+define('ENRD_NRN_TOOLKIT_CONTACT_US_UUID', 'b1cd0e38-44ba-4455-aaec-34494bb77a85');
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function enrd_nrn_toolkit_override_multisite_components() {
+  // Adds CAPTCHA to the "Contact us" form component.
+  enrd_nrn_toolkit_post_features_revert('uuid_node');
+
+  watchdog('enrd_nrn_toolkit', 'Override multisite components');
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_nrn_toolkit_menu() {
+  $items = array();
+
+  $items['admin/config/search/enrd-classification/nrn-toolkit'] = array(
+    'title' => 'NRN Toolkit',
+    'description' => 'Set ENRD NRN Toolkit field intances related fields.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_nrn_toolkit_field_instances_form'),
+    'access arguments' => array('administer fields'),
+    'file' => 'enrd_nrn_toolkit.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_nrn_toolkit_permission() {
+  return [
+    'use nrn toolkit shared fields' => [
+      'title' => t('Use NRN Toolkit shared fields to classify content.'),
+    ],
+  ];
+}
+
+/**
+ * Create custom ENRD NRN Toolkit bean programmatically.
+ */
+function _enrd_nrn_toolkit_custom_bean() {
+  if (!bean_load_delta('nrntoolkitintro')) {
+    $bean = bean_create(array('type' => 'enrd_bean'));
+    $bean->label = 'NRN Toolkit intro';
+    $bean->title = '';
+    $bean->delta = 'nrntoolkitintro';
+    $bean->save();
+  }
+}
+
+/**
+ * Helper function to import terms into ENRD NRN Toolkit vocabularies.
+ *
+ * @param mixed $vocabularies
+ *   An optional array of taxonomies machine names.
+ */
+function _enrd_nrn_toolkit_import_taxonomies($vocabularies = NULL) {
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_nrn_toolkit', 'data/enrd_nrn_toolkit_taxonomies');
+
+  if (is_null($vocabularies) || !is_array($vocabularies)) {
+    $vocabularies = array(
+      'enrd_networking',
+      'enrd_resource_type',
+    );
+  }
+
+  foreach ($vocabularies as $machine_name) {
+    // Import data.
+    _enrd_taxonomies_save_taxo(_enrd_nrn_toolkit_taxonomies($machine_name),
+      taxonomy_vocabulary_machine_name_load($machine_name));
+  }
+
+  drupal_set_message(t('ENRD NRN Toolkit @machine_name vocabulary and terms created.',
+      array('@machine_name' => $machine_name))
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrn_toolkit_form_nrn_resource_node_form_alter(&$form, &$form_state, $form_id) {
+  // File and External link visible and required according to boolean field.
+  if (isset($form['field_enrd_nrn_resource_type'])) {
+
+    if (isset($form['field_enrd_nrn_file'])) {
+      $form['field_enrd_nrn_file']['#states'] = [
+        'visible' => [
+          [
+            ':input[name="field_enrd_nrn_resource_type[und]"]' => ['value' => 0],
+          ],
+        ],
+        'required' => [
+          [
+            ':input[name="field_enrd_nrn_resource_type[und]"]' => ['value' => 0],
+          ],
+        ],
+      ];
+    }
+
+    if (isset($form['field_enrd_nrn_external_link'])) {
+      $form['field_enrd_nrn_external_link']['#states'] = [
+        'visible' => [
+          [
+            ':input[name="field_enrd_nrn_resource_type[und]"]' => ['value' => 1],
+          ],
+        ],
+        'required' => [
+          [
+            ':input[name="field_enrd_nrn_resource_type[und]"]' => ['value' => 1],
+          ],
+        ],
+      ];
+    }
+
+    // Actually make fields required according to the radio button.
+    $form['#validate'][] = '_enrd_nrn_toolkit_nrn_resource_node_form_validate';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrn_toolkit_form_node_form_alter(&$form, &$form_state, $form_id) {
+
+  if (isset($form['#node']->type)) {
+
+    module_load_include('inc', 'enrd_nrn_toolkit', 'enrd_nrn_toolkit.admin');
+    $field_list = _enrd_nrn_toolkit_field_base_list();
+
+    foreach ($field_list as $group_name => $group) {
+      foreach ($group as $field_name => $field_label) {
+        if (!empty($form[$field_name])) {
+          $right_position = (isset($form['#group_children'][$field_name]) && $form['#group_children'][$field_name] == $group_name);
+          $form[$field_name]['#access'] = user_access('use nrn toolkit shared fields') || !$right_position;
+        }
+      }
+    }
+
+    // Networking, Resource type, Date visible&required if Include =checked.
+    if (isset($form['field_enrd_nrn_include_toolkit'])) {
+      $states = [
+        'visible' => [
+          [
+            ':input[name="field_enrd_nrn_include_toolkit[und]"]' => ['checked' => TRUE],
+          ],
+        ],
+        'required' => [
+          [
+            ':input[name="field_enrd_nrn_include_toolkit[und]"]' => ['value' => 1],
+          ],
+        ],
+      ];
+
+      if (isset($form['field_tax_networking'])) {
+        $form['field_tax_networking']['#states'] = $states;
+      }
+
+      if (isset($form['field_enrd_nrn_type'])) {
+        $form['field_enrd_nrn_type']['#states'] = $states;
+      }
+
+      if (isset($form['field_enrd_nrn_date'])) {
+        $form['field_enrd_nrn_date']['#states'] = $states;
+      }
+
+      $visibility = [
+        'visible' => [
+          [
+            ':input[name="field_enrd_nrn_include_toolkit[und]"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+
+      if (isset($form['field_enrd_nrn_title'])) {
+        $form['field_enrd_nrn_title']['#states'] = $visibility;
+      }
+
+      if (isset($form['field_enrd_nrn_alter_description'])) {
+        $form['field_enrd_nrn_alter_description']['#states'] = $visibility;
+      }
+
+      // Actually make fields required according to the checkbox.
+      $form['#validate'][] = '_enrd_nrn_toolkit_node_form_validate';
+    }
+  }
+
+}
+
+/**
+ * Validate function for NRN Toolkit fields.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ */
+function _enrd_nrn_toolkit_node_form_validate($form, &$form_state) {
+  if ($form_state['values']['field_enrd_nrn_include_toolkit'][LANGUAGE_NONE][0]['value'] == 1) {
+    if (empty($form_state['values']['field_tax_networking'][LANGUAGE_NONE][0]['tid'])) {
+      // Report and highlight the error for the "Networking" field instance.
+      form_set_error('field_tax_networking', t('!name field is required.', array('!name' => $form['field_tax_networking'][LANGUAGE_NONE]['#title'])));
+    }
+
+    if (empty($form_state['values']['field_enrd_nrn_type'][LANGUAGE_NONE][0]['tid'])) {
+      // Report and highlight the error for the "Resource type" field instance.
+      form_set_error('field_enrd_nrn_type', t('!name field is required.', array('!name' => $form['field_enrd_nrn_type'][LANGUAGE_NONE]['#title'])));
+    }
+
+    if (empty($form_state['values']['field_enrd_nrn_date'][LANGUAGE_NONE][0]['value'])) {
+      // Report and highlight the error for the "Date" field instance.
+      form_set_error('field_enrd_nrn_date', t('!name field is required.', array('!name' => $form['field_enrd_nrn_date'][LANGUAGE_NONE]['#title'])));
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrn_toolkit_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['#search_page']['page_id'] == 'nrn_toolkit') {
+    $form['#after_build'][] = '_enrd_nrn_toolkit_change_apachesolr_freetext_placeholder';
+  }
+}
+
+/**
+ * After build function to change Apache Solr free-text placeholder.
+ *
+ * @param mixed $form
+ *   The form which contains the search form attributes.
+ * @param mixed $form_state
+ *   Values added in form array.
+ *
+ * @return array
+ *   Returns the modified $form array.
+ */
+function _enrd_nrn_toolkit_change_apachesolr_freetext_placeholder($form, &$form_state) {
+  if ($form['#search_page']['page_id'] == 'nrn_toolkit') {
+    $form['basic']['keys']['#attributes']['placeholder'] = t("Free-text search in the NRN Toolkit");
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_node().
+ */
+function enrd_nrn_toolkit_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
+  // Set single valued NRN "Date" field to be indexed.
+  if (isset($entity->field_enrd_nrn_include_toolkit[LANGUAGE_NONE][0]['value']) && $entity->field_enrd_nrn_include_toolkit[LANGUAGE_NONE][0]['value'] == '1') {
+    if (isset($entity->field_enrd_nrn_date[LANGUAGE_NONE]['0']['value'])) {
+      $document->setField('ds_field_enrd_nrn_date', apachesolr_date_iso($entity->field_enrd_nrn_date[LANGUAGE_NONE][0]['value']));
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_query_prepare().
+ */
+function enrd_nrn_toolkit_apachesolr_query_prepare(DrupalSolrQueryInterface $query) {
+
+  $context = $query->getContext();
+  $router_item = menu_get_item();
+
+  // Set custom Date solr filter if facet is selected.
+  if ($context['page_id'] == 'nrn_toolkit') {
+    if (empty($router_item['page_arguments'][1])) {
+      $query->addParams(array(
+        'sort' => array(
+          'ds_field_enrd_nrn_date desc',
+          'ds_changed desc',
+        ),
+      ));
+    }
+  }
+}
+
+/**
+ * Pre populate link items into enrd_nrn_static_pages menu.
+ */
+function _enrd_nrn_toolkit_nrn_static_pages_menu_prepopulate() {
+
+  module_load_include('php', 'enrd_nrn_toolkit', 'data/enrd_nrn_toolkit_menu_items');
+
+  $menu_name = 'menu-enrd-nrn-static-pages';
+  $menu = menu_load($menu_name);
+  if ($menu === FALSE) {
+    return;
+  }
+
+  $items = _enrd_nrn_toolkit_menu_enrd_nrn_static_pages();
+
+  foreach ($items as $item) {
+    // Look the table first if the data does exist.
+    $query = db_select('menu_links', 'ml');
+    $query->fields('ml', array('mlid'))
+      ->condition('ml.menu_name', $menu_name, '=')
+      ->condition('ml.link_title', $item['link_title'], '=');
+
+    $result = $query->execute()
+      ->fetchAssoc();
+
+    // Save the record if the data does not exist.
+    if (!$result) {
+      $link = array(
+        'link_path' => $item['link_path'],
+        'link_title' => $item['link_title'],
+        'menu_name' => $item['menu_name'],
+        'weight' => $item['weight'],
+        'expanded' => $item['expanded'],
+        'options' => $item['options'],
+      );
+      menu_link_save($link);
+    }
+  }
+}
+
+/**
+ * Validate function for NRN Resource fields.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ */
+function _enrd_nrn_toolkit_nrn_resource_node_form_validate($form, &$form_state) {
+  if ($form_state['values']['field_enrd_nrn_resource_type'][LANGUAGE_NONE][0]['value'] == '0'
+    && (empty($form_state['values']['field_enrd_nrn_file'][LANGUAGE_NONE][0]['fid'])
+      || $form_state['values']['field_enrd_nrn_file'][LANGUAGE_NONE][0]['fid'] == 0)) {
+    // Report and highlight the error for the "File" field instance.
+    form_set_error('field_enrd_nrn_file', t('!name field is required.', array('!name' => $form['field_enrd_nrn_file'][LANGUAGE_NONE][0]['#title'])));
+  }
+
+  if ($form_state['values']['field_enrd_nrn_resource_type'][LANGUAGE_NONE][0]['value'] == '1'
+    && empty($form_state['values']['field_enrd_nrn_external_link'][LANGUAGE_NONE][0]['url'])) {
+    // Report and highlight the error for the "External link" field instance.
+    form_set_error('field_enrd_nrn_external_link', t('!name field is required.', array('!name' => $form['field_enrd_nrn_external_link'][LANGUAGE_NONE][0]['#title'])));
+  }
+}
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function enrd_nrn_toolkit_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  if (isset($context['view_mode']) &&
+    ($context['view_mode'] == 'enrd_nrn_toolkit_resource' || ($context['bundle'] == 'nrn_resource' && $context['view_mode'] == 'full'))) {
+    // Custom class applied to NRN content.
+    $vars['classes_array'][] = 'enrd-nrn-toolkit-resource';
+
+    if (isset($vars['thumb_classes']) && isset($vars['elements']['field_enrd_nrn_type'][0]['#markup'])) {
+      // Add Resource type class to set background image.
+      $vars['thumb_classes'] = drupal_html_class('resource-type-' . $vars['elements']['field_enrd_nrn_type'][0]['#markup']);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function enrd_nrn_toolkit_preprocess_page(&$variables) {
+  $item = menu_get_item();
+
+  if (isset($variables['node']) && $variables['node']->type == 'nrn_resource' && $item['path'] == 'node/%') {
+    if (isset($variables['node']->title) && !empty($variables['node']->title)) {
+      $variables['title'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function enrd_nrn_toolkit_node_view_alter(&$build) {
+  if ($build['#node']->type == 'nrn_resource' &&
+    ($build['#view_mode'] == 'full' || $build['#view_mode'] == 'enrd_nrn_toolkit_resource')) {
+    $title = $build['#node']->title;
+
+    // NRN Resource title targets to the file path when the "File" is uploaded.
+    if (isset($build['field_enrd_nrn_file']) && !empty($build['field_enrd_nrn_file'][0]['#file']->uri)) {
+      $file_path = file_create_url($build['field_enrd_nrn_file'][0]['#file']->uri);
+
+      if ($build['#node']->field_enrd_nrn_resource_type[LANGUAGE_NONE][0]['value'] == 0) {
+        if (!empty($file_path)) {
+          $nrn_link = l($title, $file_path, array(
+            'attributes' => array(
+              'target' => '_blank',
+            ),
+          ));
+          $build['title'][0]['#markup'] = preg_replace('/<a .*>(.*?)<\/a>/', $nrn_link, $build['title'][0]['#markup']);
+        }
+      }
+
+      // Remove file name from "File" field.
+      if (isset($build['field_enrd_nrn_file'][0]['#file']->filename)
+        && !empty($build['field_enrd_nrn_file'][0]['#file']->filename)) {
+        $build['field_enrd_nrn_file'][0]['#file']->filename = '';
+      }
+    }
+
+    if (isset($build['field_enrd_nrn_external_link']) && !empty($build['field_enrd_nrn_external_link']['#items'][0]['url'])) {
+      $external_link = $build['field_enrd_nrn_external_link']['#items'][0]['url'];
+
+      // NRN Resource external link targets to link when External link is set.
+      if ($build['#node']->field_enrd_nrn_resource_type[LANGUAGE_NONE][0]['value'] == 1) {
+        if (!empty($external_link)) {
+          $link = l($title, $external_link, array(
+            'attributes' => array(
+              'rel' => 'nofollow',
+              'target' => '_blank',
+              'class' => 'external-link',
+              'title' => 'external resource',
+            ),
+          ));
+          $build['title'][0]['#markup'] = preg_replace('/<a .*>(.*?)<\/a>/', $link, $build['title'][0]['#markup']);
+        }
+      }
+
+      // Remove external file url from "External link" field.
+      if (isset($build['field_enrd_nrn_external_link'])
+        && !empty($build['field_enrd_nrn_external_link'][0]['#element']['title'])) {
+        $build['field_enrd_nrn_external_link'][0]['#element']['url'] = '';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function enrd_nrn_toolkit_node_presave($node) {
+  // Clean "File" or "External link" value according to selected resource type.
+  if (isset($node->field_enrd_nrn_resource_type[LANGUAGE_NONE])) {
+    if ($node->field_enrd_nrn_resource_type[LANGUAGE_NONE][0]['value'] == '1') {
+      if (isset($node->field_enrd_nrn_file[LANGUAGE_NONE]) && !empty($node->field_enrd_nrn_file[LANGUAGE_NONE][0]['fid'])) {
+        unset($node->field_enrd_nrn_file[LANGUAGE_NONE]);
+      }
+    }
+    elseif ($node->field_enrd_nrn_resource_type[LANGUAGE_NONE][0]['value'] == '0') {
+      if (isset($node->field_enrd_nrn_external_link[LANGUAGE_NONE]) && !empty($node->field_enrd_nrn_external_link[LANGUAGE_NONE][0]['url'])) {
+        unset($node->field_enrd_nrn_external_link[LANGUAGE_NONE]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function enrd_nrn_toolkit_date_formats() {
+  return array(
+    // Creates a new custom format type.
+    array(
+      'type' => 'enrd_nrn_toolkit_m_y',
+      'format' => 'F Y',
+      'locales' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function enrd_nrn_toolkit_date_format_types() {
+  return array(
+    'enrd_nrn_toolkit_m_y' => t('ENRD NRN Toolkit'),
+  );
+}
+
+/**
+ * Implements hook_facetapi_widgets().
+ */
+function enrd_nrn_toolkit_facetapi_widgets() {
+  return array(
+    'enrd_facetapi_dropdown_links' => array(
+      'handler' => array(
+        'label' => t('ENRD Dropdown Links'),
+        'class' => 'EnrdNrnToolkitFacetapiWidgetLinks',
+        'query types' => array('term', 'date'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function enrd_nrn_toolkit_theme() {
+  return array(
+    'enrd_nrn_toolkit_networking_link' => array(
+      'variables' => array(
+        'links' => NULL,
+        'label' => NULL,
+        'attributes' => array(
+          'class' => array('links'),
+        ),
+        'heading' => array(),
+      ),
+    ),
+    'enrd_nrn_toolkit_active_text_link' => array(
+      'variables' => array(
+        'links' => NULL,
+        'label' => NULL,
+        'attributes' => array(
+          'class' => array('links'),
+        ),
+        'heading' => array(),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function enrd_nrn_toolkit_block_info() {
+  $blocks['contact_us_nrn_webform'] = array(
+    'info' => t('ENRD NRN TOOLKIT: Contact us'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function enrd_nrn_toolkit_block_view($delta = '') {
+  $block = array();
+
+  if ($delta == 'contact_us_nrn_webform') {
+    $block['subject'] = t('Contact us *');
+    $node_obj = entity_uuid_load('node', array(ENRD_NRN_TOOLKIT_CONTACT_US_UUID));
+    $node_obj = reset($node_obj);
+    $node_obj->title = '';
+    $node = node_view($node_obj, 'default');
+    $block['content'] = $node;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_apachesolr_search_page_alter().
+ */
+function enrd_nrn_toolkit_apachesolr_search_page_alter(&$build, $search_page) {
+  if ($search_page['page_id'] == 'nrn_toolkit') {
+    // Create "Back to NRN Toolkit" link, displayed on the search results list.
+    if (isset($build['search_results']['search_results'])) {
+      $build['search_results']['back_to_nrntoolkit'] = array(
+        '#type' => 'container',
+        '#attributes' => array(
+          'class' => array('back-to-nrn-toolkit'),
+        ),
+        '#prefix' => '<div class="row back">',
+        '#suffix' => '</div>',
+        'back-link' => array(
+          '#type' => 'link',
+          '#title' => t('Back to NRN Toolkit'),
+          '#href' => base_path() . $search_page['search_path'],
+        ),
+        '#weight' => 1,
+      );
+    }
+
+    // Implement context behavior according to the page parameters.
+    if ($build['search_form']['basic']['get']['#value'] == '[]'
+      && empty($build['search_form']['basic']['keys']['#value'])) {
+      // Landing page behavior.
+      $blockObject = block_load('bean', 'nrntoolkitintro');
+      if (!is_null($blockObject)) {
+        $block = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+        $build['nrn_toolkit_intro'] = $block;
+        $build['nrn_toolkit_intro']['#weight'] = -5;
+      }
+
+      $blockObject = block_load('facetapi', 'JKXasId1JAegIrug07EdXUE9BnOqvXn4');
+      $block = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['nrn_classification'] = $block;
+      $build['nrn_classification']['#weight'] = 9;
+
+      $blockObject = block_load('menu', 'menu-enrd-nrn-static-pages');
+      $block = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['enrd_nrn_static_pages'] = $block;
+      $build['enrd_nrn_static_pages']['#weight'] = 10;
+    }
+    elseif ($build['search_form']['basic']['get']['#value'] !== '[]'
+      && empty($build['search_form']['basic']['keys']['#value'])) {
+      // When selecting specifically the NRN Classification facet.
+      $blockObject = block_load('facetapi', 'JKXasId1JAegIrug07EdXUE9BnOqvXn4');
+      $block = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['nrn_classification'] = $block;
+      $build['nrn_classification']['#weight'] = -5;
+
+      $blockObject = block_load('current_search', 'nrn_toolkit');
+      $build['nrn_toolkit_current_search'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['nrn_toolkit_current_search']['#weight'] = 0;
+
+      $blockObject = block_load('facetapi', '2slSjD0911B2kxBLtl6SUr6xn9jWbF2y');
+      $build['enrd_nrn_type'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['enrd_nrn_type']['#weight'] = 5;
+
+      $blockObject = block_load('enrd_nrn_toolkit', 'contact_us_nrn_webform');
+      $build['enrd_contact_us_form'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['enrd_contact_us_form']['#weight'] = 10;
+
+      // Move the child "NRN Classification" facet value under the parent value.
+      if (isset($build['search_results']['search_results'])) {
+        if (isset($build['nrn_classification'])) {
+          $build['search_results']['child_networking'] = array(
+            '#markup' => $build['nrn_classification']['facetapi_JKXasId1JAegIrug07EdXUE9BnOqvXn4']['im_field_tax_networking'][0]['#markup'],
+            '#prefix' => '<div class="row selected"><div class="col-md-2"></div><div class="col-md-10 nrn-classification-selected">',
+            '#suffix' => '</div></div>',
+          );
+
+          $build['search_results']['child_networking']['#weight'] = $build['search_results']['back_to_nrntoolkit']['#weight'] + 1;
+          unset($build['nrn_classification']['facetapi_JKXasId1JAegIrug07EdXUE9BnOqvXn4']['im_field_tax_networking'][0]['#markup']);
+        }
+      }
+
+      // Do not display the search bar on the results page.
+      $build['search_form']['#access'] = FALSE;
+    }
+    elseif (($build['search_form']['basic']['get']['#value'] == '[]'
+      && !empty($build['search_form']['basic']['keys']['#value'])
+      || ($build['search_form']['basic']['get']['#value'] !== '[]'
+      && !empty($build['search_form']['basic']['keys']['#value'])))) {
+      // Either with a search key or when having both the facet and the key.
+      $blockObject = block_load('current_search', 'nrn_toolkit');
+      $build['nrn_toolkit_current_search'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['nrn_toolkit_current_search']['#weight'] = 0;
+
+      $blockObject = block_load('facetapi', '2slSjD0911B2kxBLtl6SUr6xn9jWbF2y');
+      $build['enrd_nrn_type'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['enrd_nrn_type']['#weight'] = 5;
+
+      $blockObject = block_load('enrd_nrn_toolkit', 'contact_us_nrn_webform');
+      $build['enrd_contact_us_form'] = _block_get_renderable_array(_block_render_blocks(array($blockObject)));
+      $build['enrd_contact_us_form']['#weight'] = 10;
+    }
+
+    // Set general weight to always existing elements.
+    $build['search_results']['search_extra']['#weight'] = 3;
+    $build['search_results']['search_results']['#weight'] = $build['search_results']['search_extra']['#weight'] + 1;
+
+    // Set weight to the results pager, if present.
+    if (isset($build['search_results']['search_pager']['#markup'])) {
+      $build['search_results']['search_pager']['#weight'] = $build['search_results']['search_results']['#weight'] + 1;
+    }
+
+    // Set class to the search bar to exclude the landing page.
+    if (isset($build['search_form']) && empty($build['nrn_classification']['facetapi_JKXasId1JAegIrug07EdXUE9BnOqvXn4']['im_field_tax_networking'][0])) {
+      $build['search_form']['#attributes']['class'][] = 'nrn-toolkit-search-form';
+    }
+  }
+
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function enrd_nrn_toolkit_preprocess_block(&$variables) {
+  $menu_item = menu_get_item();
+  $query_params = drupal_get_query_parameters();
+
+  // Check that it is the NRN search results list & exclude the landing page.
+  if (empty($menu_item['page_arguments'][1]) && $menu_item['tab_root'] == 'networking/nrn-toolkit/%'
+    && !empty($query_params)) {
+    // Add class to the "NRN Classification" facet only when the facet
+    // is selected, in order to apply it a custom theme.
+    if ($variables['block']->delta == 'JKXasId1JAegIrug07EdXUE9BnOqvXn4') {
+      $variables['classes_array'][] = 'nrn-toolkit-nrn-classification-selected';
+    }
+  }
+}
+
+/**
+ * Implements hook_facet_items_alter().
+ */
+function enrd_nrn_toolkit_facet_items_alter(&$build, &$settings) {
+  // Remove unnecessary NRN Classification facet values when selected
+  // And create a facet item corresponding to the selected value.
+  $query_params = drupal_get_query_parameters();
+
+  // Exclude Landing page from the NRN Classification facet custom logic.
+  if (!empty($query_params)) {
+    if ($settings->facet == 'im_field_tax_networking') {
+      foreach ($build as $key => $item) {
+
+        if (count($build) == 1) {
+          if (isset($query_params['f'])) {
+            $solr_params = $query_params['f'];
+
+            foreach ($solr_params as $solr_param) {
+              if (strpos($solr_param, 'im_field_tax_networking:') === 0) {
+                // If no inactive link when Type is tagged for only 1 cluster.
+                $selected_item = str_replace('im_field_tax_networking:', '', $solr_param);
+
+                if (!empty($selected_item)) {
+                  $nrn_classification_selected_term = taxonomy_term_load($selected_item);
+                  if (!empty($nrn_classification_selected_term)) {
+                    // Create a facet item corresponding to the selected value.
+                    $nrn_classification_selected_term_name = $nrn_classification_selected_term->name;
+                    if (!empty($selected_item) && !empty($nrn_classification_selected_term)) {
+                      $build[$selected_item] = array(
+                        '#markup' => $nrn_classification_selected_term_name,
+                        '#path' => '',
+                        '#html' => FALSE,
+                        '#indexed_value' => '',
+                        '#count' => 0,
+                        '#active' => 0,
+                        '#item_parents' => array(),
+                        '#item_children' => array(),
+                        '#query' => array(
+                          'f' => array(
+                            0 => '',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        elseif (count($build) > 1) {
+          // Get the tid of the selected value.
+          if (isset($item['#query']['f'][0])) {
+            $selected_item = str_replace('im_field_tax_networking:', '', $item['#query']['f'][0]);
+
+            if (!empty($selected_item)) {
+              $nrn_classification_selected_term = taxonomy_term_load($selected_item);
+              if (!empty($nrn_classification_selected_term)) {
+                // Create a facet item corresponding to the selected value.
+                $nrn_classification_selected_term_name = $nrn_classification_selected_term->name;
+                if (!empty($selected_item) && !empty($nrn_classification_selected_term)) {
+                  $build[$selected_item] = array(
+                    '#markup' => $nrn_classification_selected_term_name,
+                    '#path' => '',
+                    '#html' => FALSE,
+                    '#indexed_value' => '',
+                    '#count' => 0,
+                    '#active' => 0,
+                    '#item_parents' => array(),
+                    '#item_children' => array(),
+                    '#query' => array(
+                      'f' => array(
+                        0 => '',
+                      ),
+                    ),
+                  );
+                }
+
+                // Remove not selected items.
+                $query_values = implode("", $item['#query']['f']);
+                if (strpos($query_values, $nrn_classification_selected_term->tid)) {
+                  unset($build[$key]);
+                }
+              }
+            }
+          }
+        }
+
+      }
+    }
+
+  }
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function enrd_nrn_toolkit_page_alter(&$page) {
+  if (isset($page['content']['system_main']['search_form']['#search_page']['search_path']) &&
+    $page['content']['system_main']['search_form']['#search_page']['search_path'] == 'networking/nrn-toolkit') {
+
+    // Display the "Current search" block in the sidebar right.
+    if (isset($page['content']['system_main']['nrn_toolkit_current_search'])) {
+      $page['sidebar_right']['nrn_toolkit_current_search'] = $page['content']['system_main']['nrn_toolkit_current_search'];
+      unset($page['content']['system_main']['nrn_toolkit_current_search']);
+    }
+
+    // Display the "Type" facet in the sidebar right.
+    if (isset($page['content']['system_main']['enrd_nrn_type'])) {
+      $page['sidebar_right']['enrd_nrn_type'] = $page['content']['system_main']['enrd_nrn_type'];
+      unset($page['content']['system_main']['enrd_nrn_type']);
+    }
+
+    // Display the "Contact us" webform block in the sidebar right.
+    if (isset($page['content']['system_main']['enrd_contact_us_form'])) {
+      // Display the "Current search" block in the sidebar right.
+      $page['sidebar_right']['enrd_contact_us_form'] = $page['content']['system_main']['enrd_contact_us_form'];
+      unset($page['content']['system_main']['enrd_contact_us_form']);
+    }
+
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function enrd_nrn_toolkit_form_webform_client_form_alter(&$form, &$form_state, $form_id) {
+  // Custom behaviors for the "Contact us" webform.
+  if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_NRN_TOOLKIT_CONTACT_US_UUID) {
+
+    // Disclaimer msg below "Submit" button of the "Contact us" Webform.
+    if ($form['actions']['submit']['#type'] == 'submit') {
+      $form['actions']['submit']['#suffix'] = '<div class="webform-nrn-toolkit-contact-us-disclaimer">' .
+        t('* The information you provide will be directly forwarded to the Networking team of the ENRD Contact Point.') . '</div>';
+    }
+
+    // Captcha for anonymous.
+    if (user_is_anonymous()) {
+      $form['captcha'] = array(
+        '#type' => 'captcha',
+        '#captcha_type' => 'image_captcha/Image',
+      );
+    }
+
+  }
+}
+
+/**
+ * Implements hook_post_features_revert().
+ */
+function enrd_nrn_toolkit_post_features_revert($component) {
+  // Set once captcha type to the "Contact us" form after feature revert.
+  if (!empty($component) && $component == 'uuid_node') {
+    module_load_include('inc', 'uuid', 'uuid.entity');
+    $ids = entity_get_id_by_uuid('node', array(ENRD_NRN_TOOLKIT_CONTACT_US_UUID));
+
+    if (!empty($ids)) {
+      $contact_us_form_id = reset($ids);
+
+      // Add validation ("Message" component: max length 800 chars).
+      $contact_us_node = node_load($contact_us_form_id);
+      $contact_us_message = webform_get_cid($contact_us_node, 'enrd_nrn_toolkit_contact_us_message', 0);
+
+      $values = array(
+        'action' => 'add',
+        'nid' => $contact_us_form_id,
+        'rulename' => 'Max length',
+        'validator' => 'max_length',
+        'data' => 800,
+        'rule_components' => array($contact_us_message => $contact_us_message),
+      );
+      // Check if the Webform already has some validation rules.
+      $contact_us_form = webform_validation_get_node_rules($contact_us_form_id);
+
+      if (empty($contact_us_form)) {
+        webform_validation_rule_save($values);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_nrn_toolkit_menu_alter(&$items) {
+  $items['networking/nrn-toolkit']['type'] = MENU_NORMAL_ITEM;
+  $items['networking/nrn-toolkit']['menu_name'] = 'main-menu';
+  $items['networking/nrn-toolkit']['weight'] = 4;
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_nrn_toolkit_menu_link_alter(&$item) {
+  if (isset($item['menu_name']) && $item['menu_name'] == 'main-menu') {
+    if ($item['link_path'] == 'networking/nrn-toolkit') {
+      // Right position of NRN Toolkit Search page.
+      if (!isset($item['customized'])) {
+        if ($path = drupal_lookup_path('source', 'networking')) {
+          $item['plid'] = (int) db_select('menu_links')
+            ->fields('menu_links', array('mlid'))
+            ->condition('menu_name', 'main-menu')
+            ->condition('link_path', $path)
+            ->execute()
+            ->fetchField();
+        };
+      }
+    }
+  }
+}
+
+/**
+ * Preprocess the NRN Toolkit RSS feed row.
+ */
+function enrd_nrn_toolkit_preprocess_views_view_row_rss(&$vars) {
+  $view = &$vars['view'];
+
+  // Customize NRN Toolkit RSS Feed.
+  if ($view->name == 'enrd_nrn_toolkit_rss' && $view->current_display == 'feed_nrn_toolkit') {
+    $index = $view->row_index;
+    // Force using "NRN Title" in <title> if set.
+    if (!empty($view->result[$index]->field_field_enrd_nrn_title)) {
+      $vars['title'] = $view->result[$index]->field_field_enrd_nrn_title[0]['rendered']['#markup'];
+    }
+    // Force using "NRN Description" in <description> is set.
+    if (!empty($view->result[$index]->field_field_enrd_nrn_alter_description)) {
+      $vars['description'] = $view->result[$index]->field_field_enrd_nrn_alter_description[0]['rendered']['#markup'];
+    }
+  }
+}

@@ -1,0 +1,1579 @@
+<?php
+
+/**
+ * @file
+ * Install file of the enrd_mastermind module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_mastermind_install() {
+  // Workaround for missing TMGMT cache table during install.
+  if (module_exists('entitycache') && module_exists('tmgmt')) {
+    if (!db_table_exists('cache_entity_tmgmt_translator')) {
+      db_create_table('cache_entity_tmgmt_translator', drupal_get_schema_unprocessed('system', 'cache'));
+    }
+  }
+  // Workaround for missing Field collection item cache table during install.
+  if (module_exists('entitycache') && module_exists('field_collection')) {
+    if (!db_table_exists('cache_entity_field_collection_item')) {
+      db_create_table('cache_entity_field_collection_item', drupal_get_schema_unprocessed('system', 'cache'));
+    }
+  }
+
+  // Set site name.
+  variable_set('site_name', 'The European Network for Rural Development (ENRD)');
+  variable_set('site_slogan', 'Connecting Rural Europe ...');
+  // Enable the enrd subtheme.
+  theme_enable(array('enrd'));
+  variable_set('theme_default', 'enrd');
+  variable_set('node_admin_theme', 0);
+  variable_set('classification', '01000');
+  variable_set('meta_configuration', '01000');
+  variable_set('site_frontpage', 'home-page');
+
+  // Enable custom Multisite components.
+  features_install_modules(array(
+    // Sitemap.
+    'sitemap',
+    // Forum.
+    'multisite_forum_core',
+    'multisite_forum_community',
+    // E-Library.
+    'e_library_core',
+    'e_library_og',
+    // Notification.
+    'multisite_notifications_og',
+    // ECAS Environment.
+    'ecas_env',
+    // Activities.
+    'multisite_activity_core',
+    // Solr facets settings.
+    'solr_config',
+    // Nexteuropa Last Update platform module.
+    'nexteuropa_lastupdate',
+  ));
+
+  module_disable(array(
+    'dashboard',
+    'multisite_drupal_access',
+  ));
+
+  // Enabling ENRD languages.
+  if (module_exists('locale')) {
+    include_once DRUPAL_ROOT . '/includes/locale.inc';
+    $languages = array(
+      'fr' => TRUE,
+      'de' => TRUE,
+      'it' => TRUE,
+      'es' => TRUE,
+      'pl' => TRUE,
+    );
+
+    $weight = 0;
+    foreach ($languages as $langcode => $enabled) {
+      locale_add_language($langcode, NULL, NULL, LANGUAGE_LTR, '', '', ($enabled) ? 1 : 0);
+
+      db_update('languages')
+        ->fields(array('weight' => (++$weight) > 10 ? 10 : $weight))
+        ->condition('language', $langcode)
+        ->execute();
+    }
+  }
+
+  // Create the home-page.
+  $front_page = variable_get('site_frontpage');
+  if (drupal_get_normal_path($front_page) === $front_page) {
+    $node = new stdClass();
+    $node->type = 'page';
+    $node->title = 'ENRD home page';
+    $node->status = NODE_PUBLISHED;
+    $node->language = language_from_default();
+    $node->body[$node->language][0]['value'] = '';
+    $node->body[$node->language][0]['format'] = 'full_html';
+
+    node_save($node);
+    $alias = array(
+      'source' => "node/{$node->nid}",
+      'alias' => $front_page,
+    );
+    path_save($alias);
+  }
+  variable_set('site_frontpage', drupal_get_normal_path($front_page));
+
+  // Remove Multisite dummy terms for tags.
+  foreach (array('sport', 'economic') as $term_name) {
+    $terms = taxonomy_get_term_by_name($term_name, 'tags');
+    $term = reset($terms);
+    if ($term) {
+      taxonomy_term_delete($term->tid);
+    }
+  }
+
+  db_delete('block')
+    ->condition('theme', 'enrd')
+    ->condition('region', 'header_top')
+    ->execute();
+
+  db_delete('block')
+    ->condition('theme', 'enrd')
+    ->condition('region', 'header_right')
+    ->execute();
+
+  features_revert_module('enrd_mastermind');
+
+  features_install_modules(array(
+    'enrd_country_pages',
+    'enrd_ehd_home',
+    'enrd_focus_on',
+    'enrd_gallery',
+    'enrd_lag_database',
+    'enrd_lag_dashboard',
+    'enrd_lag_invite',
+    'enrd_multilingual',
+    'enrd_news',
+    'enrd_notifications',
+    'enrd_nrn_profiles',
+    'enrd_nrn_toolkit',
+    'enrd_nrnp_invite',
+    'enrd_projects',
+    'enrd_publications',
+    'enrd_sfr_pub',
+    'enrd_taxonomies',
+  ));
+
+  drupal_flush_all_caches();
+  features_revert(array(
+    'enrd_multilingual' => array(
+      'variable',
+    ),
+    'enrd_notifications' => array(
+      'variable',
+    ),
+    'enrd_mastermind' => array(
+      'user_permission',
+    ),
+  ));
+
+  // Set default CAPTCHA skipped forms and default fonts.
+  _enrd_mastermind_default_captcha_settings();
+
+  // Override all Multisite components.
+  _enrd_mastermind_overrides_all();
+
+  // Call all environment pre-populate hooks().
+  _enrd_mastermind_environment_prepopulate();
+
+  // Set Solr environment custom settings.
+  _enrd_mastermind_solr_config();
+
+  // Reset menu items prepopulated by CCE BASIC.
+  _enrd_mastermind_reset_menu_items('user-menu', array('admin/workbench'));
+  _enrd_mastermind_reset_menu_items('main-menu', array('<front>'));
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_mastermind_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Mastermind is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_mastermind_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Mastermind has been deactivated on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_mastermind_uninstall() {
+  variable_store_delete_all('language', NULL, 'site_name');
+  variable_store_delete_all('language', NULL, 'site_slogan');
+
+  variable_del('site_name');
+  variable_del('site_slogan');
+  variable_set('theme_default', 'ec_resp');
+  variable_del('classification');
+  variable_del('meta_configuration');
+  variable_set('site_frontpage', 'node');
+  variable_del('enrd_lastupdate_custom_skipped_paths');
+  theme_disable(array('enrd'));
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function enrd_mastermind_requirements($phase) {
+  $t = get_t();
+
+  $requirements = array();
+
+  // Report Modules versions.
+  if ($phase == 'runtime') {
+
+    $module_prefix = 'enrd';
+
+    $results = db_select('system', 's')
+      ->fields('s')
+      ->condition('name', db_like($module_prefix) . '%', 'LIKE')
+      ->execute()
+      ->fetchAll();
+
+    foreach ($results as $module) {
+
+      $path = drupal_get_path($module->type, $module->name) . '/' . $module->name . '.info';
+      $info = drupal_parse_info_file($path);
+
+      $schema_info = ($module->schema_version > 0) ? "($module->schema_version)" : '';
+
+      $requirements[$module->name] = array(
+        'title' => $info['name'],
+        'value' => ($module->status) ? $t('Enabled :version', array(':version' => $schema_info)) : '',
+        'severity' => ($module->status) ? REQUIREMENT_OK : REQUIREMENT_INFO,
+        'weight' => -1,
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Enable contexts and conditional fields not enabled (or disabled) in install.
+ */
+function enrd_mastermind_update_7102() {
+
+  // Re-enable contexts disabled on install.
+  $context = context_load('homepage');
+  ctools_export_set_object_status($context, FALSE);
+
+  $context = context_load('site_wide');
+  ctools_export_set_object_status($context, FALSE);
+
+  $context = context_load('communities');
+  ctools_export_set_object_status($context, FALSE);
+
+  $context = context_load('workbench_moderate_all');
+  ctools_export_set_object_status($context, FALSE);
+
+}
+
+/**
+ * Fix status of features in Features Set UI.
+ */
+function enrd_mastermind_update_7104() {
+
+  // Re-enable multisite module apachesolr to disable core features.
+  // News dependency has been reverted with apachesolr active,
+  // so news content type has been initially automatically added to solr index.
+  // To prevent call to undefined function of apachesolr (now deactivated),
+  // it must be re-enabled and then disabled again.
+  module_enable(array('apachesolr'));
+
+  // Clean disable features.
+  module_disable(
+    array(
+      'news_core',
+      'events_standard',
+      'events_core',
+      'multisite_forum_core',
+    )
+  );
+
+  // Enable features sets.
+  module_enable(
+    array(
+      'events_core',
+      'events_og',
+      'events_resources',
+      'multisite_forum_core',
+      'multisite_forum_community',
+      'news_core',
+      'news_og',
+    )
+  );
+
+  // ENRD specific ctypes.
+  $bundles = array(
+    'community',
+    'discussion',
+    'event',
+    'focus_group',
+    'f_a_q',
+    'news',
+    'organization',
+    'rdp_information',
+  );
+
+  // Delete ENRD specific ctype from Solr bundles.
+  foreach ($bundles as $bundle) {
+    // Public multisite function to delete bundle from Solr.
+    multisite_drupal_toolbox_config_solr_bundle($bundle, 'delete');
+    watchdog('enrd_mastermind', "deleted bundle %bundle from solr bundles.", array('%bundle' => $bundle));
+  }
+
+  // Disable again apachesolr.
+  module_disable(array('apachesolr'));
+
+  // Revert a field that results unlocked.
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'field_base',
+    ),
+  ));
+
+}
+
+/**
+ * Enable e-library feature set.
+ */
+function enrd_mastermind_update_7106() {
+  module_enable(array('e_library_core', 'e_library_og'));
+}
+
+/**
+ * Hide titles for block regions created with Display Suite Extras.
+ */
+function enrd_mastermind_update_7108() {
+
+  db_update('block')
+    ->fields(array('title' => '<none>'))
+    ->condition('module', 'ds_extras')
+    ->condition('delta', array('nrn_self_asses_sidebarblock', 'sidebarblock'), 'IN')
+    ->condition('theme', 'enrd_theme')
+    ->execute();
+
+  cache_clear_all();
+
+}
+
+/**
+ * Close comments on content types where they're still open and delete comments.
+ */
+function enrd_mastermind_update_7112() {
+
+  // Close comments on content types.
+  db_update('node')
+    ->fields(array('comment' => 0))
+    ->condition('type', array(
+      'l_a_g',
+      'f_a_q',
+      'news',
+      'member',
+      'organization',
+    ), 'IN')
+    ->execute();
+
+  // Close comments on existing nids with comments.
+  db_update('node')
+    ->fields(array('comment' => 0))
+    ->condition('comment', array('1', '2'), 'IN')
+    ->execute();
+
+  // Close comments on existing nids with comments.
+  db_update('node_revision')
+    ->fields(array('comment' => 0))
+    ->condition('comment', array('1', '2'), 'IN')
+    ->execute();
+
+  // Delete all existing comments (if any).
+  db_delete('comment')
+    ->execute();
+
+  db_delete('field_data_comment_body')
+    ->execute();
+
+  db_delete('field_revision_comment_body')
+    ->execute();
+}
+
+/**
+ * Change My ENRD community node to allow override of roles and permissions.
+ */
+function enrd_mastermind_update_7115() {
+
+  $nid = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('title', 'myENRD')
+    ->execute()->fetchField();
+
+  $node = node_load($nid);
+
+  // Update Organic groups field that allows overrides of roles/permissions.
+  $node->og_roles_permissions[LANGUAGE_NONE][0]['value'] = 1;
+
+  // Update node fields.
+  field_attach_update('node', $node);
+}
+
+/**
+ * Remove Community and remaining content types from solr index.
+ */
+function enrd_mastermind_update_7118() {
+
+  // ENRD specific ctypes.
+  $bundles = array(
+    'article',
+    'document',
+    'member',
+    'page',
+  );
+
+  // Delete ENRD specific ctype from Solr bundles.
+  foreach ($bundles as $bundle) {
+    // Public multisite function to delete bundle from Solr.
+    multisite_drupal_toolbox_config_solr_bundle($bundle, 'delete');
+    watchdog('enrd_mastermind', "deleted bundle %bundle from solr bundles.", array('%bundle' => $bundle));
+  }
+}
+
+/**
+ * Enable sitemap module and set multilanguage page title variable.
+ */
+function enrd_mastermind_update_7120() {
+  module_enable(array('sitemap'));
+  i18n_variable_set('site_map_page_title', 'Site Map', 'en');
+}
+
+/**
+ * Delete useless fields and istances.
+ */
+function enrd_mastermind_update_7123() {
+  // Delete field_core_address in event.
+  $instance = field_info_instance('node', 'field_core_address', 'event');
+  field_delete_instance($instance, FALSE);
+
+  // Delete other UUIDs fields and Section.
+  $fields = array(
+    'field_page_uuid',
+    'field_lag_uuid',
+    'field_member_uuid',
+    'field_page_section',
+  );
+
+  foreach ($fields as $field) {
+    field_delete_field($field);
+  }
+}
+
+/**
+ * Alter weights on main menu.
+ */
+function enrd_mastermind_update_7125() {
+
+  $item = menu_get_item();
+  $tree = menu_tree_all_data(variable_get('menu_main_links_source', 'main-menu'), $item, 1);
+
+  $new_weight = -40;
+  $wtable = array();
+
+  foreach ($tree as $tr) {
+
+    if ($tr['link']['language'] == 'en') {
+
+      $item = $tr['link'];
+      $item['weight'] = $new_weight;
+      menu_link_save($item);
+      $wtable[$item['i18n_tsid']] = $item['weight'];
+      $new_weight += 5;
+    }
+  }
+
+  foreach ($tree as $tr) {
+    if ($tr['link']['language'] != 'en') {
+      $item = $tr['link'];
+      if ($wtable[$item['i18n_tsid']]) {
+        $item['weight'] = $wtable[$item['i18n_tsid']];
+      }
+      $item['hidden'] = 0;
+      menu_link_save($item);
+    }
+  }
+
+  db_select('menu_links', 'ml')
+    ->fields('ml', array('i18n_tsid'))
+    ->condition('link_title', 'Country')
+    ->execute();
+
+  $countries = array(
+    'Land',
+    'Maa',
+    'Ország',
+    'Paese',
+    'Pays',
+    'País',
+    'Państwa Członkowskie',
+    'Země',
+    'Ţară',
+    'Χώρα',
+    'Държави',
+  );
+
+  // Countries.
+  db_update('menu_links')
+    ->fields(array('weight' => -30))
+    ->condition('menu_name', 'main-menu')
+    ->condition('link_title', $countries, 'IN')
+    ->execute();
+
+  // Info.
+  $info_tsid = db_select('menu_links', 'ml')
+    ->fields('ml', array('i18n_tsid'))
+    ->condition('link_title', 'Info')
+    ->execute()->fetchField();
+
+  db_update('menu_links')
+    ->fields(array('weight' => 0))
+    ->condition('i18n_tsid', $info_tsid)
+    ->execute();
+
+  menu_cache_clear_all();
+}
+
+/**
+ * Disable Communities directory views.
+ */
+function enrd_mastermind_update_7126() {
+
+  $viewnames = array(
+    'communities_directory',
+    'communities_directory_my',
+    'forums_list',
+  );
+
+  // List of disabled views.
+  $views_status = variable_get('views_defaults', array());
+
+  // Add communities_directory to disabled views list.
+  foreach ($viewnames as $viewname) {
+    $views_status[$viewname] = TRUE;
+  }
+
+  // Reset the variable with the new list.
+  variable_set('views_defaults', $views_status);
+
+  // Empty views cache.
+  if (function_exists('views_invalidate_cache')) {
+    views_invalidate_cache();
+  }
+}
+
+/**
+ * Open comments on event content type.
+ */
+function enrd_mastermind_update_7127() {
+
+  $query = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('type', array('event'), 'IN')
+    ->execute();
+
+  while ($result = $query->fetchAssoc()) {
+    $nids[] = $result['nid'];
+  }
+
+  db_update('node')
+    ->fields(array('comment' => 2))
+    ->condition('nid', $nids, 'IN')
+    ->execute();
+
+  db_update('node_revision')
+    ->fields(array('comment' => 2))
+    ->condition('nid', $nids, 'IN')
+    ->execute();
+}
+
+/**
+ * Delete en-rd-events-and-meetings custom menu items.
+ */
+function enrd_mastermind_update_7128() {
+  db_delete('menu_links')
+    ->condition('router_path', 'en-rd-events-and-meetings')
+    ->execute();
+}
+
+/**
+ * Update homepage links in all languages with homepage icon.
+ */
+function enrd_mastermind_update_7136() {
+
+  // Find i18n_tsid of 'en' homepage.
+  $id = db_select('menu_links', 'ml')
+    ->fields('ml', array('i18n_tsid'))
+    ->condition('link_title', 'Home')
+    ->condition('menu_name', 'main-menu')
+    ->execute()->fetchField();
+
+  // Find all translated homepages.
+  $query = db_select('menu_links', 'ml')
+    ->fields('ml', array('i18n_tsid', 'options'))
+    ->condition('i18n_tsid', $id)
+    ->condition('language', 'en', '<>')
+    ->condition('menu_name', 'main-menu')
+    ->execute();
+
+  // Array of settings to show homepage icon.
+  $attributes = array(
+    'attributes' => array(
+      'data-image' => 'home',
+      'data-display-title' => 0,
+      'data-remove-class' => 0,
+    ),
+  );
+
+  while ($results = $query->fetchAssoc()) {
+
+    // Get menu options array and attach attributes array to it.
+    $options = unserialize($results['options']);
+    $options += $attributes;
+    $options = serialize($options);
+
+    // Update all translated homepage menu links.
+    db_update('menu_links')
+      ->fields(array('options' => $options))
+      ->condition('i18n_tsid', $id)
+      ->condition('language', 'en', '<>')
+      ->condition('menu_name', 'main-menu')
+      ->execute();
+  }
+
+}
+
+/**
+ * Disable pathologic, change 'taxonomy_forums' label.
+ */
+function enrd_mastermind_update_7137() {
+  module_disable(array('pathologic'));
+
+  _enrd_mastermind_overrides();
+}
+
+/**
+ * Disable views for hide item menu in footer.
+ */
+function enrd_mastermind_update_7143() {
+  $viewnames = array(
+    'enrd_media_galleries',
+    'archive_news',
+    'enrd_news',
+  );
+
+  // List of disabled views.
+  $views_status = variable_get('views_defaults', array());
+
+  // Add communities_directory to disabled views list.
+  foreach ($viewnames as $viewname) {
+    $views_status[$viewname] = TRUE;
+  }
+
+  // Reset the variable with the new list.
+  variable_set('views_defaults', $views_status);
+
+  // Empty views cache.
+  if (function_exists('views_invalidate_cache')) {
+    views_invalidate_cache();
+  }
+}
+
+/**
+ * Enable feature set "Events registration".
+ */
+function enrd_mastermind_update_7144() {
+
+  $featuresets = feature_set_get_featuresets();
+
+  if (isset($featuresets['multisite_registration_og'])) {
+    feature_set_enable_feature_set($featuresets['multisite_registration_og']);
+  }
+}
+
+/**
+ * Update taxonomy path alias for events category.
+ */
+function enrd_mastermind_update_7145() {
+  if ($vocabulary = taxonomy_vocabulary_machine_name_load('event_categories')) {
+    $tree = taxonomy_get_tree($vocabulary->vid);
+    foreach ($tree as $term) {
+      $term_alias = drupal_get_path_alias('taxonomy/term/' . $term->tid);
+      $rep_str = str_replace('en-rd-events-and-meetings', 'news-events', $term_alias);
+      db_update('url_alias')
+        ->fields(array('alias' => $rep_str))
+        ->condition('source', 'taxonomy/term/' . $term->tid)
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Updates for ENRD release 2.1.
+ */
+function enrd_mastermind_update_7204() {
+
+  // Activation of Subscriptions system.
+  $featuresets = feature_set_get_featuresets();
+
+  if (isset($featuresets['multisite_registration_og'])) {
+    feature_set_enable_feature_set($featuresets['multisite_notifications_og']);
+  }
+
+  // Subscribe user to digest for own group.
+  _enrd_mastermind_subscribe_users();
+
+  // Enable News menu link in Main Menu.
+  db_update('menu_links')
+    ->fields(array('hidden' => 0))
+    ->condition('menu_name', 'main-menu')
+    ->condition('link_title', 'News')
+    ->condition('link_path', 'news-events/news')
+    ->execute();
+
+  // Delete old field 'field_news_date'.
+  $instance = array(
+    'field_name' => 'field_news_date',
+    'entity_type' => 'node',
+    'bundle' => 'news',
+  );
+  field_delete_instance($instance);
+
+  // Enable ENRD News & Events feature dependencies and feature itself.
+  module_enable(
+    array(
+      'expanding_formatter',
+      'service_links',
+      'general_services',
+      'enrd_news',
+    )
+  );
+
+  // Delete enrd_meetings_events vocabulary.
+  $voc = taxonomy_vocabulary_machine_name_load('enrd_meetings_events');
+  $vid = $voc->vid;
+
+  taxonomy_vocabulary_delete($vid);
+
+  // Enable again CKEditor Link.
+  module_enable(array('ckeditor_link'));
+
+  _enrd_mastermind_overrides_all();
+}
+
+/**
+ * Fix workbench_moderation module and override settings for workbench_email.
+ */
+function enrd_mastermind_update_7205() {
+  // Remove duplicate rows.
+  db_delete('workbench_moderation_transitions')
+    ->condition('name', NULL)
+    ->execute();
+
+  // Override settings.
+  _enrd_mastermind_overrides_workbench_email();
+
+  // Delete old configuration.
+  $roles = workbench_email_determine_valid_roles();
+  $items = array(
+    0 => array(
+      'transition' => (object) array(
+        'from_name' => 'needs_review',
+        'to_name' => 'draft',
+      ),
+      'rid' => array_search('editor', $roles),
+    ),
+    1 => array(
+      'transition' => (object) array(
+        'from_name' => 'needs_review',
+        'to_name' => 'published',
+      ),
+      'rid' => array_search('publisher', $roles),
+    ),
+  );
+  foreach ($items as $item) {
+    workbench_email_delete($item['transition'], $item['rid']);
+  }
+
+}
+
+/**
+ * Delete old fields and taxonomies.
+ */
+function enrd_mastermind_update_7206() {
+
+  // Delete fields base and fields instance.
+  $fields = array(
+    'field_page_subsite',
+    'field_core_address',
+    'field_core_date',
+    'field_core_keywords',
+  );
+
+  foreach ($fields as $field_name) {
+    field_delete_field($field_name);
+  }
+
+  // Delete vocabularies and terms.
+  $vocabularies = array(
+    'enrd_themes',
+    'media_categories_images',
+    'media_catgories_videos',
+    'tool_audience',
+    'tool_categories',
+    'subsites',
+  );
+
+  foreach ($vocabularies as $vocab_name) {
+    $vocab_obj = taxonomy_vocabulary_machine_name_load($vocab_name);
+    taxonomy_vocabulary_delete($vocab_obj->vid);
+  }
+}
+
+/**
+ * Enable ENRD and NextEuropa multilingual environment.
+ */
+function enrd_mastermind_update_7207() {
+
+  // Disable Multisite Drupal Language Negociation.
+  module_disable(
+    array(
+      'multisite_drupal_language_negociation',
+      'multisite_translations',
+      'lang_dropdown_hideout',
+      'lang_dropdown',
+    )
+  );
+
+  drupal_uninstall_modules(
+    array(
+      'multisite_drupal_language_negociation',
+      'lang_dropdown_hideout',
+      'lang_dropdown',
+      'pathologic',
+    )
+  );
+
+  // Enable entity cache first
+  // without this operation installation doesn't create all cache tables.
+  module_enable(array('entitycache'));
+
+  registry_update();
+  entity_info_cache_clear();
+  drupal_flush_all_caches();
+
+  // Than enable our modules with NextEuropa stack.
+  module_enable(array('enrd_multilingual'));
+
+  // Revert multisite and our new components.
+  features_revert(array(
+    'cce_basic_config' => array(
+      'field_base',
+    ),
+    'e_library_core' => array(
+      'field_base',
+    ),
+    'events_core' => array(
+      'field_base',
+    ),
+    'news_core' => array(
+      'field_base',
+    ),
+    'enrd_mastermind' => array(
+      'node',
+      'field_base',
+      'field_instance',
+      'variable',
+    ),
+    'enrd_news' => array(
+      'field_base',
+    ),
+    'enrd_multilingual' => array(
+      'field_instance',
+      'user_permission',
+      'variable',
+    ),
+  ));
+
+  // Clean realm and restore site frontpage to variables instead i18n_variable.
+  variable_store_delete_all('language', NULL, 'site_frontpage');
+  variable_set('site_frontpage', drupal_get_normal_path('home-page'));
+
+  // Remove roles from Multisite Translation.
+  foreach (array_keys(language_list('name')) as $language) {
+    user_role_delete('translator_' . drupal_strtolower($language));
+  }
+  user_role_delete('translator');
+
+  // Rename language name for Portuguese.
+  db_update('languages')
+    ->fields(array(
+      'name' => 'Portuguese',
+      'native' => 'Portuguese',
+    ))
+    ->condition('language', 'pt')
+    ->execute();
+
+  // Override Multisite changed configurations.
+  _enrd_mastermind_overrides_all();
+
+}
+
+/**
+ * Removed CKEditor Imagemaps.
+ */
+function enrd_mastermind_update_7208() {
+  module_disable(array('ckeditor_imagemaps'));
+  drupal_uninstall_modules(array('ckeditor_imagemaps'));
+}
+
+/**
+ * Cumulative update for 2.3 release.
+ */
+function enrd_mastermind_update_7209() {
+  // Disable and uninstall Splash Screen and CKEditor Link.
+  $modules = array(
+    'splash_screen',
+    'ckeditor_link',
+  );
+
+  module_disable($modules);
+  drupal_uninstall_modules($modules);
+
+  // Delete Core Garbage field.
+  $field_instance = field_info_instances('node', 'focus_group');
+
+  if (isset($field_instance['field_core_garbage'])) {
+    $field_core_garbage = $field_instance['field_core_garbage'];
+    field_delete_instance($field_core_garbage, TRUE);
+  }
+
+}
+
+/**
+ * Cumulative update for 2.4 release.
+ */
+function enrd_mastermind_update_7210() {
+
+  // Disable and uninstall modules.
+  $modules = array(
+    'fat_footer',
+    'menu_select',
+    'multisite_twitterblock',
+    'splash_screen',
+  );
+
+  module_disable($modules);
+  drupal_uninstall_modules($modules);
+
+  // Enable the feature set Webtools and the Metatag features.
+  module_enable(array(
+    'nexteuropa_metatags',
+    'nexteuropa_webtools',
+  ));
+
+  // Delete link "myEnrd" from user-menu.
+  $links = menu_load_links('user-menu');
+  foreach ($links as $link) {
+    if (in_array('myenrd', $link)) {
+      menu_link_delete($link['mlid']);
+    }
+  }
+
+  // Reset settings for user-menu.
+  $link_list = array(
+    'account_request',
+    'admin/workbench',
+    'user',
+    'manage-translate',
+    'ecas',
+    'translate',
+    'user/logout',
+  );
+
+  _enrd_mastermind_reset_menu_items('user-menu', $link_list, TRUE);
+
+  // Create custom beans for Webtools and ENRD.
+  _enrd_mastermind_custom_beans();
+
+  // Pre populate menu "ENRD Join Us".
+  _enrd_mastermind_join_us_menu_prepopulate();
+
+  // Enable the new ENRD features.
+  module_enable(array(
+    'enrd_focus_on',
+    'enrd_lag_database',
+    'enrd_publications',
+  ));
+
+}
+
+/**
+ * Enable apachesolr modules and prepare search environment for multilanguage.
+ */
+function enrd_mastermind_update_7211() {
+  // Enable the Apache Solr Search and Apache Solr Attachments modules.
+  module_enable(array(
+    'apachesolr_attachments',
+    'apachesolr_search',
+    'apachesolr_multilingual',
+    'solr_config',
+  ));
+
+  // Set apachesolr_multilingual to use translations.
+  _enrd_mastermind_solr_config();
+}
+
+/**
+ * Update to Platform 2.3, menus and contexts cleanup, uninstall newsletter.
+ */
+function enrd_mastermind_update_7212() {
+
+  $menus = array(
+    'menu-custom-temporary-menu',
+    'menu-evaluation-network',
+    'menu-knowledge-innovation',
+    'menu-kw-innovation-international',
+    'menu-leader-gateway',
+    'menu-leader-toolkit',
+    'menu-leader-toolkit-gt-top',
+    'menu-menu-leader-tnc-guide',
+    'menu-nrn-toolkit',
+    'menu-nrn-self-assesment',
+    'menu-rural-development',
+    'menu-rural-development-gt-top',
+    'menu-rural-development-prioritie',
+    'menu-rural-entrepreneurship',
+    'menu-youth-and-young-farmers',
+  );
+
+  foreach ($menus as $menu_name) {
+    if ($menu = menu_load($menu_name)) {
+      menu_delete($menu);
+    };
+  }
+
+  $contexts = array(
+    'communicating_rural_development',
+    'evaluation_network',
+    'knowledge_innovation',
+    'leader_gateway',
+    'leader_tnc_guide',
+    'leader_toolkit',
+    'nrn_toolkit',
+    'rural_development_priority',
+    'rural_entrepreneurshi',
+    'youth_and_young_farmers',
+  );
+
+  foreach ($contexts as $context_name) {
+    if ($context = context_load($context_name)) {
+      context_delete($context);
+    }
+  }
+
+  // Uninstall Menu Tree, Newsletter and other 2.3 platform modules.
+  module_disable(array(
+    // Menu Tree.
+    'enrd_menu_tree',
+    // Newsletters.
+    'newsletters',
+    'simplenews',
+    'bounce',
+    // Platform 2.3.
+    'contact',
+    'nexteuropa_trackedchanges',
+    'ckeditor_lite',
+    // Cleanup.
+    'multisite_translations',
+  ));
+
+  $modules = array(
+    'enrd_menu_tree',
+    'contact',
+    'nexteuropa_trackedchanges',
+    'ckeditor_lite',
+    'multisite_translations',
+    // Newsletter.
+    // NB don't uninstall simplenews directly.
+    'newsletters',
+    'simplenews_statistics_bounce',
+    'simplenews_statistics',
+    'bounce',
+  );
+
+  foreach ($modules as $module) {
+    $success = drupal_uninstall_modules(array($module));
+    watchdog('enrd_mastermind', '@module uninstall @outcome.', array(
+      '@module' => $module,
+      '@outcome' => $success ? 'completed' : 'failed',
+    ));
+  }
+
+  _enrd_mastermind_overrides_all();
+}
+
+/**
+ * Enable Webform, LAG Dashboard, RDP information feature and cleanup and fixes.
+ */
+function enrd_mastermind_update_7213() {
+  module_enable(array(
+    'enrd_lag_dashboard',
+    'webform',
+    // RDP Information.
+    'enrd_country_pages',
+    // Allow users to create collapsible text blocks in CKEditor.
+    'text_collapse',
+    // Apache SolR env.
+    'apachesolr_multisitesearch',
+  ));
+
+  // Disable custom group node access for performance issue!
+  module_disable(array(
+    'multisite_drupal_access',
+  ));
+
+  // Delete field 'field_core_attachments' from RDP Information.
+  $instance = field_info_instance('node', 'field_core_attachments', 'rdp_information');
+  field_delete_instance($instance, FALSE);
+
+  // Delete field 'field_rdp_information_country' from RDP Information.
+  $instance = field_info_instance('node', 'field_rdp_information_country', 'rdp_information');
+  field_delete_instance($instance, TRUE);
+
+}
+
+/**
+ * Enable ENRD LAG Invite feature. Disable and uninstall Google Analytics.
+ */
+function enrd_mastermind_update_7214() {
+  module_enable(array('enrd_lag_invite'));
+  module_disable(array('googleanalytics'));
+  drupal_uninstall_modules(array('googleanalytics'));
+}
+
+/**
+ * Enable Embedded video feature to allow video embedding.
+ */
+function enrd_mastermind_update_7215() {
+  $featuresets = feature_set_get_featuresets();
+  if (isset($featuresets['ec_embedded_video'])) {
+    feature_set_enable_feature_set($featuresets['ec_embedded_video']);
+  }
+}
+
+/**
+ * Override Solr indexed bundles and facet settings.
+ */
+function enrd_mastermind_update_7216() {
+  _enrd_mastermind_solr_config();
+}
+
+/**
+ * Delete field_tax_networking and enable ENRD NRN Toolkit feature.
+ */
+function enrd_mastermind_update_7217() {
+
+  $bundles = [
+    'organization',
+    'focus_group',
+  ];
+
+  foreach ($bundles as $bundle_name) {
+    $instance = field_info_instance('node', 'field_tax_networking', $bundle_name);
+    field_delete_instance($instance, TRUE);
+  }
+
+  module_enable(array('enrd_nrn_toolkit'));
+}
+
+/**
+ * Enable Invisimail module.
+ */
+function enrd_mastermind_update_7218() {
+  module_enable(array('invisimail'));
+}
+
+/**
+ * Enable 'enrd_notifications' feature, set multiple twitter menu items account.
+ */
+function enrd_mastermind_update_7219() {
+
+  // Create the second level menu items for the Join Us menu.
+  _enrd_mastermind_join_us_menu_prepopulate();
+
+  // Update the Twitter menu item.
+  db_update('menu_links')
+    ->fields(array(
+      'has_children' => 1,
+      'expanded' => 1,
+    ))
+    ->condition('menu_name', 'menu-enrd-join-us', '=')
+    ->condition('link_title', 'Twitter', '=')
+    ->execute();
+
+  // Enable 'enrd_notifications' feature.
+  module_enable(array(
+    'enrd_notifications',
+  ));
+}
+
+/**
+ * Enable ENRD Evaluation home feature.
+ */
+function enrd_mastermind_update_7220() {
+  // Enable 'enrd_ehd_home' feature.
+  module_enable(array(
+    'enrd_ehd_home',
+  ));
+
+  // Fix some rules.
+  _enrd_mastermind_overrides_rules();
+}
+
+/**
+ * Enable ENRD Subscription Form Requests feature.
+ */
+function enrd_mastermind_update_7221() {
+
+  // Enable field_collection_item on entity_translation.
+  variable_set('entity_translation_entity_types', array(
+    'node' => 'node',
+    'field_collection_item' => 'field_collection_item',
+  ));
+
+  // Enable 'enrd_sfr_pub' feature.
+  module_enable(array('enrd_sfr_pub'));
+}
+
+/**
+ * Upgrade to NE-CMS 2.5.
+ */
+function enrd_mastermind_update_7222() {
+  // Fix ecaslogout menu link formatting.
+  _enrd_mastermind_reset_menu_items('user-menu', array('ecaslogout'));
+}
+
+/**
+ * ENRDPORTAL-389, ENRDPORTAL-409, ENRDPORTAL-411.
+ */
+function enrd_mastermind_update_7223() {
+  features_revert(array(
+    'enrd_focus_on' => array(
+      'views_view',
+    ),
+    'enrd_multilingual' => array(
+      'variable',
+    ),
+    'enrd_mastermind' => array(
+      'field_base',
+      'field_instance',
+      'views_view',
+      'context',
+    ),
+  ));
+
+  // Create custom beans for Webtools and ENRD.
+  _enrd_mastermind_custom_beans();
+}
+
+/**
+ * ENRDPORTAL-360.
+ */
+function enrd_mastermind_update_7224() {
+  // Enable Field tips module and NRN Profiles feature.
+  module_enable(array(
+    'enrd_fieldtips',
+    'enrd_nrn_profiles',
+  ));
+
+}
+
+/**
+ * Enable features "enrd_nrnp_invite" and revert filter components.
+ */
+function enrd_mastermind_update_7225() {
+  // Enable NRN Profiles invitation features.
+  module_enable(array(
+    'enrd_nrnp_invite',
+  ));
+
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'filter',
+    ),
+  ));
+
+}
+
+/**
+ * ENRDPORTAL-429, ENRDPORTAL-432, ENRDPORTAL-433, ENRDPORTAL-448.
+ */
+function enrd_mastermind_update_7226(&$sandbox) {
+  $t = get_t();
+
+  // Delete messages and message types with batch operation.
+  if (!isset($sandbox['progress'])) {
+
+    // Delete variable used to enable CCK globally.
+    variable_del('enrd_mastermind_enable_cck');
+
+    // Delete 'gallerymedia' nodes.
+    $query = new EntityFieldQuery();
+    $result = $query
+      ->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'gallerymedia')
+      ->execute();
+
+    if (isset($result['node'])) {
+      $nids = array_keys($result['node']);
+      node_delete_multiple($nids);
+      watchdog('enrd_mastermind', 'Deleted %count nodes of type: @type.', array('%count' => count($nids), '@type' => 'gallerymedia'));
+    }
+
+    // Delete 'gallerymedia' bundle, fields and variables.
+    node_type_delete('gallerymedia');
+
+    // Disable and uninstall Multisite Block Carousel, Multisite
+    // Media Gallery Standard, Multisite Media Gallery Core.
+    $modules = array(
+      'multisite_block_carousel',
+      'multisite_mediagallery_core',
+      'multisite_mediagallery_standard',
+    );
+    module_disable($modules);
+    watchdog('enrd_mastermind', 'multisite_mediagallery feature set disabled successfully.');
+
+    if (drupal_uninstall_modules($modules)) {
+      watchdog('enrd_mastermind', 'multisite_mediagallery feature set uninstalled successfully.');
+    };
+
+    $gallerymedia_vars = array(
+      'entity_translation_settings_node__gallerymedia',
+      'field_bundle_settings_node_gallerymedia',
+      'field_bundle_settings_node__gallerymedia',
+      'i18n_node_extended_gallerymedia',
+      'i18n_node_options_gallerymedia',
+      'language_content_type_gallerymedia',
+      'menu_options_gallerymedia',
+      'menu_parent_gallerymedia',
+      'node_options_gallerymedia',
+      'node_preview_gallerymedia',
+      'node_submitted_gallerymedia',
+      'pathauto_node_gallerymedia_pattern',
+      'workbench_moderation_default_state_gallerymedia',
+    );
+    foreach ($gallerymedia_vars as $variable) {
+      variable_del($variable);
+    }
+    // Delete disabled 'gallerymedia' bundle.
+    node_type_delete('gallerymedia');
+    watchdog('enrd_mastermind', '%type content type has been deleted.', array('%type' => 'gallerymedia'));
+
+    // Update node types cache.
+    node_types_rebuild();
+
+    // ENRD node-related message types.
+    $message_types = array(
+      'enrd_content_moderation_as_draft',
+      'enrd_content_update',
+      'enrd_content_deletion',
+      'enrd_content_moderation',
+      'enrd_new_content_creation',
+      'enrd_og_content_deletion',
+      'enrd_og_content_update',
+      'enrd_og_new_content_creation',
+      'enrd_content_mod_from_draft_to_needs_review',
+      'enrd_content_mod_from_needs_review_to_draft',
+      'enrd_content_mod_from_needs_review_to_published',
+      'enrd_content_mod_from_needs_review_to_validated',
+      'enrd_content_mod_from_validated_to_published',
+      'enrd_content_mod_published_to_archived',
+      'enrd_content_mod_published_to_draft',
+    );
+    // Get all ENRD node-related messages.
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'message')
+      ->propertyCondition('type', $message_types, 'IN')
+      ->execute();
+
+    // The count of messages for each chunk.
+    $sandbox['progress'] = 0;
+    $sandbox['limit'] = 1000;
+    $sandbox['#finished'] = 0;
+
+    // Tot. messages that must be deleted.
+    $sandbox['data'] = array_keys($result['message']);
+    $sandbox['max'] = count($sandbox['data']);
+  }
+
+  if (!empty($sandbox['data'])) {
+    // Split messages into smaller chunks.
+    $chunks = array_slice($sandbox['data'], $sandbox['progress'], $sandbox['limit'], TRUE);
+
+    // Delete obsolete msgs. in chunks.
+    if (!empty($chunks)) {
+      message_delete_multiple($chunks);
+      // Update progress.
+      $sandbox['progress'] += count($chunks);
+    }
+  }
+
+  // Set the "finished" status, to tell batch engine whether this function
+  // needs to run again.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+
+  // If batch is finished, perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    watchdog('enrd_mastermind', 'Deleted %count messages.', array('%count' => $sandbox['progress']));
+
+    // ENRD obsolete message types.
+    $message_types_deleted = array(
+      'enrd_content_mod_from_draft_to_needs_review',
+      'enrd_content_mod_from_needs_review_to_draft',
+      'enrd_content_mod_from_needs_review_to_published',
+      'enrd_content_mod_from_needs_review_to_validated',
+      'enrd_content_mod_from_validated_to_published',
+      'enrd_content_mod_published_to_archived',
+      'enrd_content_mod_published_to_draft',
+    );
+
+    // Delete obsolete message types.
+    foreach ($message_types_deleted as $type) {
+      message_type_delete($type);
+    }
+
+    watchdog('enrd_mastermind', 'Cleaned up activities message types.');
+
+    // Enable ENRD Gallery feature and
+    // allow to upload multiple Media files at a time.
+    module_enable(array(
+      // Add Admin Views module to add more filters on files and users views.
+      'admin_views',
+      'enrd_gallery',
+      'media_bulk_upload',
+    ));
+
+    watchdog('enrd_mastermind', 'Enabled ENRD Gallery stack.');
+
+    // Revert changed components.
+    features_revert(array(
+      // Export field_picture_upload base in ENRD News.
+      'enrd_news' => array(
+        'field_base',
+      ),
+      'enrd_focus_on' => array(
+        'variable',
+      ),
+      'enrd_lag_database' => array(
+        'variable',
+      ),
+      'enrd_mastermind' => array(
+        'field_base',
+        'field_instance',
+        'variable',
+        'views_view',
+      ),
+      'enrd_multilingual' => array(
+        'field_instance',
+      ),
+      'enrd_nrn_profiles' => array(
+        'views_view',
+      ),
+      'enrd_nrn_toolkit' => array(
+        'variable',
+      ),
+      'enrd_projects' => array(
+        'variable',
+      ),
+      'enrd_publications' => array(
+        'variable',
+      ),
+      'enrd_taxonomies' => array(
+        'field_instance',
+      ),
+    ));
+
+    // Override File entity instances.
+    _enrd_mastermind_overrides();
+
+    return $t('Finished deleting ENRD messages and message types.');
+  }
+}
+
+/**
+ * Disable multisite_mediagallery feature set.
+ */
+function enrd_mastermind_update_7227() {
+
+  $bundle_name = 'gallerymedia';
+  $bundle_info = node_type_get_type($bundle_name);
+
+  $modules = [
+    'multisite_block_carousel',
+    'multisite_mediagallery_core',
+    'multisite_mediagallery_standard',
+  ];
+
+  module_disable($modules);
+  if (drupal_uninstall_modules($modules)) {
+    watchdog('enrd_mastermind', 'multisite_mediagallery feature set uninstalled successfully.');
+  };
+
+  // Delete disabled 'gallerymedia' bundle.
+  db_delete('node_type')
+    ->condition('type', $bundle_name)
+    ->execute();
+  field_attach_delete_bundle('node', $bundle_name);
+  module_invoke_all('node_type_delete', $bundle_info);
+  watchdog('enrd_mastermind', '%type content type has been deleted.', array('%type' => $bundle_name));
+
+  // Revert changed components.
+  features_revert(['enrd_news' => ['field_base']]);
+  _enrd_mastermind_overrides_all();
+
+}
+
+/**
+ * ENRDPORTAL-374, ENRDPORTAL-456, ENRDPORTAL-470.
+ */
+function enrd_mastermind_update_7228() {
+
+  // Enable NextEuropa Last Update module.
+  module_enable(array('nexteuropa_lastupdate'));
+
+  // Delete unused Wysiwyg profile.
+  $full_html_track = wysiwyg_profile_load('full_html_track');
+  wysiwyg_profile_delete($full_html_track);
+  // Disable unused Text format.
+  $full_html_track_format = filter_format_load('full_html_track');
+  filter_format_disable($full_html_track_format);
+
+  features_revert(array(
+    // Revert Wysiwyg profiles.
+    'enrd_mastermind' => array(
+      'wysiwyg',
+    ),
+    // Rebuild fixed "Ask for publishing" rules.
+    'enrd_lag_dashboard' => array(
+      'rules_config',
+    ),
+    'enrd_lag_database' => array(
+      'rules_config',
+    ),
+    'enrd_nrn_profiles' => array(
+      'field_instance',
+      'rules_config',
+      'variable',
+    ),
+  ));
+
+  // Override teaser display for News & Events, disable page version management.
+  _enrd_mastermind_overrides_all();
+
+  // Exclude "Gallery" from Apache Solr.
+  _enrd_mastermind_solr_config();
+}

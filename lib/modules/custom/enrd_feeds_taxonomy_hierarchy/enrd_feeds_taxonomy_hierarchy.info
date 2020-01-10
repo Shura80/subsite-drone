@@ -1,0 +1,8 @@
+name = ENRD feeds taxonomy hierarchy
+description = Respect taxonomy hierarchy when creating taxonomy terms.
+package = Feeds
+core = 7.x
+dependencies[] = feeds
+dependencies[] = taxonomy
+php = 5.5.9
+multisite_version = 2.5

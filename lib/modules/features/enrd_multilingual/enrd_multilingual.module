@@ -1,0 +1,604 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Multilingual feature.
+ */
+
+include_once 'enrd_multilingual.features.inc';
+
+define('ENRD_MULTILINGUAL_CONTENT_TRANSLATION_REPORT_VIEW', 'enrd_content_translation_report');
+define('ENRD_MULTILINGUAL_CONTENT_TRANSLATION_REPORT_FORM', 'views-exposed-form-enrd-content-translation-report-translated-content-list');
+
+/**
+ * Implements hook_views_api_alter().
+ */
+function enrd_multilingual_views_api_alter(&$apis) {
+  if (!empty($apis['enrd_multilingual']) && $apis['enrd_multilingual']['api'] == '3.0') {
+    // Add additional templates folder to override, for example, system views.
+    $apis['enrd_multilingual']['template path'] = drupal_get_path('module', 'enrd_multilingual') . '/views-templates';
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_multilingual_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter' || $hook == 'menu_alter') {
+    if (isset($implementations['enrd_multilingual'])) {
+      $group = $implementations['enrd_multilingual'];
+      unset($implementations['enrd_multilingual']);
+      $implementations['enrd_multilingual'] = $group;
+    }
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_multilingual_permission() {
+  return array(
+    'create menu link for translation' => array(
+      'description' => t('Allows users to create different menu items (that have its own parent and weight) instead translate only title and description during node edit form.'),
+      'title' => t('Create different menu link for each translation'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_multilingual_menu_alter(&$items) {
+  if (isset($items['admin/tmgmt/sources/entity_node'])) {
+    // Give a more descriptive title to non-moderated content tab in tgmgt form.
+    $items['admin/tmgmt/sources/entity_node']['title'] = 'Other content';
+  }
+  // Hide original node items tab in TMGMT Sources Overview.
+  if (isset($items['admin/tmgmt/sources/node'])) {
+    $items['admin/tmgmt/sources/node']['access callback'] = FALSE;
+  }
+  // Hide Field collection items tab in TMGMT Sources Overview.
+  if (isset($items['admin/tmgmt/sources/entity_field_collection_item'])) {
+    $items['admin/tmgmt/sources/entity_field_collection_item']['access callback'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_entity_translation_upgrade().
+ */
+function enrd_multilingual_entity_translation_upgrade($node, $translation) {
+  menu_node_prepare($node);
+
+  if (!empty($node->menu['mlid'])) {
+    if ($node->menu['language'] == $node->language) {
+      // Prepare menu item for the node base translation.
+      entity_translation_i18n_menu_item_tset_prepare($node, LANGUAGE_NONE);
+      menu_link_save($node->menu);
+    }
+  }
+
+  // Force the original node to have a 'und' alias.
+  if (isset($node->path['pid'])) {
+    if ($node->path['language'] == $node->language) {
+      $node->path['language'] = LANGUAGE_NONE;
+      path_save($node->path);
+    }
+  }
+
+  // Delete the translation alias.
+  if (isset($translation->path['pid'])) {
+    path_delete($translation->path['pid']);
+  }
+}
+
+/**
+ * Return a collection of all i18n and entity translations variables overridden.
+ *
+ * @return array
+ *   The array of languages variables overridden.
+ */
+function _enrd_multilingual_content_type_languages_override() {
+  $content_types = array(
+    'article',
+    'document',
+    'discussion',
+    'event',
+    'f_a_q',
+    'news',
+  );
+
+  $values = array(
+    'language_content_type' => (string) ENTITY_TRANSLATION_ENABLED,
+    'i18n_node_options' => array(),
+    'i18n_node_extended' => (string) I18N_LANGUAGE_DISABLED,
+  );
+
+  $variables = array();
+  foreach ($content_types as $content_type) {
+    foreach ($values as $strongarm => $value) {
+      $variables["{$strongarm}_{$content_type}"] = $value;
+    }
+  }
+
+  return $variables;
+}
+
+/**
+ * Implements hook_COMPONENT_alter().
+ */
+function enrd_multilingual_strongarm_alter(&$strongarms) {
+  // Force entity translation activation on Multisite Content Types.
+  foreach (_enrd_multilingual_content_type_languages_override() as $variable => $value) {
+    if (isset($strongarms[$variable])) {
+      $strongarms[$variable]->value = $value;
+    }
+  }
+}
+
+/**
+ * Implements hook_field_group_info_alter().
+ */
+function enrd_multilingual_field_group_info_alter(&$groups) {
+  /*
+   * Force new title_filed in the right fieldgroup.
+   */
+  $multisite_groups = array(
+    // Feature cce_basic_config.
+    'group_article_content|node|article|form',
+    // Feature e_library_core.
+    'group_document_content|node|document|form',
+    // Feature events_core.
+    'group_event_content|node|event|form',
+    // Feature f_a_q.
+    'group_faq_content|node|f_a_q|form',
+    // Feature multisite_forum_core.
+    'group_discussion_content|node|discussion|form',
+    // Feature news_core.
+    'group_news_content|node|news|form',
+  );
+
+  foreach ($multisite_groups as $group) {
+    if (!empty($groups[$group])) {
+      if (!in_array('title_field', $groups[$group]->data['children'])) {
+        $groups[$group]->data['children'][] = 'title_field';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_default_field_bases_alter().
+ */
+function enrd_multilingual_field_default_field_bases_alter(&$fields) {
+
+  // Force this fields to translatable.
+  $alter_fields = array(
+    // cce_basic_config feature.
+    'body',
+    'field_image',
+    // e_library_core feature.
+    'field_document',
+    // news_core feature.
+    'field_link',
+    // events_core feature.
+    'field_location',
+  );
+
+  foreach ($alter_fields as $field) {
+    if (isset($fields[$field])) {
+      $fields[$field]['translatable'] = 1;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_multilingual_form_menu_overview_form_alter(&$form, &$form_state) {
+  // FORM_ID = menu-overview-form
+  // Add a language label into operations column for each menu item.
+  $languages = language_list();
+
+  foreach (element_children($form) as $element) {
+    if (drupal_substr($element, 0, 5) == 'mlid:') {
+      $lang_string = '';
+      if (isset($form[$element]['#item']['language'])) {
+        if (isset($languages[$form[$element]['#item']['language']]) && isset($languages[$form[$element]['#item']['language']]->name)) {
+          $lang_string = $languages[$form[$element]['#item']['language']]->name;
+        }
+      }
+
+      array_unshift($form[$element]['operations'], array(
+        '#type' => 'markup',
+        '#markup' => check_plain($lang_string),
+      ));
+    }
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function enrd_multilingual_form_node_form_alter(&$form, $form_state) {
+  // Don't able all users to create a different menu link for each translation.
+  if (isset($form['menu']['#multilingual'])) {
+    $form['menu']['link']['tset']['#access'] = user_access('create menu link for translation');
+  }
+
+  // We are after i18n_node thanks to module_implements_alter.
+  $key = array_search('_i18n_node_form_node_form_alter', $form['#after_build']);
+
+  if ($key !== FALSE) {
+    // Call a 'private' implementation of i18n_node_form_node_form_alter().
+    $form['#after_build'][$key] = '_enrd_multilingual_i18n_node_form_node_form_alter';
+  }
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_multilingual_menu_link_alter(&$item) {
+  if (isset($item['menu_name']) && $item['menu_name'] == 'management') {
+
+    // Children menu links of "Translation".
+    $translation_links = [
+      'admin/tmgmt/sources',
+      'admin/tmgmt/cart',
+    ];
+
+    // Move children items under their parent item.
+    if (in_array($item['link_path'], $translation_links)) {
+      // Set right position of translation links.
+      $item['plid'] = (int) db_select('menu_links')
+        ->fields('menu_links', ['mlid'])
+        ->condition('menu_name', 'management')
+        ->condition('link_path', 'admin/tmgmt')
+        ->execute()
+        ->fetchField();
+    };
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_multilingual_form_tmgmt_job_form_alter(&$form, &$form_state, $form_id) {
+
+  // Length of prefix added before saving local task in its db table.
+  $label_prefix_len = 9;
+  // Local task title table column max length.
+  $local_task_max_len = 128;
+  // Calculate maxlength subtracting the task label prefix from db column limit.
+  $maxlength = $local_task_max_len - $label_prefix_len;
+  // Set a maxlength Subtract characters from label to avoid title length error.
+  $form['info']['label']['#maxlength'] = $maxlength;
+  // Trim the default value.
+  $form['info']['label']['#default_value'] = drupal_substr($form['info']['label']['#default_value'], 0, $maxlength);
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function enrd_multilingual_views_query_alter(&$view, &$query) {
+  // Check if it is the content translation report view.
+  if ($view->name == ENRD_MULTILINGUAL_CONTENT_TRANSLATION_REPORT_VIEW) {
+
+    // Get enabled languages list.
+    $languages = array_keys(locale_language_list('name'));
+
+    foreach ($query->table_queue as $relationship) {
+      if ($relationship['table'] == 'entity_translation') {
+        if ($language = array_shift($languages)) {
+          // Add and extra language field to the JOIN conditions.
+          $relationship['join']->extra[] = [
+            'field' => 'language',
+            'value' => $language,
+          ];
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_multilingual_form_views_exposed_form_alter(&$form, &$form_state) {
+
+  if ($form['#id'] == ENRD_MULTILINGUAL_CONTENT_TRANSLATION_REPORT_FORM) {
+
+    // Get list of content types.
+    $content_types = node_type_get_types();
+
+    foreach ($content_types as $content_type) {
+
+      // Get type node settings.
+      $type_settings = variable_get("entity_translation_settings_node__$content_type->type");
+      // Check if a default language is set.
+      $type_default_lang_settings = isset($type_settings['default_language']) ? TRUE : FALSE;
+      // Check if both default language is set and it's the default one.
+      $default_lang_is_set = $type_default_lang_settings && $type_settings['default_language'] == ENTITY_TRANSLATION_LANGUAGE_DEFAULT;
+      // Check if type is translated using entity_translation default settings.
+      $type_is_translatable = entity_translation_node_supported_type($content_type->type) && $default_lang_is_set;
+
+      // Build an array with entity_translation supported types.
+      if ($type_is_translatable) {
+        $et_types[$content_type->type] = $content_type;
+      }
+    }
+
+    // Filter the exposed filter options list.
+    $options = array_intersect_key($form['type']['#options'], $et_types);
+    $options = array('All' => '- Any -') + $options;
+
+    // Use the new list in the exposed filter 'type' select list options.
+    $form['type']['#options'] = $options;
+  }
+}
+
+/**
+ * Implements hook_date_views_extra_tables().
+ */
+function enrd_multilingual_date_views_extra_tables() {
+  // Allow to use entity_translation date fields as filters in Views.
+  return ['entity_translation' => 'entity_translation'];
+}
+
+/**
+ * After build called for hook_form_BASE_FORM_ID_alter().
+ *
+ * Called for the i18n_node_form_node_form_alter workaround.
+ *
+ * @param mixed $form
+ *   The form.
+ * @param mixed $form_state
+ *   The form state.
+ *
+ * @return mixed
+ *   The form.
+ *
+ * @see https://www.drupal.org/node/1852102#comment-9612303
+ */
+function _enrd_multilingual_i18n_node_form_node_form_alter($form, &$form_state) {
+  $node = $form['#node'];
+  if (i18n_node_type_enabled($node)) {
+    if (!empty($form['language']['#options'])) {
+      $form['language']['#options'] = i18n_node_language_list($node, TRUE, TRUE);
+    }
+  }
+  elseif (variable_get('i18n_node_default_language_none', 0) && !isset($form['#node']->nid)) {
+    // Only do this if the language is really disabled.
+    if (variable_get('language_content_type_' . $node->type, 0) == 0) {
+      // Override locale module setting default language to nodes.
+      // It is already in form_state.
+      $form['language']['#value'] = $form_state['values']['language'] = LANGUAGE_NONE;
+    }
+  }
+  // Translate field names for title and body for the node edit form.
+  if (!empty($form['title']['#title'])) {
+    $form['title']['#title'] = i18n_node_translate_type($node->type, 'title_label', $form['title']['#title']);
+  }
+  if (!empty($form['body_field']['body']['#title'])) {
+    $form['body_field']['body']['#title'] = i18n_node_translate_type($node->type, 'body', $form['body_field']['body']['#title']);
+  }
+  // Translate page title for node/add/% and node/%/edit pages.
+  if (empty($node->nid) && strpos(current_path(), 'node/add/' . str_replace('_', '-', $node->type)) === 0) {
+    drupal_set_title(t('Create @name', array('@name' => i18n_node_type_name($node->type))), PASS_THROUGH);
+  }
+  elseif (!empty($node->nid) && current_path() == 'node/' . $node->nid . '/edit') {
+    drupal_set_title(t('<em>Edit @type</em> @title', array('@type' => i18n_node_type_name($node->type), '@title' => $node->title)), PASS_THROUGH);
+  }
+  return $form;
+}
+
+/**
+ * Get a list of fields tables to clean.
+ *
+ * @param string $entity_type
+ *   The entity type name.
+ *
+ * @return array
+ *   Returns tables where fields have to be deleted and a total count of them.
+ */
+function _enrd_multilingual_get_translatable_fields_by_entity_type($entity_type) {
+
+  $chosen_fields = array();
+
+  // Get a descriptive list of all fields.
+  $fields = field_info_fields();
+
+  // Fill an array with all translatable entity_type fields.
+  foreach ($fields as $field) {
+    if (in_array($entity_type, array_keys($field['bundles'])) && field_is_translatable($entity_type, $field)) {
+      $chosen_fields[$field['field_name']] = $field;
+    }
+  }
+
+  $data = [];
+  // Get a list of tables to clean based on translatable fields list.
+  foreach ($chosen_fields as $chosen_field) {
+    $data['tables'][] = $chosen_field['storage']['details']['sql']['FIELD_LOAD_CURRENT'];
+    $data['tables'][] = $chosen_field['storage']['details']['sql']['FIELD_LOAD_REVISION'];
+  }
+
+  $data['total'] = count($data['tables']);
+
+  // Returns the tables list.
+  return $data;
+}
+
+/**
+ * Helper function to get list and count of language components to delete.
+ *
+ * @param array $components_tables
+ *   An array of tables to clean.
+ * @param array $languages
+ *   A list of languages.
+ *
+ * @return array
+ *   Returns counts of components for given languages.
+ */
+function _enrd_multilingual_get_components_to_clean(array $components_tables, array $languages) {
+
+  $components = [];
+
+  // Get node fields to clean.
+  $fields = _enrd_multilingual_get_translatable_fields_by_entity_type('node');
+  $fields_count = 0;
+
+  // Get node field tables rows count.
+  foreach ($fields['tables'] as $table) {
+    $table = key($table);
+    $count = db_select($table)
+      ->fields($table, ['entity_id'])
+      ->condition('language', $languages, 'IN')
+      ->execute()->rowCount();
+    $fields_count += $count;
+  }
+
+  $components['fields'] = $fields_count;
+
+  // Get component tables row count.
+  foreach ($components_tables as $table) {
+    $query = db_select($table)
+      ->fields($table);
+    // Change conditions for 'variable_store' that don't have language column.
+    if ($table == 'variable_store') {
+      $query->condition('realm', 'language');
+      $query->condition('realm_key', $languages, 'IN');
+    }
+    // Filter by given languages.
+    else {
+      $query->condition('language', $languages, 'IN');
+    }
+    $count = $query->execute()->rowCount();
+
+    // Set the amount of rows to clean for each given table.
+    $components["$table"] = $count;
+
+  }
+
+  // Returns the list of tables to clean with rows count.
+  return $components;
+
+}
+
+/**
+ * Helper function clean given table of a given language.
+ *
+ * @param string $table
+ *   A list of components table to clean.
+ * @param string $language
+ *   A language code.
+ *
+ * @return int
+ *   Returns counts of components for given languages.
+ */
+function _enrd_multilingual_clean_component_table($table, $language, $op) {
+
+  // Delete operation.
+  if ($op == 'delete') {
+    // Delete rows in component table for given language.
+    $query = db_delete($table);
+    if ($table == 'variable_store') {
+      $query->condition('realm', 'language');
+      $query->condition('realm_key', $language);
+    }
+    else {
+      $query->condition('language', $language);
+    }
+    $count_deleted = $query->execute();
+
+    return $count_deleted;
+  }
+  // Update operation.
+  elseif ($op == 'update') {
+    // Update rows in component table for given language.
+    $query = db_update($table);
+    $query->fields(array('language' => language_default('language')));
+    $query->condition('language', $language);
+    $count_updated = $query->execute();
+
+    return $count_updated;
+  }
+
+}
+
+/**
+ * Helper function to get a list of entities to delete for given languages.
+ *
+ * @param string $entity_type
+ *   The entity type name.
+ * @param array $languages
+ *   A list of language codes.
+ *
+ * @return array|bool
+ *   Return count and list of node ids or FALSE if no nodes are found.
+ */
+function _enrd_multilingual_get_entities_to_delete($entity_type, array $languages) {
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', $entity_type)
+    ->propertyCondition('language', $languages, 'IN')
+    ->execute();
+
+  $result = $query->execute();
+  $total = $query->count()->execute();
+
+  // If there are results, returns an array with node count and ids.
+  if ($total > 0) {
+    $nodes = [
+      'result' => $result,
+      'total' => $total,
+    ];
+  }
+
+  else {
+    $nodes = [
+      'total' => $total,
+    ];
+  }
+
+  return $nodes;
+}
+
+/**
+ * Clean fields tables of an entity type.
+ *
+ * @param string $entity_type
+ *   The entity_type to search for fields.
+ * @param string $language
+ *   A language code.
+ *
+ * @return int
+ *   Returns the amount of deleted items.
+ */
+function _enrd_multilingual_delete_fields_rows($entity_type, $language) {
+
+  // Fields tables to clean.
+  $data = _enrd_multilingual_get_translatable_fields_by_entity_type($entity_type);
+  $deleted = 0;
+
+  foreach ($data['tables'] as $table) {
+
+    // Delete table rows for given language.
+    $table = key($table);
+    $num_deleted = db_delete($table)
+      ->condition('language', $language)
+      ->execute();
+
+    if ($num_deleted) {
+      watchdog('enrd_multilingual', "Deleted %num_deleted rows in %table table for '%lang' language.",
+        [
+          '%num_deleted' => $num_deleted,
+          '%table' => $table,
+          '%lang' => $language,
+        ]
+      );
+      $deleted += $num_deleted;
+    }
+  }
+
+  return $deleted;
+
+}

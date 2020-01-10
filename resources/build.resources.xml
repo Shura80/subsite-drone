@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="resources" default="help">
+    <!-- Subtarget: Define commands to import taxonomies trees, fields and
+        translations from csv files -->
+    <!-- TREES -->
+    <!-- ENRD Countries -->
+    <target name="taxocsv-import-enrd-countries">
+        <echo message="Running taxocsv import for ENRD Countries."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/countries.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_countries</param>
+            <param>--delete_terms</param>
+            <param>--set_hierarchy=1</param>
+        </drush>
+    </target>
+    <!-- ENRD Evaluation -->
+    <target name="taxocsv-import-enrd-evaluation">
+        <echo message="Running taxocsv import for ENRD Evaluation."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/evaluation.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_evaluation</param>
+            <param>--delete_terms</param>
+            <param>--set_hierarchy=1</param>
+        </drush>
+    </target>
+    <!-- ENRD Languages -->
+    <target name="taxocsv-import-enrd-languages">
+        <echo message="Running taxocsv import for ENRD Languages."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/languages.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_languages</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD Networking -->
+    <target name="taxocsv-import-enrd-networking">
+        <echo message="Running taxocsv import for ENRD Networking."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/networking.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_networking</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD Origin -->
+    <target name="taxocsv-import-enrd-origin">
+        <echo message="Running taxocsv import for ENRD Origin."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/origin.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_origin</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD Rural Development Policy -->
+    <target name="taxocsv-import-enrd-rural-development-policy">
+        <echo message="Running taxocsv import for ENRD Rural Development Policy."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/rural_development_policy.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_rural_development_policy</param>
+            <param>--delete_terms</param>
+            <param>--set_hierarchy=1</param>
+        </drush>
+    </target>
+    <!-- ENRD Translation Status -->
+    <target name="taxocsv-import-enrd-translation-status">
+        <echo message="Running taxocsv import for ENRD Translation Status."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/translation_status.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_translation_status</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD Transversal Topics -->
+    <target name="taxocsv-import-enrd-transversal-topics">
+        <echo message="Running taxocsv import for ENRD Transversal Topics."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/transversal_topics.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_transversal_topics</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD Update status -->
+    <target name="taxocsv-import-enrd-update-status">
+        <echo message="Running taxocsv import for ENRD Update status."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/update_status.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_update_status</param>
+            <param>--delete_terms</param>
+        </drush>
+    </target>
+    <!-- ENRD RDPs -->
+    <target name="taxocsv-import-enrd-rdps">
+        <echo message="Running taxocsv import for ENRD RDPs."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/trees/RDPs.csv</param>
+            <param>tree</param>
+            <param>--check_line</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_rdps</param>
+            <param>--delete_terms</param>
+            <param>--set_hierarchy=1</param>
+        </drush>
+    </target>
+    <!-- FIELDS -->
+    <!-- ENRD Countries fields -->
+    <target name="taxocsv-import-enrd-countries-fields">
+        <echo message="Running taxocsv import for ENRD Countries fields."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/fields/countries_fields.csv</param>
+            <param>fields</param>
+            <param>--fields_format=name,field_enrd_countries_iso_2,field_enrd_countries_language</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_countries</param>
+        </drush>
+    </target>
+    <!-- ENRD RDPs fields -->
+    <target name="taxocsv-import-enrd-rdps-fields">
+        <echo message="Running taxocsv import for ENRD RDPs fields."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/fields/RDPs_fields.csv</param>
+            <param>fields</param>
+            <param>--fields_format=name,field_enrd_rdps_ms</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_rdps</param>
+        </drush>
+    </target>
+    <!-- ENRD Languages fields -->
+    <target name="taxocsv-import-enrd-languages-fields">
+        <echo message="Running taxocsv import for ENRD Languages fields."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/fields/languages__fields.csv</param>
+            <param>fields</param>
+            <param>--fields_format=name,field_enrd_language_source_lang,field_enrd_language_iso</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_languages</param>
+        </drush>
+    </target>
+    <!-- TRANSLATIONS -->
+    <!-- ENRD Evaluation translations -->
+    <target name="taxocsv-import-enrd-evaluation-translations">
+        <echo message="Running taxocsv import for ENRD Evaluation translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/evaluation__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_evaluation</param>
+        </drush>
+    </target>
+    <!-- ENRD Languages translations -->
+    <target name="taxocsv-import-enrd-languages-translations">
+        <echo message="Running taxocsv import for ENRD Languages translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/languages__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_languages</param>
+        </drush>
+    </target>
+    <!-- ENRD Networking translations -->
+    <target name="taxocsv-import-enrd-networking-translations">
+        <echo message="Running taxocsv import for ENRD Networking translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/networking__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_networking</param>
+        </drush>
+    </target>
+    <!-- ENRD Origin translations -->
+    <target name="taxocsv-import-enrd-origin-translations">
+        <echo message="Running taxocsv import for ENRD Origin translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/origin__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_origin</param>
+        </drush>
+    </target>
+    <!-- ENRD Rural Development Policy translations -->
+    <target name="taxocsv-import-enrd-rural-development-policy-translations">
+        <echo message="Running taxocsv import for ENRD Rural Development Policy translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/rural_development_policy__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_rural_development_policy</param>
+        </drush>
+    </target>
+    <!-- ENRD Translation Status translations -->
+    <target name="taxocsv-import-enrd-translation-status-translations">
+        <echo message="Running taxocsv import for ENRD Translation Status translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/translation_status__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_translation_status</param>
+        </drush>
+    </target>
+    <!-- ENRD Transversal Topics translations -->
+    <target name="taxocsv-import-enrd-transversal-topics-translations">
+        <echo message="Running taxocsv import for ENRD Transversal Topics translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/transversal_topic__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_transversal_topics</param>
+        </drush>
+    </target>
+    <!-- ENRD Update Status translations -->
+    <target name="taxocsv-import-enrd-update-status-translations">
+        <echo message="Running taxocsv import for ENRD Update Status translations."/>
+        <drush
+                command="taxocsv-import"
+                bin="${toolkit.dir.bin.drush}"
+                pipe="yes"
+                verbose="${drush.verbose}"
+                root="${build.platform.dir}">
+            <param>${resources.dir}/taxonomy_csv/translations/update_status__translation.csv</param>
+            <param>translate</param>
+            <param>--translate_languages=und,fr,de,it,es,pl</param>
+            <param>--check_utf8</param>
+            <param>--keep_order</param>
+            <param>--vocabulary_target=existing</param>
+            <param>--vocabulary_id=enrd_update_status</param>
+        </drush>
+    </target>
+    <target name="import-enrd-taxonomies">
+        <echo msg="Importing taxonomies trees, fields and translations."/>
+        <phingcall target="import-enrd-taxonomies-trees">
+        </phingcall>
+        <phingcall target="import-enrd-taxonomies-fields">
+        </phingcall>
+        <phingcall target="import-enrd-taxonomies-translations">
+        </phingcall>
+    </target>
+    <!-- Import taxonomy trees -->
+    <target name="import-enrd-taxonomies-trees">
+        <echo msg="Importing taxonomies trees."/>
+        <phingcall target="taxocsv-import-enrd-countries">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-evaluation">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-languages">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-networking">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-origin">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-rural-development-policy">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-translation-status">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-transversal-topics">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-update-status">
+        </phingcall>
+    </target>
+    <!-- Import taxonomy fields -->
+    <target name="import-enrd-taxonomies-fields">
+        <echo msg="Importing taxonomies fields."/>
+        <phingcall target="taxocsv-import-enrd-countries-fields">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-languages-fields">
+        </phingcall>
+    </target>
+    <!-- Import taxonomy translations -->
+    <target name="import-enrd-taxonomies-translations">
+        <echo msg="Importing taxonomies translations."/>
+        <phingcall target="taxocsv-import-enrd-evaluation-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-languages-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-networking-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-origin-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-rural-development-policy-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-translation-status-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-transversal-topics-translations">
+        </phingcall>
+        <phingcall target="taxocsv-import-enrd-update-status-translations">
+        </phingcall>
+    </target>
+</project>

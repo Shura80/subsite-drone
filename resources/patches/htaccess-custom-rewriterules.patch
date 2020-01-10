@@ -1,0 +1,17 @@
+Index: .htaccess
+<+>UTF-8
+===================================================================
+--- .htaccess	(date 1466021131000)
++++ .htaccess	(revision )
+@@ -82,6 +82,11 @@
+   # downloaded.
+   RewriteRule "(^|/)\." - [F]
+ 
++  # Custom RewriteRules for ENRD requirements for prefix language fallback
++  # to the IPG standard.
++  RewriteRule ^(en|fr|de|it|es|pl)/+([^/]+)/?$ /$2_$1 [L,R=301]
++  RewriteRule ^(en|fr|de|it|es|pl)/+(([^/]+/?)+)$ /$3_$1 [L,R=301]
++
+   # If your site can be accessed both with and without the 'www.' prefix, you
+   # can use one of the following settings to redirect users to your preferred
+   # URL, either WITH or WITHOUT the 'www.' prefix. Choose ONLY one option:

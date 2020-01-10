@@ -1,0 +1,136 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD Publications taxonomy terms.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_publications_install() {
+  $t = get_t();
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_publications', 'data/enrd_publications_taxonomies');
+
+  features_revert_module('enrd_publications');
+
+  // Imports Evaluation Publication Content Type data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_content_type(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_content_type'));
+
+  // Imports Evaluation Publication Theme data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_theme(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_theme'));
+
+  // Imports Evaluation Publication Type data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_type(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_type'));
+
+  // Imports Programming Period data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_programming_period(),
+    taxonomy_vocabulary_machine_name_load('enrd_programming_period'));
+
+  // Imports Publications data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_publication_types(),
+    taxonomy_vocabulary_machine_name_load('enrd_publications'));
+
+  drupal_set_message($t('ENRD Publications is now installed on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_publications_uninstall() {
+  node_type_delete('publication_ehd');
+
+  // Deletes the vocabularies created by the feature.
+  $vocabularies = array(
+    'enrd_evaluation_content_type',
+    'enrd_evaluation_theme',
+    'enrd_evaluation_type',
+    'enrd_programming_period',
+  );
+
+  foreach ($vocabularies as $machine_name) {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+    if ($vocabulary) {
+      $vid = $vocabulary->vid;
+      taxonomy_vocabulary_delete($vid);
+    }
+  }
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Publications is now uninstalled on your site.'));
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_publications_enable() {
+  $t = get_t();
+
+  // SolR configuration add bundle.
+  multisite_drupal_toolbox_config_solr_bundle('publication_ehd', 'add');
+
+  drupal_set_message($t('ENRD Publications is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_publications_disable() {
+  $t = get_t();
+
+  // SolR configuration remove bundle.
+  multisite_drupal_toolbox_config_solr_bundle('publication_ehd', 'delete');
+
+  drupal_set_message($t('ENRD Publications is now disabled on your site.'));
+}
+
+/**
+ * Delete old elibrary view and point the menu link to related apachesolr page.
+ */
+function enrd_publications_update_7201() {
+  // Deletes Evaluation Helpdesk's eLibrary view.
+  if ($view = views_get_view('enrd_helpdesk_elibrary')) {
+    views_delete_view($view);
+  }
+
+  // Reset Menu item name to "eLibrary".
+  $main_menu_links = menu_load_links('main-menu');
+  foreach ($main_menu_links as $link) {
+    if (in_array('evaluation/publications/e-library', $link)) {
+      menu_reset_item($link);
+    }
+  }
+}
+
+/**
+ * Add the ENRD Publications vocabulary and its terms.
+ */
+function enrd_publications_update_7202() {
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_publications', 'data/enrd_publications_taxonomies');
+
+  // Revert taxonomies, fields bases and instances after terms import.
+  features_revert(array(
+    'enrd_publications' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Imports Publications data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_publication_types(),
+    taxonomy_vocabulary_machine_name_load('enrd_publications'));
+}
+
+/**
+ * ENRDPORTAL-364.
+ */
+function enrd_publications_update_7203() {
+  features_revert(array('enrd_publications' => array('field_instance')));
+}

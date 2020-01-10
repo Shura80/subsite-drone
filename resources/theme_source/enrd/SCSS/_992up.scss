@@ -1,0 +1,207 @@
+body.admin-menu {
+    margin-top: 20px !important;
+}
+
+#mobile-header-wrapper{
+	height:0;
+}
+
+#mobile-header{
+	display:none;
+}
+
+.region-sidebar-left{
+
+  .nav{
+
+    background: $lightBlue;
+  }
+}
+
+.action-bar {
+	display:block;
+
+	.username .dropdown-toggle .glyphicon:before{margin-top:-3px;}
+}
+
+#block-system-main-menu{display:block;}
+
+.views-exposed-form .views-exposed-widget .form-submit {
+    margin-top: 2.1em;
+}
+
+#footer {
+    .region-footer {
+        text-align: center;
+    }
+}
+
+
+table.table-enrd {
+	tr {
+		font-size: 11px;
+	}
+}
+
+/* News Rolling blocks */
+body.front {
+  .view-display-id-focus_on_carousel .carousel {
+    min-height: 350px;
+  }
+}
+
+/* Center logo in LAG profiles */
+.page-node.node-type-lag {
+	div.field-name-field-enrd-lag-logo.field-type-image {
+		img {
+			margin: 0 auto;
+		}
+	}
+}
+
+.page-leader-clld-lag-database, .page-leader-clld-clld-partner-search {
+    .region.region-content {
+        #block-system-main {
+            .table-enrd {
+                table-layout: fixed;
+              tbody {
+                word-wrap: break-word;
+              }
+            }
+        }
+    }
+}
+
+.page-node.page-node-add.page-node-add-lag, .page-node.page-node-edit.node-type-lag {
+	div.field-name-field-enrd-lag-logo.field-type-image {
+        float: none;
+        margin-top: 0px;
+        margin-bottom: 20px;
+	}
+}
+
+.page-node {
+    .nav-justified {
+        li {
+            display: inline-table;
+        }
+    }
+}
+
+.page-node-edit.node-type-lag {
+    .field-name-field-enrd-lag-logo.field-type-image {
+        overflow: none !important;
+    }
+    img {
+        position: unset !important;
+        transform: none !important;
+        max-height: none !important;
+
+    }
+}
+
+.node-type-lag.admin-menu {
+    .field-name-field-enrd-lag-code {
+        .field-label {
+            width: calc(40%);
+        }
+    }
+}
+
+.node-type-rdp-information {
+	.regions {
+		margin-top: 50px;
+		* {
+			border: none !important;
+		}
+
+		.rdp-information {
+			margin-top: 40px;
+			.col-md-12 {
+				padding: 0px;
+				.col-md-12 {
+					background-color: #e8f5f5;
+					padding: 0 15px 15px 15px;
+					.label-above {
+						font-size: 18px;
+						margin-left: 10px;
+						padding-bottom: 10px;
+						margin-top: -10px;
+						border-bottom: 1px solid #a2d7d7 !important;
+						width: 95%;
+					}
+					p {
+						margin-top: 70px;
+						margin-left: 10px;
+                        padding-right: 30px;
+                        padding-top: 0px;
+					}
+                    ul {
+                        padding-left: 10px;
+                        padding-top: 40px;
+                    }
+				}
+			}
+		}
+
+		.national-rural-network {
+			margin-top: 30px;
+			background-color: #f1f6e0;
+			padding: 25px;
+            .col-md-12 {
+                margin-top: 0px;
+            }
+			.field-label-above {
+				.field-label {
+					font-size: 18px;
+					color: #5a5a5a;
+					padding-bottom: 10px;
+					border-bottom: 1px solid #a2d7d7 !important;
+					width: 97.5%;
+				}
+			}
+			.field-name-field-enrd-rdp-info-region-image, .field-name-field-enrd-rdp-info-region-nrn {
+				margin-top: 60px;
+                padding-top: 0px;
+			}
+			.field-name-field-enrd-rdp-info-region-image {
+				margin-left: -15px;
+				margin-top: 30px;
+				width: 100%;
+			}
+
+			.col-md-2 {
+				width: 20%;
+				position: relative;
+				float: left;
+			}
+			.col-md-10 {
+				float: none;
+				width: 100%;
+				position: relative;
+			}
+		}
+	}
+}
+
+// NRN Toolkit nodes display.
+.page-networking-nrn-toolkit .thumbnail .ds-thumb {
+    width: 70px;
+    height: 70px;
+}
+
+// CP & EHD Publications Solr search pages.
+.page-evaluation-publications,
+.page-publications-search .node-sticky {
+    article {
+        padding-left: 0 !important;
+
+        .thumbnail {
+            padding-right: 0 !important;
+        }
+
+        .media-body {
+            padding-left: 16px;
+        }
+    }
+}

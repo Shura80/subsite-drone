@@ -1,0 +1,65 @@
+// CP Publication Full display.
+.field-name-field-enrd-publication-file.field-type-file {
+    .field-item {
+        display: inline-table;
+        margin-bottom: 10px;
+        margin-right: 5px;
+    }
+}
+
+.page-node.node-type-publication {
+    .ds-side {
+        .taxonomy-term.vocabulary-enrd-publications {
+            h3 {
+                color: #009193;
+                font-weight: bold;
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                margin-top: 0;
+            }
+        }
+    }
+}
+
+// Evaluation Publication Full display.
+.field-name-field-enrd-publ-ehd-file div.field-item {
+    display: inline-table;
+}
+
+.field-name-field-enrd-publ-ehd-history .collapse-text-fieldset legend a.fieldset-title {
+    font-size: 15px;
+}
+
+.field-name-field-enrd-publ-ehd-public-date {
+    margin-top: 10px;
+}
+
+// CP & EHD Publications Solr search pages.
+.page-evaluation-publications,
+.page-publications-search {
+    .node-sticky article {
+        background-color: #E9F5F5;
+        border-bottom: 1px solid #c8c8c8;
+        padding: 20px 16px;
+
+        .thumbnail {
+            background: #E9F5F5;
+        }
+    }
+}
+
+.page-evaluation-publications {
+    .ds-search-extra {
+        padding-bottom: 5px;
+    }
+
+    .node-sticky article {
+        margin-top: 3px;
+    }
+}
+
+.page-publications-search article {
+    margin-top: 8px !important;
+    margin-bottom: 15px;
+}

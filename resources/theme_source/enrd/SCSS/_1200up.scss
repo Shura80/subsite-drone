@@ -1,0 +1,145 @@
+/* BEGIN _1200up.scss */
+
+
+
+div#ec-funded {
+	position: absolute;
+	left: 0;
+	top: 5px;
+}
+
+
+
+/*Funded by footer img */
+div#ec-funded {
+	position: absolute;
+	left: 0;
+	top: 5px;
+	span {
+		vertical-align: bottom;
+		font-size: 12px;
+		line-height: 10px;
+		padding-right: 5px;
+	}
+	img {
+		width: 130px;
+	}
+}
+
+.block-menu {
+    .menu {
+        li.dropdown {
+            ul::before {
+                display: none;
+            }
+            ul {
+                padding-left: 0px;
+                padding-right: 0px;
+                width: calc(1000%/7.5);
+			}
+		}
+	}
+}
+
+table.table-enrd {
+	tr {
+		font-size: 14px;
+	}
+}
+
+.page-lag-dashboard.page-lag-dashboard-cooperation-offers, .page-lag-dashboard.page-lag-dashboard-lag-profiles {
+    #edit-state-wrapper {
+        .views-widget {
+            position: absolute;
+            right: -30%;
+            top: -25%;
+        }
+    }
+}
+.page-my-lags.page-my-lags-manage.page-my-lags-manage-cooperation-offers {
+	#edit-state-wrapper {
+        .views-widget {
+            position: absolute;
+            right: -31.5%;
+            top: -25%;
+        }
+    }
+}
+.page-lag-dashboard-cooperation-offers.page-lag-dashboard-cooperation-offers-pending {
+	#edit-state-wrapper {
+        .views-widget {
+            position: absolute;
+            right: -31.5%;
+            top: -10%;
+        }
+    }
+}
+
+.view-enrd-lag-database-custom-dashboard {
+	#edit-state-wrapper {
+		.views-widget {
+			position: absolute;
+    		right: -30%;
+    		top: -35%;
+		}
+	}
+}
+
+section#block-enrd-nrn-toolkit-contact-us-nrn-webform,
+.node-type-cooperation-offer {
+	.captcha {
+		margin-top: 15px;
+        .fieldset-wrapper {
+            img {
+                width: 50%;
+                height: auto;
+                display: inline;
+				margin-top: 0px;
+            }
+            .form-item-captcha-response {
+                width: 40%;
+                margin-left: 5%;
+                display: inline-block;
+                label {
+                    position: relative;
+                    left: -110px;
+                    width: 220%;
+                    max-width: none;
+                }
+            }
+        }
+    }
+}
+
+// NRN Toolkit: ENRD NRN Classification facet.
+.facetapi-facet-im-field-tax-networking div.dropdown {
+    &:nth-child(2n+2) {
+        margin-right: 20px;
+
+        .dropdown-menu {
+            right: auto;
+            left: 0;
+        }
+    }
+
+    &:nth-child(3n+3) {
+        margin-right: 0;
+
+        .dropdown-menu {
+            right: 0;
+            left: auto;
+        }
+    }
+}
+
+// NRN Toolkit: ENRD NRN Static pages menu.
+#block-menu-menu-enrd-nrn-static-pages div.block-content li:nth-child(3n+3) {
+    margin-right: 0;
+}
+
+/* News Rolling blocks */
+body.front {
+  .view-display-id-focus_on_carousel .carousel {
+    min-height: 420px;
+  }
+}

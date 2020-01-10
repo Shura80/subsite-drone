@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD NRN Profiles features.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_nrn_profiles_install() {
+
+  // Revert taxonomies, fields bases and instance and other components.
+  features_revert_module('enrd_nrn_profiles');
+
+  // Override multisite default permissions.
+  enrd_nrn_profiles_override_multisite_components();
+
+  // Revert component to modify the settings for "socialfield" module.
+  features_revert(array(
+    'enrd_nrn_profiles' => array(
+      'variable',
+    ),
+  ));
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_nrn_profiles_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD NRN Profiles is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_nrn_profiles_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD NRN Profiles has been deactivated on your site.'));
+}
+
+/**
+ * Revert component views_view.
+ */
+function enrd_nrn_profiles_update_7101() {
+  features_revert(array(
+    'enrd_nrn_profiles' => array(
+      'views_view',
+    ),
+  ));
+}
+
+/**
+ * Replaced some formatters with enrd_readmore.
+ */
+function enrd_nrn_profiles_update_7102() {
+  module_enable(array('enrd_readmore'));
+  features_revert(array(
+    'enrd_nrn_profiles' => array(
+      'field_instance',
+    ),
+  ));
+}

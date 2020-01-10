@@ -1,0 +1,353 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Publication Subscriptions forms feature.
+ */
+
+include_once 'enrd_sfr_pub.features.inc';
+
+define('ENRD_SFR_PUB_NEWSLETTER_URL', 'http://ec.europa.eu/newsroom/agri/subscription-quick-generic-form-fullpage.cfm?service_id=239');
+define('ENRD_SFR_PUB_SUB_CP_FORM', 'enrd_sfr_pub_subscribe_cp');
+define('ENRD_SFR_PUB_SUB_EHD_FORM', 'enrd_sfr_pub_subscribe_ehd');
+define('ENRD_SFR_PUB_CONT_CP_FORM', 'enrd_sfr_pub_contact_cp');
+define('ENRD_SFR_PUB_CONT_EHD_FORM', 'enrd_sfr_pub_contact_ehd');
+define('ENRD_SFR_PUB_CONT_FORM_PURGE_LIMIT', 100);
+define('ENRD_SFR_PUB_CONT_FORM_PURGE_DAYS', 30);
+define('ENRD_SFR_PUB_EU_MAXLENGTH', 35);
+
+/**
+ * @file
+ * Code for the ENRD Publication Subscriptions forms feature.
+ */
+
+/**
+ * Implements hook_multiple_field_remove_button_field_widgets_alter().
+ */
+function enrd_sfr_pub_multiple_field_remove_button_field_widgets_alter(&$fieldwidgets) {
+  // Enable "Remove" button to multiple widget Double field (Select+Select).
+  if (!in_array('select_&_select', $fieldwidgets)) {
+    $fieldwidgets[] = 'select_&_select';
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function enrd_sfr_pub_block_info() {
+  $blocks['enrd_sfr_pub_cp'] = array('info' => t('ENRD Publication Subscriptions forms: CP Subscription request'));
+  $blocks['enrd_sfr_pub_ehd'] = array('info' => t('ENRD Publication Subscriptions forms: EHD Subscription request'));
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function enrd_sfr_pub_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'enrd_sfr_pub_cp':
+      // Custom buttons to the CP Form request.
+      $block['content'] = _enrd_sfr_pub_subscription_cp_link();
+      break;
+
+    case 'enrd_sfr_pub_ehd':
+      // Custom buttons to the EHD Form request.
+      $block['content'] = array(
+        '#theme' => 'link',
+        '#text' => 'Subscribe to Evaluation Publications',
+        '#path' => url(ENRD_SFR_PUB_ADD_REQUEST . _enrd_sfr_type_path_replace(ENRD_SFR_PUB_SUB_EHD_FORM), array(
+          'query' => drupal_get_destination(),
+          'absolute' => TRUE,
+        )),
+        '#options' => array(
+          'attributes' => array(
+            'class' => array(
+              'btn',
+              'btn-default',
+            ),
+            'title' => t("Request subscription to Evaluation Helpdesk's Publications"),
+          ),
+          'html' => FALSE,
+        ),
+      );
+      break;
+
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see _enrd_sfr_pub_subscribe_cp_customizations()
+ * @see _enrd_sfr_pub_subscribe_ehd_customizations()
+ * @see _enrd_sfr_pub_contact_cp_customizations()
+ * @see _enrd_sfr_pub_contact_ehd_customizations()
+ */
+function enrd_sfr_pub_form_enrd_sfr_form_alter(&$form, &$form_state, $form_id) {
+  // Load shared functionalities declared into include file.
+  form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms');
+
+  // Load specific include file for each bundle.
+  form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms.' . $form['#bundle']);
+  $form_alter_function = '_' . $form['#bundle'] . '_customizations';
+
+  if (function_exists($form_alter_function)) {
+    $form_alter_function($form, $form_state);
+  }
+
+  // Image captcha for Anonymous.
+  if (user_is_anonymous()) {
+    $form['actions'] = array(
+      'captcha' => array(
+        '#type' => 'captcha',
+        '#captcha_type' => 'image_captcha/Image',
+      ),
+    ) + $form['actions'];
+  }
+
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_sfr_pub_form_views_exposed_form_alter(&$form, &$form_state) {
+  // Alter options of Paper / Electronic CP subscriptions subtypes.
+  if ($form['#id'] == 'views-exposed-form-enrd-sfr-pub-manage-enrd-subscription-cp-sub-cp-req') {
+    // Set a standard value for TRUE keys labels.
+    $form['field_enrd_sfr_pub_subcp_paper_value']['#options'][1] = t('Yes');
+    $form['field_enrd_sfr_pub_subcp_electr_value']['#options'][1] = t('Yes');
+    // Re-sort options keys (Any/Yes/No).
+    krsort($form['field_enrd_sfr_pub_subcp_paper_value']['#options'], SORT_STRING);
+    krsort($form['field_enrd_sfr_pub_subcp_electr_value']['#options'], SORT_STRING);
+  }
+}
+
+/**
+ * Implements hook_addressfield_default_values_alter().
+ */
+function enrd_sfr_pub_addressfield_default_values_alter(&$default_values, $context) {
+  if ($context['instance']['entity_type'] == ENRD_SFR_ENTITY_NAME) {
+    // Don't use Afghanistan as default value.
+    // Needs a form alter for the country options!
+    $default_values['country'] = '';
+  }
+}
+
+/**
+ * Function used to add CP Subscription link to Publication contexts.
+ *
+ * @return array
+ *   A renderable array with the CP Subscription link.
+ */
+function _enrd_sfr_pub_subscription_cp_link() {
+  $element = array(
+    '#theme' => 'link',
+    '#text' => 'Subscribe to Publications',
+    '#path' => url(ENRD_SFR_PUB_ADD_REQUEST . _enrd_sfr_type_path_replace(ENRD_SFR_PUB_SUB_CP_FORM), array(
+      'query' => drupal_get_destination(),
+      'absolute' => TRUE,
+    )),
+    '#options' => array(
+      'attributes' => array(
+        'class' => array(
+          'btn',
+          'btn-default',
+        ),
+        'title' => t('Request subscription to ENRD Publications'),
+      ),
+      'html' => FALSE,
+    ),
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_sfr_pub_menu() {
+  $items[ENRD_MASTERMIND_ADMIN_MENU_LINK . '/enrd-sfr'] = array(
+    'title' => 'Publication Subscriptions',
+    'description' => 'Manage ENRD Subscription requests.',
+    'position' => 'left',
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 18,
+    'page callback' => 'system_admin_menu_block_page',
+    'access callback' => '_enrd_sfr_pub_access_management_page',
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  return $items;
+}
+
+/**
+ * Access callback: check if a user can manage Subscriptions requests.
+ *
+ * @return bool
+ *   returns TRUE if access is granted, otherwise returns FALSE.
+ */
+function _enrd_sfr_pub_access_management_page() {
+  foreach (enrd_sfr_get_types() as $enrd_sfr_type) {
+    if (user_access('manage ' . $enrd_sfr_type->name . ' entity')) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_enrd_evf_post_status_confirm().
+ */
+function enrd_sfr_pub_enrd_evf_post_status_confirm($entity_type, $bundle, $entity, $field_name, $by_email) {
+  $entity->finalize($by_email);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function enrd_sfr_pub_theme() {
+  $hooks['enrd_sfr_pub_cp_csv_body'] = array(
+    'variables' => array(
+      'view' => NULL,
+      'options' => NULL,
+      'rows' => NULL,
+      'title' => NULL,
+    ),
+    'file' => 'theme/enrd_sfr_pub.theme.inc',
+  );
+  $hooks['enrd_sfr_pub_subcp_type'] = array(
+    'render element' => 'element',
+    'file' => 'includes/enrd_sfr_pub.forms.enrd_sfr_pub_subscribe_cp.inc',
+  );
+
+  return $hooks;
+}
+
+/**
+ * Implements template_preprocess_field().
+ */
+function enrd_sfr_pub_preprocess_field(&$variables, $hook) {
+  $element = $variables['element'];
+
+  if ($element['#entity_type'] == 'taxonomy_term' && $element['#bundle'] == 'enrd_publications') {
+    if ($element['#field_name'] == 'field_enrd_publications_ext_link') {
+      if ($element['#items'][0]['url'] == url('enrd-sfr/add/enrd-sfr-pub-subscribe-cp')) {
+        // Build url to Subscriptions CP form page.
+        $sub_cp_form_destination = url($element['#items'][0]['url'], array(
+          'query' => drupal_get_destination(),
+          'absolute' => TRUE,
+        ));
+        // Set the Subscriptions CP url.
+        $variables['items'][0]['#element']['url'] = $sub_cp_form_destination;
+        $variables['items'][0]['#element']['display_url'] = $sub_cp_form_destination;
+        // Set the Subscriptions CP url title.
+        $variables['items'][0]['#element']['attributes']['title'] = t('Request subscription to ENRD Publications');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function enrd_sfr_pub_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+
+  // CP Forms.
+  $sfr_cp_vbo_forms = [
+    'views_form_enrd_sfr_pub_manage_enrd_subscription_cp_sub_cp_req',
+    'views_form_enrd_sfr_pub_manage_enrd_subscription_cp_cont_cp_req',
+  ];
+
+  // EHD forms.
+  $sfr_ehd_vbo_forms = [
+    'views_form_enrd_sfr_pub_manage_enrd_subscription_ehd_sub_ehd_req',
+    'views_form_enrd_sfr_pub_manage_enrd_subscription_ehd_cont_ehd_req',
+  ];
+
+  $sfr_vbo_forms = array_merge($sfr_cp_vbo_forms, $sfr_ehd_vbo_forms);
+
+  if (in_array($form['#form_id'], $sfr_vbo_forms)) {
+    // Set bulk operations weights.
+    if (isset($form['select']['action::nexteuropa_data_export_export_action'])
+      || isset($form['select']['action::views_bulk_operations_delete_item'])) {
+      // "Export" operation.
+      $form['select']['action::nexteuropa_data_export_export_action']['#weight'] = 0;
+      // "Delete" operation.
+      $form['select']['action::views_bulk_operations_delete_item']['#weight'] = 1;
+    }
+
+    // Refactor for confirmation page before executing the operation.
+    // Only for CP Sub export.
+    if ($form['#form_id'] == $sfr_cp_vbo_forms[0] && isset($form['fields'])) {
+      // Hide form element to select fields.
+      $form['fields']['#access'] = FALSE;
+
+      // Add a confirmation message similar to vbo standard.
+      // @see theme_views_bulk_operations_confirmation().
+      $form['confirm_list'] = array(
+        '#markup' => theme('views_bulk_operations_confirmation', array(
+          'rows' => $form_state['selection'],
+          'vbo' => $vbo,
+          'operation' => $form_state['operation'],
+          'select_all_pages' => $form_state['select_all_pages'],
+        )),
+      );
+
+    }
+  }
+
+}
+
+/**
+ * Implements hook_tokens_alter().
+ */
+function enrd_sfr_pub_tokens_alter(array &$replacements, array $context) {
+  if (isset($context['data']['entity'])) {
+    if ($context['data']['entity_type'] == 'enrd_sfr') {
+      $enrd_sfr = $context['data']['entity'];
+
+      // Replace "Reason" field token value during e-mail delivery.
+      if ($enrd_sfr->type == ENRD_SFR_PUB_CONT_CP_FORM) {
+        $reason = $enrd_sfr->field_enrd_sfr_pub_contcp_reas[LANGUAGE_NONE][0]['value'];
+        $replacements['[enrd_sfr:field_enrd_sfr_pub_contcp_reas]'] = $reason;
+      }
+      elseif ($enrd_sfr->type == ENRD_SFR_PUB_CONT_EHD_FORM) {
+        $reason = $enrd_sfr->field_enrd_sfr_pub_contehd_reas[LANGUAGE_NONE][0]['value'];
+        $replacements['[enrd_sfr:field_enrd_sfr_pub_contehd_reas]'] = $reason;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_environment_prepopulate().
+ */
+function enrd_sfr_pub_environment_prepopulate() {
+  // Pre-populate link items into enrd_sfr_pub_subscribe menu.
+  _enrd_sfr_pub_enrd_sfr_pub_subscribe_menu_prepopulate();
+}
+
+/**
+ * Pre-populate link items into enrd_sfr_pub_subscribe menu.
+ */
+function _enrd_sfr_pub_enrd_sfr_pub_subscribe_menu_prepopulate() {
+
+  $menu_name = 'menu-enrd-sfr-pub-subscribe';
+  $menu = menu_load($menu_name);
+  if ($menu === FALSE) {
+    return;
+  }
+
+  drupal_load('module', 'enrd_sfr');
+  module_load_include('php', 'enrd_sfr_pub', 'data/enrd_sfr_pub_menu_items');
+
+  $items = _enrd_sfr_pub_menu_enrd_sfr_pub_subscribe();
+  _enrd_mastermind_menu_prepopulate($items);
+}
