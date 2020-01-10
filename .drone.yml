@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-name: agri-eip
+name: enrd
 
 platform:
   os: linux
@@ -76,7 +76,7 @@ steps:
   # TEST SECTION #
   # SELENIUM #
   - name: selenium
-    image: selenium/standalone-chrome-debug:3.141.59-oxygen
+    image: selenium/standalone-chrome-debug
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"
