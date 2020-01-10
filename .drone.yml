@@ -38,12 +38,13 @@ steps:
 # TELEGRAM NOTIFICATIONS
   - name: notification
     image: appleboy/drone-telegram
+    secrets: [ telegram_token, telegram_to ]
     settings:
-      token: 1010031050:AAFiKD77-RBdVB9BKQMRFmHypOGuz1ACa9k
-      to: 12833500
       message: >
         {{#success build.status}}
-          ✅ build succeeded. Good job.
+          ✅ Build succeeded #{{build.number}} of {{repo.name}} - Good job.
+          📝 Commit by {{commit.author}} on {{commit.branch}}:
         {{else}}
-          ❌ build failed. Fix me please.
+          ❌ Build failed #{{build.number}} of {{repo.name}} - Fix me please.
+          📝 Commit by {{commit.author}} on {{commit.branch}}:
         {{/success}}
