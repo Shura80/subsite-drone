@@ -40,7 +40,7 @@ steps:
     image: appleboy/drone-telegram
     settings:
       token: 1010031050:AAFiKD77-RBdVB9BKQMRFmHypOGuz1ACa9k
-      to: @alessiodepisi
+      to: alessiodepisi
       message: >
         {{#success build.status}}
           build succeeded. Good job.
