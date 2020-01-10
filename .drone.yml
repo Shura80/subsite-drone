@@ -19,7 +19,7 @@ workspace:
 # SERVICES #
 services:
   - name: web
-    image: fpfis/httpd-php
+    image: fpfis/php56-build
     environment:
       DOCUMENT_ROOT: /test/toolkit/build
       PORT: 8080
@@ -34,7 +34,7 @@ services:
 steps:
   # SETUP TOOLKIT #
   - name: toolkit
-    image: fpfis/httpd-php
+    image: fpfis/php56-dev
     commands:
       - composer install
       - rm -rf ./.tmp/ ./build
@@ -50,7 +50,7 @@ steps:
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
-    image: fpfis/httpd-php
+    image: fpfis/php56-dev
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
@@ -62,7 +62,7 @@ steps:
   # INSTALL SECTION #
   # CLEAN #
   - name: install-clean
-    image: fpfis/httpd-php
+    image: fpfis/php56-dev
     commands:
       - rm /test/toolkit/build/sites/sites.php
       - ./toolkit/phing install-clean
@@ -79,6 +79,6 @@ steps:
 
   # BEHAT #
   - name: behat
-    image: fpfis/httpd-php
+    image: ffpfis/php56-dev
     commands:
       - ./toolkit/phing test-run-behat
