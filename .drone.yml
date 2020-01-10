@@ -40,8 +40,10 @@ steps:
     image: appleboy/drone-telegram
     secrets: [ telegram_token, telegram_to ]
     settings:
-      token: telegram_token
-      to: telegram_to
+      token:
+        from_secret: telegram_token
+      to:
+        from_secret: telegram_to
       message: >
         {{#success build.status}}
           ✅ Build succeeded #{{build.number}} of {{repo.name}} - Good job.
