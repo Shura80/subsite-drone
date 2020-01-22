@@ -30,5 +30,4 @@ build.platform.htaccess.append.text =  ${line.separator}# Legacy prefix substitu
 # Configuration to append to the robots.txt
 build.platform.robots.append.text = ${line.separator}# ENRD Specific directives${line.separator}User-agent: *${line.separator}Disallow: /enrd-static/${line.separator}
 
-behat.tags = ~@wip&&~@clean
 behat.formatter.name = progress

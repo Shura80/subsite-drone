@@ -8,5 +8,5 @@ share.path = /cache
 project.url.base = http://web:8080
 devel.mdls.en = maillog dblog
 drush.verbose = TRUE
-behat.tags = ~@wip~@clean
+behat.tags = ~@wip&&~@online
 behat.formatter.name = progress
