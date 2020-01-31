@@ -462,7 +462,8 @@
             hidden="true"
             depends="resources-composer-install">
         <echo msg="Compiling SCSS resources..."/>
-        <sass useScssphp="true"
+        <sass useSass="false"
+              useScssphp="true"
               style="compressed"
               unixnewlines="yes"
               nocache="true"
