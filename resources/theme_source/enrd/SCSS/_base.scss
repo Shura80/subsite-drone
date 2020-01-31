@@ -4031,6 +4031,12 @@ body.cke_editable {
         position: inherit;
         float: inherit;
     }
+    // Media images responsive within CKEditor.
+    img.media-element.file-wysiwyg,
+    img.media-element.file-default {
+        @include img-responsive;
+    }
+
 }
 
 /* ENRD Panels */

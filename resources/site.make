@@ -82,6 +82,10 @@ projects[message_subscribe_email_frequency][version] = "1.1"
 projects[multiple_fields_remove_button][subdir] = "contrib"
 projects[multiple_fields_remove_button][version] = "1.5"
 
+; https://webgate.ec.europa.eu/fpfis/wikis/x/ApAFGg
+projects[postal_code_validation][subdir] = "contrib"
+projects[postal_code_validation][version] = "1.7"
+
 projects[queue_mail][subdir] = "contrib"
 projects[queue_mail][version] = "1.6"
 

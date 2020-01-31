@@ -456,4 +456,29 @@
         <phingcall target="taxocsv-import-enrd-update-status-translations">
         </phingcall>
     </target>
+    <!-- Compile .scss partials into the main minified css file -->
+    <target name="compile-scss"
+            description="Compile .scss files into the main minified css."
+            hidden="true"
+            depends="resources-composer-install">
+        <echo msg="Compiling SCSS resources..."/>
+        <sass useScssphp="true"
+              style="compressed"
+              unixnewlines="yes"
+              nocache="true"
+              input="${resources.dir}/theme_source/${project.id}/SCSS/style.scss"
+              output="${sass.compiled.dir}/${project.id}.min.css">
+        </sass>
+    </target>
+    <!-- Install Composer dependencies for resources -->
+    <target name="resources-composer-install" hidden="true">
+        <echo msg="Run 'composer install' in resources folder." />
+        <composer command="install" composer="${project.bin.composer}">
+            <arg value="--working-dir=${resources.dir}" />
+            <arg value="--no-interaction" />
+            <arg value="--no-suggest" />
+            <arg value="--ansi" />
+            <arg value="--no-progress" />
+        </composer>
+    </target>
 </project>
