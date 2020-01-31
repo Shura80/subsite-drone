@@ -463,10 +463,10 @@
             depends="resources-composer-install">
         <echo msg="Compiling SCSS resources..."/>
         <echo msg="Creating minified CSS file..."/>
-        <exec command="${resources.dir.bin}/pscss --style=compressed ${resources.dir}/theme_source/enrd/SCSS/style.scss"
-              output="${sass.compiled.dir}/enrd.min.css"/>
-        <append destFile="${sass.compiled.dir}/enrd.min.css"
-                text="/*# sourceMappingURL=enrd.min.css.map */"
+        <exec command="${resources.dir.bin}/pscss --style=compressed ${resources.dir}/theme_source/${project.id}/SCSS/style.scss"
+              output="${sass.compiled.dir}/${project.id}.min.css"/>
+        <append destFile="${sass.compiled.dir}/${project.id}.min.css"
+                text="/*# sourceMappingURL=${project.id}.min.css.map */"
                 description="Appending source map file to minified css file...">
         </append>
         <echo msg="Finished compiling SCSS sources."/>
