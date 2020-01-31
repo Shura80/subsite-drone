@@ -42,10 +42,10 @@ steps:
 
 # PHPCS CHECKS #
 # Standard #
-  - name: phpcs
-    image: fpfis/php56-dev
-    commands:
-      - ./toolkit/phing test-run-phpcs
+#  - name: phpcs
+    # image: fpfis/php56-dev
+    # commands:
+    #  - ./toolkit/phing test-run-phpcs
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
