@@ -33,4 +33,5 @@ build.platform.robots.append.text = ${line.separator}# ENRD Specific directives$
 behat.formatter.name = progress
 
 # SCSS compiled directory
+resources.dir.bin = ${resources.dir}/vendor/bin
 sass.compiled.dir = ${lib.dir.themes}/${project.id}/css

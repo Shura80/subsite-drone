@@ -26,4 +26,10 @@ toolkit
 /dist
 /tests/bin
 /tests/vendor
-/.idea/
+
+# Ignore Sass caches and .map files.
+# ----------------------------------
+.sass-cache
+lib/themes/enrd/css/enrd.min.css
+lib/themes/enrd/css/enrd.min.css.map
+/resources/vendor/
