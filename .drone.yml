@@ -42,14 +42,14 @@ steps:
 
 # PHPCS CHECKS
   - name: phpcs
-     image: fpfis/httpd-php-dev:7.3
-     commands:
+    image: fpfis/httpd-php-dev:7.3
+    commands:
       - ./toolkit/phing test-run-phpcs
 
   - name: phpcs 7
-      image: fpfis/httpd-php-dev:7.3
-      commands:
-        - ./toolkit/phing test-run-phpcs-compatibility
+    image: fpfis/httpd-php-dev:7.3
+    commands:
+      - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
