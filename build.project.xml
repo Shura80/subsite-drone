@@ -38,8 +38,6 @@
         </if>
         <phingcall target="clean-libraries-folders">
         </phingcall>
-        <phingcall target="compile-scss">
-        </phingcall>
     </target>
 
     <!-- Append text to .htaccess file -->
