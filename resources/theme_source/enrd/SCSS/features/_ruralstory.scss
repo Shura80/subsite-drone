@@ -1,0 +1,316 @@
+// ENRD Rural Story Form flag.
+@mixin enrd-ruralstory-flag-status() {
+    div.flag-inner.flag-enrd-ruralstory-status {
+        font-weight: bold;
+        font-variant: all-small-caps;
+        border-radius: 4px;
+        font-size: 14px;
+        font-size-adjust: 0.45;
+        line-height: 1em;
+        display: inline-block;
+        width: max-content;
+        color: #fff;
+        padding: 2px 4px 0 8px;
+
+        span.flag-throbber {
+            position: relative;
+            left: 2px;
+        }
+
+        &:before {
+            position: relative;
+            top: 1px;
+            right: 3px;
+            font-family: "Glyphicons Halflings";
+        }
+
+        &.pending-review {
+            background: $btn-info-bg;
+            border: 1px solid $btn-info-border;
+
+            &:before {
+                content: "\231b";
+            }
+        }
+
+        &.under-review {
+            background: $btn-primary-bg;
+            border: 1px solid $btn-primary-border;
+
+            &:before {
+                content: "\270f";
+            }
+        }
+
+        &.reviewed {
+            background: $btn-warning-bg;
+            border: 1px solid $btn-warning-border;
+
+            &:before {
+                content: "\e013";
+            }
+        }
+
+        &.eligible {
+            background: $btn-success-bg;
+            border: 1px solid $btn-success-border;
+
+            &:before {
+                content: "\e034";
+            }
+        }
+
+        &.to-be-deleted {
+            background: $btn-danger-bg;
+            border: 1px solid $btn-danger-border;
+
+            &:before {
+                content: "\e020";
+            }
+        }
+
+        > a {
+            text-decoration: none;
+            font-size-adjust: 0.45;
+            text-decoration: none;
+
+            &.flag-action {
+                font-weight: normal;
+                font-variant: none;
+                font-size: 15px;
+                font-size-adjust: 0.5;
+                position: relative;
+                right: 8px;
+            }
+        }
+
+        ul.flag-wrapper.flag-enrd-ruralstory-status {
+            padding: 0;
+            font-size-adjust: 0.45;
+            margin-top: 5px;
+
+            li {
+                position: relative;
+                right: 14px;
+                font-size: 13px;
+
+                a {
+                    text-decoration: none;
+                    font-variant: all-small-caps;
+                    font-size: 13px;
+
+                    &:hover {
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+
+        span.flag-enrd-ruralstory-status {
+
+            > a {
+                text-decoration: none;
+                font-size: 0;
+                font-size-adjust: 0.45;
+                color: rgba(0, 145, 147, 1);
+
+                &.unflag-action {
+                    color: #fff;
+
+                    &:before {
+                        content: "\e014";
+                        font-size: 16px;
+                        font-family: "Glyphicons Halflings";
+                        position: relative;
+                        top: 2px;
+                        left: 1px;
+                    }
+                }
+            }
+
+        }
+    }
+    div.flag-user {
+        font-variant: none;
+        font-size: 12px;
+        font-size-adjust: 0.45;
+        padding: 0 0 3px 0;
+        font-weight: normal;
+
+        span.flag-username-prefix {
+            &:after {
+                content: ':';
+            }
+        }
+
+        span.flag-username {
+            font-weight: bold;
+        }
+    }
+}
+
+/* Rural Story Form */
+.page-enrd-sfr-add-enrd-ruralstory form {
+    // Theme / topic field.
+    div.field-name-field-enrd-ruralstory-topic div.chosen-container {
+        width: 100% !important;
+    }
+
+    // Country field.
+    div.field-name-field-enrd-ruralstory-country div#edit_field_enrd_ruralstory_country_und_chosen {
+        width: 100% !important;
+    }
+
+    // Contact information.
+    div.group-ruralstory-contact-info {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 18px;
+
+        h2 > span {
+            color: $lblue;
+        }
+    }
+
+    // Relevant links field.
+    div.field-name-field-enrd-ruralstory-links {
+        div.form-type-link-field {
+            display: flex;
+
+            div.link-field-subrow {
+                flex: 4;
+                margin-right: 10px;
+            }
+
+            input.multiple-fields-remove-button {
+                flex: 0.2;
+            }
+        }
+
+        div.form-type-select select.field_enrd_ruralstory_links-delta-order {
+            width: 78px;
+            display: inline-block;
+        }
+    }
+
+    // Upload photos/files field.
+    div.field-name-field-enrd-ruralstory-files div.form-type-managed-file input.form-submit {
+        margin-top: 8px;
+    }
+
+    // Authorize notice checkbox.
+    div.form-item-enrd-ruralstory-authorize-notice {
+        label.option {
+            padding-left: 5px;
+        }
+    }
+
+    // Eu Legal notice chechbox.
+    div#edit-enrd-ruralstory-eu-legal-notice div.form-item-privacy-policy {
+        margin-top: 10px;
+    }
+
+    // Captcha.
+    div.captcha {
+        border-top: 1px solid #ccc;
+        margin-top: 30px;
+        padding-top: 20px;
+    }
+}
+
+/* ENRD Sfr Full page. */
+.page-enrd-sfr.page-enrd-sfr-enrd-ruralstory {
+    div.group-rural-story h2,
+    div.group-enrd-ruralstory-flags h2,
+    div.group-personal-info h2,
+    div.group-geo-info h2 {
+        color: $lblue;
+        margin-top: 15px;
+    }
+
+    div.enrd-sfr-enrd-ruralstory {
+        div.group-rural-story {
+            div.field-name-field-enrd-ruralstory-short-desc {
+                white-space: pre-wrap;
+            }
+        }
+
+        .group-enrd-ruralstory-flags {
+            background: #f2f2f2;
+            padding: 5px 20px 20px 20px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .group-geo-info,
+        .group-personal-info {
+            background: $lightBlue;
+            padding: 5px 20px 15px 20px;
+        }
+
+
+        /* Status flag */
+        div.group-enrd-ruralstory-flags {
+            // ENRD Rural Story Form flag.
+            @include enrd-ruralstory-flag-status;
+        }
+    }
+
+    div.back-to-sub-report {
+        margin-top: 20px;
+        padding: 20px 0 20px 0;
+        border-top: 1px solid #ccc;
+    }
+}
+
+// Rural Story admin report page.
+.page-admin-enrd-enrd-sfr-ruralstory {
+    input#edit-action-enrd-ruralstory-flag-status,
+    input#edit-rules-componentrules-enrd-ruralstory-remove-status,
+    {
+        margin-right: 5px;
+    }
+
+    .views-field-field-enrd-ruralstory-status {
+
+        // ENRD Rural Story Form flag.
+        @include enrd-ruralstory-flag-status;
+
+        div.ruralstory-current-status {
+            display: none;
+        }
+    }
+}
+/* Rural Story Form specific cases media queries */
+@media(min-width: 1200px) {
+    .page-enrd-sfr-add-enrd-ruralstory form {
+        // Title, Name and Surname fields.
+        .field-name-field-enrd-ruralstory-title {
+            float: left;
+            margin-top: -11px;
+            display: inline-block;
+
+            .form-type-select {
+                width: 163px;
+                margin-right: 25px;
+            }
+        }
+
+        .field-name-field-enrd-ruralstory-name {
+            display: inline-block;
+
+            > div {
+                width: 334px;
+                margin-right: 25px;
+            }
+        }
+
+        .field-name-field-enrd-ruralstory-surname {
+            float: right;
+            display: inline-block;
+
+            > div {
+                width: 300px;
+            }
+        }
+    }
+}

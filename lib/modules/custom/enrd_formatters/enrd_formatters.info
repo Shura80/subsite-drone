@@ -1,0 +1,7 @@
+name = ENRD Formatters
+description = Provides more field formatters in fields' manage display options.
+package = ENRD
+core = "7.x"
+php = 5.6
+dependencies[] = field
+multisite_version = 2.5

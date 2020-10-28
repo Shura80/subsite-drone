@@ -1,0 +1,176 @@
+<?php
+
+/**
+ * @file
+ * Install the "ENRD Rural Story Form" feature.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_ruralstory_install() {
+  // Include the terms definitions.
+  module_load_include('php', 'enrd_ruralstory', 'data/enrd_ruralstory_taxonomies');
+
+  // Revert all components.
+  features_revert_module('enrd_ruralstory');
+
+  // Import "ENRD Rural Story Topics" data.
+  _enrd_taxonomies_save_taxo(_enrd_ruralstory_ruralstory_topics(),
+    taxonomy_vocabulary_machine_name_load('enrd_ruralstory_topics'));
+
+  // Create Share your Rural Story Introduction bean.
+  _enrd_ruralstory_custom_bean();
+
+  // Force activation of "show_as_field" flag property.
+  $options = db_select('flag', 'fl')
+    ->condition('name', 'enrd_ruralstory_status', '=')
+    ->fields('fl', array('options'))
+    ->execute()->fetchCol();
+
+  $status_flag_options = unserialize($options['0']);
+  $status_flag_options['show_as_field'] = 1;
+
+  db_update('flag')
+    ->fields(array(
+      'options' => serialize($status_flag_options),
+    ))
+    ->condition('name', 'enrd_ruralstory_status')
+    ->execute();
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Rural Story Form is now installed on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_ruralstory_uninstall() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Rural Story Form is now uninstalled on your site.'));
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_ruralstory_enable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Rural Story Form is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_ruralstory_disable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Rural Story Form has been deactivated on your site.'));
+}
+
+/**
+ * ENRDPORTAL-540.
+ */
+function enrd_ruralstory_update_7201(&$sandbox) {
+  $t = get_t();
+
+  // Initialize sandbox and counters.
+  if (!isset($sandbox['progress'])) {
+    // Revert components before updating.
+    features_revert([
+      'enrd_ruralstory' => [
+        'field_base',
+        'field_instance',
+        'taxonomy',
+        'user_permission',
+        'variable',
+        'views_view',
+      ],
+    ]);
+
+    // Include the terms definitions.
+    module_load_include('php', 'enrd_ruralstory', 'data/enrd_ruralstory_taxonomies');
+
+    // Import "ENRD Rural Story Topics" data.
+    _enrd_taxonomies_save_taxo(_enrd_ruralstory_ruralstory_topics(),
+      taxonomy_vocabulary_machine_name_load('enrd_ruralstory_topics'));
+
+    // Fetch the Rural Story entity ids.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', ENRD_SFR_ENTITY_NAME)
+      ->entityCondition('bundle', ENRD_RURALSTORY_FORM);
+    $enrd_ruralstories = $query->execute();
+
+    // Get "ENRD Rural Story Topics" terms (tid + name).
+    $enrd_ruralstory_topics_voc = taxonomy_vocabulary_machine_name_load('enrd_ruralstory_topics');
+    $enrd_ruralstory_topics_terms = db_select('taxonomy_term_data', 'td')
+      ->condition('td.vid', $enrd_ruralstory_topics_voc->vid)
+      ->fields('td', ['tid'])
+      ->fields('td', ['name'])
+      ->execute()
+      ->fetchAll();
+
+    // Set starting values for sandbox.
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = 0;
+
+    if (isset($enrd_ruralstories[ENRD_SFR_ENTITY_NAME]) && !empty($enrd_ruralstories[ENRD_SFR_ENTITY_NAME])) {
+      // Set tot. Rural Stories entities that must be updated.
+      $sandbox['max'] = count($enrd_ruralstories[ENRD_SFR_ENTITY_NAME]);
+      // Sandbox rural stories to operate on.
+      $sandbox['ruralstory_sfr'] = $enrd_ruralstories[ENRD_SFR_ENTITY_NAME];
+    }
+
+    // Sandbox tax. terms to operate on.
+    $sandbox['enrd_ruralstory_topics_terms'] = $enrd_ruralstory_topics_terms;
+    // Starting message.
+    $sandbox['message'] = $t('Starting updating ENRD Sfr Rural Story entities.');
+  }
+
+  // Update Rural Story entities.
+  if (isset($sandbox['ruralstory_sfr']) && !empty($sandbox['ruralstory_sfr'])) {
+    // Extract the id and load the Rural Story entity.
+    $sfr = array_pop($sandbox['ruralstory_sfr']);
+    $ruralstory = enrd_sfr_load($sfr->sfrid);
+
+    foreach ($ruralstory->field_enrd_ruralstory_theme[LANGUAGE_NONE] as $key => $theme) {
+
+      if (!empty($sandbox['enrd_ruralstory_topics_terms'])) {
+        foreach ($sandbox['enrd_ruralstory_topics_terms'] as $rural_topic_term) {
+          // Check if the "Topic" term name equals the old field value.
+          if ($rural_topic_term->name == $theme['value']) {
+            // Copy the tid of the tax. term into the new "Theme / topic" field.
+            $ruralstory->field_enrd_ruralstory_topic[LANGUAGE_NONE][$key]['tid'] = $rural_topic_term->tid;
+          }
+        }
+
+        try {
+          field_attach_update(ENRD_SFR_ENTITY_NAME, $ruralstory);
+          // Clear enrd_sfr entity cache.
+          entity_get_controller('node')->resetCache([$ruralstory->sfrid]);
+        }
+        catch (Exception $e) {
+          watchdog('enrd_ruralstory', 'Cannot update the Rural Story: %enrd_sfr_sfrid. Caught exception: @message',
+            [
+              '%enrd_sfr_sfrid' => $ruralstory->sfrid,
+              '@message' => $e->getMessage(),
+            ], WATCHDOG_NOTICE, l($t('Rural Story page'), ENRD_RURALSTORY_PAGE_PATH . '/' . $ruralstory->sfrid, array('absolute' => TRUE)));
+        }
+      }
+    }
+
+    $sandbox['progress']++;
+  }
+
+  // Update batch status.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+  // If batch is finished, perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    // Finally delete the old "Theme / topic" (field & instance).
+    field_delete_field('field_enrd_ruralstory_theme');
+    field_purge_batch(50);
+
+    return $t('Finished deleting the old "Theme / topic" field & updating Rural Story entities.');
+  }
+
+}
