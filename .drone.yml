@@ -57,6 +57,20 @@ steps:
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
 
+  # SOLR SERVER SECTION #
+  - name: solr
+    image: fpfis/solr5
+    detach: true
+
+  # INSTALL SECTION #
+  # CLEAN #
+  - name: install-clean
+    image: fpfis/httpd-php-dev:7.3
+    commands:
+      - rm /test/toolkit/build/sites/sites.php
+      - ./toolkit/phing install-clean
+      - ./toolkit/phing drush-solr-enable
+
   # TELEGRAM NOTIFICATIONS
   - name: notification
     image: appleboy/drone-telegram
