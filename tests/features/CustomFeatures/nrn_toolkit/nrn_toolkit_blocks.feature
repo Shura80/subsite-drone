@@ -16,9 +16,9 @@ Feature: ENRD NRN Toolkit.
     And I should see "Multimedia" in the "content" region
 
   @nrn-intro-block
-  Scenario: As Admin user I should be able to set the NRN Intro text, while as Anonymous to see it in the Landing page.
+  Scenario: As Webmaster user I should be able to set the NRN Intro text, while as Anonymous to see it in the Landing page.
 
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am at "admin/content/blocks"
     And I click "edit" in the "NRN Toolkit intro" row
     And I fill in "Block Body" with "BDD NRN Toolkit Intro text."
@@ -29,8 +29,8 @@ Feature: ENRD NRN Toolkit.
     Then I should see the text "BDD NRN Toolkit Intro text." in the "content" region
 
   @nrn-static
-  Scenario: As administrator I should be able to add or delete a NRN static pages menu item.
-    Given I am logged in as a user with the "administrator" role
+  Scenario: As webmaster I should be able to add or delete a NRN static pages menu item.
+    Given I am logged in as a user with the "webmaster" role
     And I am at "admin/structure/menu/manage/menu-enrd-nrn-static-pages"
     And I follow "Add link"
     And I fill in "Menu link title" with "BDD menu item"
@@ -43,7 +43,7 @@ Feature: ENRD NRN Toolkit.
     When I click "delete" in the "BDD menu item" row
     And I press the "Confirm" button
     Then I should see the following success messages:
-      | success messages                      |
+      | success messages                              |
       | The menu link BDD menu item has been deleted. |
     When I am at "networking/nrn-toolkit"
     Then I should not see the link "BDD menu item"

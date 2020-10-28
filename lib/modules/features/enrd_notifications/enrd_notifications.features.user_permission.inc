@@ -34,6 +34,7 @@ function enrd_notifications_user_default_permissions() {
     'name' => 'administer message subscribe',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'message_subscribe',
   );
@@ -44,6 +45,7 @@ function enrd_notifications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'authenticated user' => 'authenticated user',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'message',
   );

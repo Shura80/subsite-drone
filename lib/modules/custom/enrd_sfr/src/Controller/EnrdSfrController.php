@@ -2,10 +2,13 @@
 
 namespace Drupal\enrd_sfr\Controller;
 
+use EntityAPIController;
+use DatabaseTransaction;
+
 /**
  * Class EnrdSfrController.
  */
-class EnrdSfrController extends \EntityAPIController {
+class EnrdSfrController extends EntityAPIController {
 
   /**
    * Implements EntityAPIControllerInterface.

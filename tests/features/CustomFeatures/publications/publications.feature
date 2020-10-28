@@ -6,6 +6,25 @@ Feature: ENRD Publications
   in order to feed the general website Publications eLibrary. Both published Evaluation publications and Publications are
   listed and can be filtered by applying facet filters on the related Apache Solr search page.
 
+  @webmaster @taxonomies @url-alias
+  Scenario: Webmasters can translate a specific vocabulary
+  and its children terms. He also can check that the default language alias
+  is valid for all translations.
+    Given I am logged in as a user with the "webmaster" role
+    And "enrd_publications" terms:
+      | name            | language |
+      | BDD Publication | en       |
+    And I am at "admin/structure/taxonomy/enrd_publications"
+    And I click "List"
+    And I click "edit" in the "BDD Publication" row
+    And I click "Translate"
+    And I click "add" in the "Italian" row
+    And I fill in "Name" with "Pubblicazioni BDD"
+    And I press the "Save" button
+    And I click "Translate"
+    And I click "Pubblicazioni BDD" in the "Italian" row
+    Then I am at "enrd-publications/bdd-publication_it"
+
   @anonymous @evaluation @solr @clean
   Scenario: As Anonymous I can see a subset of Evaluation Publication's fields both on its published page and on the Solr eLibrary page.
     Given I am an anonymous user
@@ -18,6 +37,9 @@ Feature: ENRD Publications
     And "enrd_evaluation_theme" terms:
       | name               |
       | BDD NRN Evaluation |
+    And "enrd_evaluation" terms:
+      | name                   |
+      | BDD Evaluation Methods |
     And "enrd_evaluation_type" terms:
       | name                             |
       | BDD Ex Ante Evaluation 2014-2020 |
@@ -27,6 +49,9 @@ Feature: ENRD Publications
     And "enrd_languages" terms:
       | name        |
       | BDD Spanish |
+    And "enrd_countries" terms:
+      | name        | parent         |
+      | BDD Ireland | European Union |
 
     And I am viewing a "publication_ehd" content in "published" status:
       | title                                | BDD Custom Evaluation Publication           |
@@ -41,7 +66,8 @@ Feature: ENRD Publications
       | field_enrd_publ_ehd_pages            | 100                                         |
       | field_enrd_publ_ehd_author           | BDD William Shakespeare                     |
       | field_enrd_publ_ehd_editor           | BDD Editor 1 BDD Editor 2 BDD Editor 3      |
-      | field_tax_country                    | Ireland                                     |
+      | field_tax_country                    | BDD Ireland                                 |
+      | field_tax_evaluation                 | BDD Evaluation Methods                      |
       | field_tags                           | BDD Tag 1                                   |
       | field_enrd_publ_ehd_rdp              | IE-National                                 |
       | field_tax_languages                  | BDD Spanish                                 |
@@ -59,8 +85,8 @@ Feature: ENRD Publications
     And I should see "Pages: 100" in the ".ds-metadata" element
     And I should see "Author(s): BDD William Shakespeare" in the ".ds-metadata" element
     And I should see "Editor(s): BDD Editor 1 BDD Editor 2 BDD Editor 3" in the ".ds-metadata" element
-    And I should see "Country(ies): Ireland" in the ".ds-metadata" element
-    And I should see "Keywords: BDD Tag 1" in the ".ds-metadata" element
+    And I should see "Country(ies): BDD Ireland" in the ".ds-metadata" element
+    And I should see "Keywords: BDD Evaluation Methods" in the ".ds-metadata" element
     And I should see "RDP: IE-National" in the ".ds-metadata" element
     And I should see "Content type: BDD Guidelines" in the ".ds-metadata" element
     And I should see "Languages: BDD Spanish" in the ".ds-metadata" element
@@ -69,6 +95,7 @@ Feature: ENRD Publications
     And I should see "Evaluation Type: BDD Ex Ante Evaluation 2014-2020" in the ".ds-metadata" element
     And I should see "Further information: http://example.com" in the ".ds-metadata" element
     And I should see "john.doe@example.com" in the ".ds-metadata" element
+    But I should not see "Keywords: BDD Tag 1" in the ".ds-metadata" element
     When I click "Full update history"
     Then I should see "BDD Publications History notes" in the ".ds-metadata" element
 
@@ -80,15 +107,16 @@ Feature: ENRD Publications
     And I should see the text "Publication date: April, 2018"
     And I should see the text "Evaluation Type: BDD Ex Ante Evaluation 2014-2020"
     And I should see the text "Author(s): BDD William Shakespeare"
+    And I should see the text "Keywords: BDD Evaluation Methods"
 
   @anonymous
   Scenario: Check that the filter to obfuscate the email from spam-bots is active.
     Given I am an anonymous user
     And I am viewing a "publication_ehd" content in "published" status:
-      | title                                | BDD Email Filter Evaluation Publication     |
-      | created                              | 01-01-2017 8:00                             |
-      | language                             | en                                          |
-      | field_enrd_publ_ehd_contact:email    | john.doe@example.com                        |
+      | title                             | BDD Email Filter Evaluation Publication |
+      | created                           | 01-01-2017 8:00                         |
+      | language                          | en                                      |
+      | field_enrd_publ_ehd_contact:email | john.doe@example.com                    |
 
     Then I should see the "a" element with the "href" attribute set to "mailto:john.doe@example.com" in the "content" region
 
@@ -96,7 +124,7 @@ Feature: ENRD Publications
   Scenario: As Anonymous I want to download the Evaluation Publication file provided in Croatian.
     # FFR: In order to work, this scenario should be included in the scenario where content has already been created,
     # otherwise the node wouldn't be saved.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am at "evaluation/publications/bdd-custom-evaluation-publication"
     And I click "New draft"
     And I select "Croatian" from "File Language"
@@ -158,14 +186,11 @@ Feature: ENRD Publications
       | name                       |
       | BDD Environmental impacts  |
       | BDD LEADER-CLLD Evaluation |
-    Given "enrd_countries" terms:
-      | name   |
-      | Europe |
     And "enrd_countries" terms:
-      | name           | parent         |
-      | European Union | Europe         |
-      | BDD Ireland    | European Union |
-      | BDD Germany    | European Union |
+      | name        | parent         |
+      | BDD Ireland | European Union |
+      | BDD Germany | European Union |
+      | BDD Bayern  | BDD Germany    |
 
     And I am viewing an "publication_ehd" content in "published" status:
       | title                            | BDD Published Evaluation Publication |
@@ -178,7 +203,7 @@ Feature: ENRD Publications
     And I am viewing an "publication_ehd" content in "published" status:
       | title                            | BDD Yet another Publication      |
       | language                         | en                               |
-      | field_tax_country                | BDD Germany                      |
+      | field_tax_country                | BDD Bayern                       |
       | field_enrd_publ_ehd_rdp          | IE-National                      |
       | field_enrd_publ_ehd_content_type | BDD Glossaries                   |
       | field_enrd_publ_ehd_eval_type    | BDD Ex Ante Evaluation 2014-2020 |
@@ -201,15 +226,15 @@ Feature: ENRD Publications
     Then I should see the heading "BDD Yet another Publication" in the "content" region
     But I should not see the link "BDD Published Evaluation Publication" in the "content" region
     And I follow "Clear filters"
-    # Facet: Country
+    # Facet: Countries
     When I follow "BDD Ireland"
     Then I should see the heading "BDD Published Evaluation Publication" in the "content" region
     But I should not see the link "BDD Yet another Publication" in the "content" region
     And I follow "Clear filters"
-    # The faceted filter is supposed to work even when clicking on the parent term.
-    When I follow "European Union"
-    Then I should see the heading "BDD Published Evaluation Publication" in the "content" region
-    And I should see the heading "BDD Yet another Publication" in the "content" region
+    # The facet should show the EU country even if pub. is tagged by the child.
+    When I follow "BDD Germany"
+    Then I should see the heading "BDD Yet another Publication" in the "content" region
+    But I should not see the link "BDD Published Evaluation Publication" in the "content" region
     And I follow "Clear filters"
     # Facet: RDP
     When I follow "IE-National"
@@ -229,12 +254,13 @@ Feature: ENRD Publications
   Scenario: As Anonymous I can see a subset of Publication's fields both on its published page and on the Solr eLibrary page.
     Given I am an anonymous user
     And "enrd_publications" terms:
-      | name                | description                             |
-      | BDD EU Rural Review | Description of BDD EU Rural Review      |
+      | name                | description                        |
+      | BDD EU Rural Review | Description of BDD EU Rural Review |
     And "project_key_words" terms:
       | name           |
       | BDD Forestry   |
       | BDD Innovation |
+    And a document "bdd-file.pdf"
 
     And I am viewing a "publication" content in "published" status:
       | title                            | BDD Custom Publication                       |
@@ -247,10 +273,12 @@ Feature: ENRD Publications
       | field_enrd_publication_link_book | http://example.com - http://example.com      |
       | field_enrd_publications_pages    | 15135646                                     |
       | field_enrd_publication_keywords  | BDD Forestry, BDD Innovation                 |
+      | field_enrd_publication_file      | bdd-file.pdf                                 |
 
     Then I should see the heading "BDD Custom Publication"
     And I should see "BDD Published Custom Publication Description" in the ".ds-abstract" element
     And I should see "Publication date: April, 2020" in the ".ds-metadata" element
+    And I should see the link "EN" in the "content" region
     And I should see "Pages: 15135646" in the ".ds-metadata" element
     And I should see "Keywords: BDD Forestry, BDD Innovation" in the ".ds-metadata" element
     And I should see "Catalogue number: AB-CD-EF-GHI-12-3" in the ".ds-metadata" element
@@ -266,12 +294,13 @@ Feature: ENRD Publications
     And I should see the text "BDD Published Custom Publication Description"
     And I should see the text "Publication date: April, 2020"
     And I should see the text "Keywords: BDD Forestry, BDD Innovation"
+    And I should see the link "EN" in the "content" region
 
   @publication @wip
   Scenario: As Anonymous I want to download the Publication file provided in Spanish.
   # FFR: In order to work, this scenario should be included in the scenario where content has already been created,
   # otherwise the node wouldn't be saved.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am at "publications/bdd-custom-publication"
     And I click "New draft"
     And I attach the file "bdd-image.jpg" to "Title page image"
@@ -370,7 +399,7 @@ Feature: ENRD Publications
 
   @anonymous @evaluation @pinned @solr @clean
   Scenario: As Anonymous I can see pinned Evaluation Publications on top of standard Evaluation Publications after
-   landing on the Evaluation eLibrary.
+  landing on the Evaluation eLibrary.
     Given I am an anonymous user
     And "enrd_evaluation_content_type" terms:
       | name           |
@@ -378,19 +407,19 @@ Feature: ENRD Publications
       | BDD Glossaries |
 
     When I am viewing a "publication_ehd" content in "published" status:
-      | title                             | BDD Custom Pinned Evaluation Publication |
-      | language                          | en                                |
-      | field_enrd_publ_ehd_content_type  | BDD Reports                       |
-      | sticky                            | 1                                 |
+      | title                            | BDD Custom Pinned Evaluation Publication |
+      | language                         | en                                       |
+      | field_enrd_publ_ehd_content_type | BDD Reports                              |
+      | sticky                           | 1                                        |
     And I am viewing a "publication_ehd" content in "published" status:
-      | title                             | BDD Unpinned Evaluation Publication |
-      | language                          | en                                  |
-      | field_enrd_publ_ehd_content_type  | BDD Reports                         |
-      | sticky                            | 0                                   |
+      | title                            | BDD Unpinned Evaluation Publication |
+      | language                         | en                                  |
+      | field_enrd_publ_ehd_content_type | BDD Reports                         |
+      | sticky                           | 0                                   |
     And I am viewing a "publication_ehd" content in "published" status:
-      | title                             | BDD Custom Evaluation Publication   |
-      | language                          | en                                  |
-      | sticky                            | 0                                   |
+      | title    | BDD Custom Evaluation Publication |
+      | language | en                                |
+      | sticky   | 0                                 |
 
     And I send the "publication_ehd" to the Solr search index
     When I am on "evaluation/publications"
@@ -412,7 +441,7 @@ Feature: ENRD Publications
 
   @anonymous @publication @pinned @solr @clean
   Scenario: As Anonymous I can see pinned CP Publications on top of standard Publications after
-   landing on the Publications eLibrary.
+  landing on the Publications eLibrary.
     Given I am an anonymous user
     And "enrd_publications" terms:
       | name                           |
@@ -430,11 +459,11 @@ Feature: ENRD Publications
       | field_enrd_publication_keywords | BDD Forestry                  |
       | sticky                          | 1                             |
     And I am viewing a "publication" content in "published" status:
-      | title                           | BDD Unpinned Publication       |
-      | language                        | en                             |
-      | field_enrd_publication_type     | BDD EU Rural Review            |
-      | field_enrd_publication_keywords | BDD Forestry                   |
-      | sticky                          | 0                              |
+      | title                           | BDD Unpinned Publication |
+      | language                        | en                       |
+      | field_enrd_publication_type     | BDD EU Rural Review      |
+      | field_enrd_publication_keywords | BDD Forestry             |
+      | sticky                          | 0                        |
     And I am viewing a "publication" content in "published" status:
       | title                           | BDD Custom Magazine            |
       | language                        | en                             |

@@ -156,10 +156,9 @@ function enrd_publications_field_group_info() {
       8 => 'field_enrd_publ_ehd_progr_period',
       9 => 'field_enrd_publ_ehd_rdp',
       10 => 'field_enrd_publ_ehd_title_image',
-      11 => 'field_tags',
-      12 => 'field_tax_country',
-      13 => 'field_tax_languages',
-      14 => 'title_field',
+      11 => 'field_tax_country',
+      12 => 'field_tax_languages',
+      13 => 'title_field',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -186,8 +185,8 @@ function enrd_publications_field_group_info() {
     'label' => 'Documentation',
     'weight' => '3',
     'children' => array(
-      0 => 'field_enrd_publ_ehd_file',
-      1 => 'field_enrd_publ_ehd_related_docs',
+      0 => 'field_enrd_publ_ehd_related_docs',
+      1 => 'field_enrd_publ_ehd_file_upload',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -242,9 +241,9 @@ function enrd_publications_field_group_info() {
     'label' => 'History information',
     'weight' => '1',
     'children' => array(
-      0 => 'field_enrd_publ_ehd_history',
-      1 => 'field_enrd_publ_ehd_last_updated',
-      2 => 'field_enrd_publ_ehd_public_date',
+      0 => 'field_enrd_publ_ehd_public_date',
+      1 => 'field_enrd_publ_ehd_history',
+      2 => 'field_enrd_publ_ehd_last_updated',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -271,8 +270,9 @@ function enrd_publications_field_group_info() {
     'label' => 'Metadata',
     'weight' => '4',
     'children' => array(
-      0 => 'path',
-      1 => 'language',
+      0 => 'field_tags',
+      1 => 'path',
+      2 => 'language',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -394,12 +394,12 @@ function enrd_publications_field_group_info() {
     'label' => 'NRN Toolkit',
     'weight' => '7',
     'children' => array(
-      0 => 'field_enrd_nrn_date',
-      1 => 'field_enrd_nrn_include_toolkit',
-      2 => 'field_enrd_nrn_type',
-      3 => 'field_tax_networking',
-      4 => 'field_enrd_nrn_title',
-      5 => 'field_enrd_nrn_alter_description',
+      0 => 'field_tax_networking',
+      1 => 'field_enrd_nrn_date',
+      2 => 'field_enrd_nrn_include_toolkit',
+      3 => 'field_enrd_nrn_type',
+      4 => 'field_enrd_nrn_alter_description',
+      5 => 'field_enrd_nrn_title',
     ),
     'format_type' => 'tab',
     'format_settings' => array(

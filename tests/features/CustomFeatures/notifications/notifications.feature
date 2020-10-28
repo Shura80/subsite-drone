@@ -3,8 +3,8 @@ Feature: ENRD Notifications.
   This Feature aims to manage site and email notifications for users that are
   subscribed to certain content types.
 
-  @admin @message-subscribe-settings
-  Scenario: As an administrator user I want check for the message subscribe form settings.
+  @webmaster @message-subscribe-settings
+  Scenario: As a webmaster user I want check for the message subscribe form settings.
     Given I am logged in as a user with the "administer message subscribe" permission
     When I am at "admin/config/system/message-subscribe"
     Then the "message_subscribe_flag_prefix" field should contain "enrd_follow"
@@ -63,10 +63,10 @@ Feature: ENRD Notifications.
 
   @javascript @authenticated @notifications @notifications-subscription
   Scenario: As a user I want to get website notifications when I follow a content type that has a new published item.
-    Given I am logged in as a user with the "administrator" role and I have the following fields:
-      | mail            | user_admin@example.com |
-      | field_firstname | User                   |
-      | field_lastname  | Admin                  |
+    Given I am logged in as a user with the "webmaster" role and I have the following fields:
+      | mail            | user_webmaster@example.com |
+      | field_firstname | User                       |
+      | field_lastname  | Webmaster                  |
     When I click "Latest Notifications" in the "tools buttons" region
     And I wait for AJAX to finish
     And I click "Settings" in the "tools buttons" region
@@ -79,7 +79,7 @@ Feature: ENRD Notifications.
     And I select "Published" from "Moderation state"
     And I wait for AJAX to finish
     And I press the "Save" button
-    And I wait
+    And I wait for "5" seconds
     # Check if message has been created.
     Then the ".enrd-notifications-counter" element should contain "1"
     And I should find a message subscribe item in the queue list
@@ -99,10 +99,10 @@ Feature: ENRD Notifications.
 
   @javascript @authenticated @notifications @notifications-subscription @emails @clean
   Scenario: As a user I want to be notified by email when I follow a content type that has a new published item.
-    Given I am logged in as a user with the "administrator" role and I have the following fields:
-      | mail            | user_admin@example.com |
-      | field_firstname | User                   |
-      | field_lastname  | Admin                  |
+    Given I am logged in as a user with the "webmaster" role and I have the following fields:
+      | mail            | user_webmaster@example.com |
+      | field_firstname | User                       |
+      | field_lastname  | Webmaster                  |
     Given the test email system is enabled
     When I click "Latest Notifications" in the "tools buttons" region
     And I wait for AJAX to finish
@@ -125,9 +125,9 @@ Feature: ENRD Notifications.
     Then the "monthly" message digest item has been "created"
     And I run cron
     Then the "monthly" message digest item has been "sent"
-    Then the email to "user_admin@example.com" should contain "The European Network for Rural Development (ENRD) Message Digest"
-    And the email to "user_admin@example.com" should contain "Greetings User Admin, you have received the following notifications on the site: The European Network for Rural Development (ENRD)."
-    And the email to "user_admin@example.com" should contain "The new News BDD News to follow [1] has been published."
+    Then the email to "user_webmaster@example.com" should contain "The European Network for Rural Development (ENRD) Message Digest"
+    And the email to "user_webmaster@example.com" should contain "Greetings User Webmaster, you have received the following notifications on the site: The European Network for Rural Development (ENRD)."
+    And the email to "user_webmaster@example.com" should contain "The new News BDD News to follow [1] has been published."
 
   @notifications @flag-access
   Scenario: As a LAG user I should see the flag link to follow a LAG if not mine.

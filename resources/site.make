@@ -23,14 +23,14 @@ projects[ds_bootstrap_layouts][download][revision] = 0bef9d49a2b302c29ebed001b66
 projects[ds_bootstrap_layouts][download][branch] = 7.x-3.x
 
 projects[entityqueue][subdir] = "contrib"
-projects[entityqueue][version] = "1.4"
+projects[entityqueue][version] = "1.5"
 
 projects[entityreference_view_widget][subdir] = "contrib"
 projects[entityreference_view_widget][version] = "2.0-rc6"
 
 projects[expanding_formatter][subdir] = "contrib"
 projects[expanding_formatter][version] = "1.0"
-;projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
+projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
 
 projects[feeds_tamper_string2id][subdir] = "contrib"
 projects[feeds_tamper_string2id][version] = "1.1"
@@ -40,6 +40,10 @@ projects[facetapi_bonus][version] = "1.2"
 
 projects[field_collection][subdir] = "contrib"
 projects[field_collection][version] = "1.0-beta12"
+projects[field_collection][patch][] = patches/field_collection-entity_field_query_exception_unknown_field_issue_1866032.patch
+projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-11-23/field_collection-php72-beta11-2936874-20.patch
+projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-11-30/field_collection_migrate_notice_php_71-3009729-6.patch
+projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-12-13/field_collection-beta12-php72-countable-2992575-25.txt
 
 ; Temporary local downgrade of File Entity for the Solr issues (NEMA-2381).
 projects[file_entity][subdir] = "contrib"
@@ -91,6 +95,7 @@ projects[queue_mail][version] = "1.6"
 
 projects[redirect][subdir] = "contrib"
 projects[redirect][version] = "1.0-rc3"
+projects[redirect][patch][] = https://www.drupal.org/files/issues/2018-11-28/redirect-func_get_args-3016519-2.patch
 
 projects[shs][subdir] = "contrib"
 projects[shs][version] = "1.8"
@@ -103,12 +108,8 @@ projects[socialfield][version] = "1.5"
 projects[socialfield][patch][] = https://www.drupal.org/files/issues/2823399-default-values-fix.patch
 projects[socialfield][patch][] = https://www.drupal.org/files/issues/2018-05-01/socialfield-new-services-unavailable-existing-fields-2464803-12.patch
 
-projects[taxonomy_csv][subdir] = "contrib"
-projects[taxonomy_csv][version] = "5.10"
-projects[taxonomy_csv][patch][] = https://www.drupal.org/files/taxonomy_csv-rm_unknown_options_check-1475952-10.patch
-
 projects[term_merge][subdir] = "contrib"
-projects[term_merge][version] = "1.2"
+projects[term_merge][version] = "1.3"
 
 projects[uuid_features][subdir] = "contrib"
 projects[uuid_features][version] = "1.0-rc1"
@@ -119,8 +120,12 @@ projects[views_between_dates_filter][version] = "1.0"
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/cR_CE
 projects[views_data_export_phpexcel][subdir] = "contrib"
 projects[views_data_export_phpexcel][version] = "1.0"
-projects[views_data_export_phpexcel][patch][] = patches/fix-libraries-version-detection.patch
 projects[views_data_export_phpexcel][patch][] = https://www.drupal.org/files/issues/support_batch-2644866-11.patch
+
+projects[views_data_export_phpspreadsheet][download][type] = "git"
+projects[views_data_export_phpspreadsheet][download][url] = "https://git.drupalcode.org/project/views_data_export_phpspreadsheet.git"
+projects[views_data_export_phpspreadsheet][download][revision] = "2c285de339ba30fa9f0f8303f2d41fd3971bed97"
+projects[views_data_export_phpspreadsheet][subdir] = "contrib"
 
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/1YDBEg
 projects[views_flag_refresh][subdir] = "contrib"
@@ -134,7 +139,7 @@ projects[webform_references][subdir] = "contrib"
 projects[webform_references][version] = "1.9"
 
 projects[webform_validation][subdir] = "contrib"
-projects[webform_validation][version] = "1.14"
+projects[webform_validation][version] = "1.18"
 
 ; =========
 ; Libraries
@@ -149,11 +154,6 @@ libraries[jquery.mask][download][type] = "git"
 libraries[jquery.mask][download][url] = "https://github.com/igorescobar/jQuery-Mask-Plugin.git"
 libraries[jquery.mask][download][revision] = "be8c1bb3b9f6040ff923ee81f7b57fe12a0f15e4"
 libraries[jquery.mask][destination] = "libraries"
-
-libraries[PHPExcel][download][type] = "git"
-libraries[PHPExcel][download][url] = "https://github.com/PHPOffice/PHPExcel.git"
-libraries[PHPExcel][download][revision] = "1441011fb7ecdd8cc689878f54f8b58a6805f870"
-libraries[PHPExcel][destination] = "libraries"
 
 ; ======
 ; Themes

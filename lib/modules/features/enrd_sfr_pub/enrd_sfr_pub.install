@@ -76,3 +76,10 @@ function enrd_sfr_pub_update_7202() {
 function enrd_sfr_pub_update_7203() {
   features_revert(array('enrd_sfr_pub' => array('views_view')));
 }
+
+/**
+ * ENRDPORTAL-505.
+ */
+function enrd_sfr_pub_update_7204() {
+  features_revert(array('enrd_sfr_pub' => array('user_permission')));
+}

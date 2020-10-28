@@ -95,6 +95,9 @@ function enrd_projects_context_default_contexts() {
         ),
       ),
     ),
+    'menu' => array(
+      0 => 'main-menu:projects-practice',
+    ),
   );
   $context->condition_mode = 0;
 

@@ -1,12 +1,12 @@
 @api @sfr-pub
 Feature: ENRD Publication Subscriptions forms.
-  This Feature is aimed at allowing any users to fill in a form in order to subscribe to both CP and Evaluation publications and to send an unsubscription / modification email to the respective admin in charge.
+  This Feature is aimed at allowing any users to fill in a form in order to subscribe to both CP and Evaluation publications and to send an unsubscription / modification email to the respective webmaster in charge.
   It also provides allowed users with several administration interfaces listing the form requests of a certain type: CP subscriptions, EHD subscriptions, CP contact requests and EHD contact requests. From these interfaces, admins can delete (bulk operation) or export the
   available requests.
 
   @anonymous @enrd-sfr @subscribe @cp @ehd @clean
   Scenario: As Anonymous I want to access the: Publications, Evaluation Publications & Newsletter
-    Subscriptions pages from the left sidebar "Subscribe" menu links.
+  Subscriptions pages from the left sidebar "Subscribe" menu links.
     Given I am an anonymous user
     When I am on the homepage
     Then I should see the heading "Subscribe" in the "left sidebar" region
@@ -16,7 +16,7 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the heading "Subscribe to Evaluation publications"
     And I should see "Newsletter" in the "section#block-menu-menu-enrd-sfr-pub-subscribe" element
 
-  @anonymous @enrd-sfr @subscribe @cp
+  @anonymous @enrd-sfr @subscribe @cp @privacy
   Scenario: As Anonymous I want to be able to subscribe to CP publications.
     Given I am an anonymous user
     And "enrd_publications" terms:
@@ -34,6 +34,8 @@ Feature: ENRD Publication Subscriptions forms.
     And I click "Subscribe to Publications"
     Then I should see the heading "Subscribe to publications"
     And I should see "Fill in the form below to request subscription to ENRD publications."
+    And I should see "By checking this box, you acknowledge that you have read and understood the ENRD Privacy Statement."
+    And I should see "I agree that my data may be collected and used for the purposes mentioned in the privacy statement."
     And I should see "If you want to subscribe to the Newsletter, please go to the ENRD Newsletter subscription page."
     And I should see "If you want to unsubscribe or modify your subscriptions, please send your request to the ENRD Contact Point."
     # I can access from a Publication page.
@@ -46,7 +48,7 @@ Feature: ENRD Publication Subscriptions forms.
     And I click "Subscribe to Publications"
     Then I should see the heading "Subscribe to publications"
 
-  @anonymous @enrd-sfr @subscribe @ehd @clean
+  @anonymous @enrd-sfr @subscribe @ehd @clean @privacy
   Scenario: As Anonymous I want to be able to subscribe to EHD publications.
     Given I am an anonymous user
     # I can access from an Evaluation Publication page.
@@ -75,6 +77,8 @@ Feature: ENRD Publication Subscriptions forms.
     And I click "Subscribe to Evaluation Publications"
     Then I should see the heading "Subscribe to Evaluation publications"
     And I should see "Fill in the form below to request subscription to Evaluation publications."
+    And I should see "By checking this box, you acknowledge that you have read and understood the ENRD Privacy Statement."
+    And I should see "I agree that my data may be collected and used for the purposes mentioned in the privacy statement."
     And I should see "If you want to unsubscribe or modify your subscription data please contact the Evaluation Helpdesk."
 
   @anonymous @enrd-sfr @contact @cp
@@ -95,12 +99,12 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the heading "Unsubscribe / modify your subscription to Evaluation publications"
     And I should see "Fill in the form below to request to unsubscribe or modify your subscription to Evaluation publications."
 
-  @authenticated @javascript @enrd-sfr @subscribe @cp
+  @authenticated @javascript @enrd-sfr @subscribe @cp @privacy
   Scenario: As Authenticated I want to fill in the form to subscribe to CP publications, and I get Name, Surname and
   Email already pre-filled.
   I should not get a confirmation message to validate the e-mail (and the subscription request in turn).
     Given I am logged in as a user with the "authenticated user" role and I have the following fields:
-      | mail            | john.doe@bdd-example.com |
+      | mail            | john.doe@example.com |
       | field_firstname | John                     |
       | field_lastname  | Doe                      |
     # I can access from the Publications search page.
@@ -135,7 +139,8 @@ Feature: ENRD Publication Subscriptions forms.
     And I fill in "Postal code " with "00100"
     And I fill in "City" with "Rome"
     And I select "Roma" from "Province"
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     But I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
@@ -177,42 +182,48 @@ Feature: ENRD Publication Subscriptions forms.
     And I press the "Send request" button
     # Country, Address Line 1 and City should be required even if "Country" is not selected.
     Then I should see the following error messages:
-      | error messages                                                |
-      | Name field is required.                                       |
-      | Surname field is required.                                    |
-      | Email field is required.                                      |
-      | Organisation field is required.                               |
-      | Type of publication field is required.                        |
-      | Language(s) + N. of copies field is required.                 |
-      | Language(s) field is required.                                |
-      | Country field is required.                                    |
-      | Address Line 1 field is required.                             |
-      | City field is required.                                       |
-      | What code is in the image? field is required.                 |
-      | You must agree with the EU Legal notice statement to proceed. |
+      | error messages                                             |
+      | Name field is required.                                    |
+      | Surname field is required.                                 |
+      | Email field is required.                                   |
+      | Organisation field is required.                            |
+      | Type of publication field is required.                     |
+      | Language(s) + N. of copies field is required.              |
+      | Language(s) field is required.                             |
+      | Country field is required.                                 |
+      | Address Line 1 field is required.                          |
+      | City field is required.                                    |
+      | What code is in the image? field is required.              |
+      | You must agree with the ENRD Privacy Statement to proceed. |
     And I should not see the following error messages:
-      | error messages                                                |
-      | Address Line 2 field is required.                             |
+      | error messages                    |
+      | Address Line 2 field is required. |
     # Fields should be required even if "Country" is selected (Addressfield default).
     And I select "Italy" from "Country"
     And I wait for AJAX to finish
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                |
-      | Address Line 1 field is required.                             |
-      | Postal code field is required.                                |
-      | City field is required.                                       |
-      | Province field is required.                                   |
+      | error messages                    |
+      | Address Line 1 field is required. |
+      | Postal code field is required.    |
+      | City field is required.           |
+      | Province field is required.       |
     And I should not see the following error messages:
-      | error messages                                                |
-      | Address Line 2 field is required.                             |
+      | error messages                    |
+      | Address Line 2 field is required. |
+    # Validate Postal code according to country.
+    And I fill in "Postal code" with "ABCDE12345"
+    And I press the "Send request" button
+    Then I should see the following error message:
+      | error messages                                                                            |
+      | Invalid postal code. Postal codes in Italy, San Marino, and the Vatican are like "99999". |
     # The Name + Surname characters should totally count maximum 35.
     And I fill in "Name" with "BDD Very Long Name Example"
     And I fill in "Surname" with "BDD Very Long Surname Example"
     And I press the "Send request" button
     Then I should see the following error message:
-      | error messages                                                |
-      | Name + Surname should be maximum 35 characters in total.      |
+      | error messages                                           |
+      | Name + Surname should be maximum 35 characters in total. |
 
   @anonymous @javascript @enrd-sfr @subscribe @cp
   Scenario: Test custom validation errors while filling in the form to subscribe to CP publications.
@@ -251,43 +262,45 @@ Feature: ENRD Publication Subscriptions forms.
       | error messages                                                       |
       | Cannot enter same Language for a Type of publication more than once. |
 
-  @authenticated @enrd-sfr @subscribe @ehd
+  @authenticated @enrd-sfr @subscribe @ehd @privacy
   Scenario: As Authenticated I want to fill in the form to subscribe to EHD publications, and I get Name, Surname and
   Email already pre-filled.
     Given I am logged in as a user with the "authenticated user" role and I have the following fields:
-      | mail            | james.bond@bdd-example.com |
+      | mail            | james.bond@example.com |
       | field_firstname | James                      |
       | field_lastname  | Bond                       |
     When I am at "evaluation/publications"
     And I click "Subscribe to Evaluation Publications"
     And I select "Researcher" from "Type of organisation"
     And I select "Belgium" from "Country"
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     But I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
     # Test the destination parameter in the url.
     Then I should see the heading "Search Evaluation Publications"
 
-  @authenticated @enrd-sfr @emails @subscribe @ehd
+  @authenticated @enrd-sfr @emails @subscribe @ehd @privacy
   Scenario: As Authenticated I want to fill in the form to subscribe to EHD publications, with an e-mail address
   different from that of the logged in user.
     Given I am logged in as a user with the "authenticated user" role and I have the following fields:
-      | mail            | james.bond@bdd-example.com |
+      | mail            | james.bond@example.com |
       | field_firstname | James                      |
       | field_lastname  | Bond                       |
     And the test email system is enabled
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-ehd"
-    And I fill in "Email" with "another-email@bdd-example.com"
+    And I fill in "Email" with "another-email@example.com"
     And I select "Researcher" from "Type of organisation"
     And I select "Belgium" from "Country"
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
     But I should not see the message "Your submission request has been forwarded correctly."
     And I receive an email
     # Test the validation token link
-    When I confirm the "another-email@bdd-example.com" through token link
+    When I confirm the "another-email@example.com" through token link
     Then I should see the message "Your submission request has been forwarded correctly."
 
   @anonymous @enrd-sfr @subscribe @ehd
@@ -296,19 +309,19 @@ Feature: ENRD Publication Subscriptions forms.
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-ehd"
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                |
-      | Name field is required.                                       |
-      | Surname field is required.                                    |
-      | Email field is required.                                      |
-      | What code is in the image? field is required.                 |
-      | You must agree with the EU Legal notice statement to proceed. |
+      | error messages                                             |
+      | Name field is required.                                    |
+      | Surname field is required.                                 |
+      | Email field is required.                                   |
+      | What code is in the image? field is required.              |
+      | You must agree with the ENRD Privacy Statement to proceed. |
 
-  @authenticated @javascript @enrd-sfr @contact @cp
+  @authenticated @javascript @enrd-sfr @contact @cp @privacy
   Scenario: As Authenticated I want to fill in the form to be unsubscribed from CP publications, and I get Name, Surname and
   Email already pre-filled.
   I should not get a confirmation message to validate the e-mail (and the subscription request in turn).
     Given I am logged in as a user with the "authenticated user" role and I have the following fields:
-      | mail            | jane.austen@bdd-example.com |
+      | mail            | jane.austen@example.com |
       | field_firstname | Jane                        |
       | field_lastname  | Austen                      |
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-cp"
@@ -340,7 +353,8 @@ Feature: ENRD Publication Subscriptions forms.
     And I fill in "City" with "Alicante"
     And I select "Alicante" from "Province"
     And I fill in "Comments" with "These are BDD comments."
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     But I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
@@ -350,19 +364,20 @@ Feature: ENRD Publication Subscriptions forms.
     And I set the chosen element "field_enrd_sfr_pub_contcp_type[und][]" to "EAFRD Projects Brochure"
     And I check "Electronic"
     And I fill in "Please specify how you would like to modify your subscription information" with "BDD Test modifications."
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     But I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
 
-    # Manage CP contact form requests as EHD user witl admin role.
-    Given I am logged in as a user with the "administrator" role
+    # Manage CP contact form requests as EHD user with webmaster role.
+    Given I am logged in as a user with the "webmaster" role
     When I am at "admin/enrd/enrd-sfr/cp/contact"
     Then I should see the heading "CP contact form requests"
     When I select "Unsubscribe" from "Reason"
     And I press "Apply"
-    Then I should see "Jane" in the "jane.austen@bdd-example.com" row
-    And I should see "Austen" in the "jane.austen@bdd-example.com" row
+    Then I should see "Jane" in the "jane.austen@example.com" row
+    And I should see "Austen" in the "jane.austen@example.com" row
     # Test the Contact forms "Export" functionality.
     And I check the box "edit-views-bulk-operations-0"
     And I press the "Export" button
@@ -381,7 +396,7 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the following success messages:
       | success messages            |
       | Performed Delete on 1 item. |
-    And I should not see "jane.austen@bdd-example.com" in the "content" region
+    And I should not see "jane.austen@example.com" in the "content" region
 
   @anonymous @javascript @enrd-sfr @contact @cp
   Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to CP publications.
@@ -397,7 +412,7 @@ Feature: ENRD Publication Subscriptions forms.
       | Type of publication(s) field is required.                             |
       | Are you subscribed for electronic or paper copies? field is required. |
       | What code is in the image? field is required.                         |
-      | You must agree with the EU Legal notice statement to proceed.         |
+      | You must agree with the ENRD Privacy Statement to proceed.            |
     And I should not see the following error messages:
       | error messages                                                                               |
       | Comments field is required.                                                                  |
@@ -408,34 +423,34 @@ Feature: ENRD Publication Subscriptions forms.
     # Please specify how you would like to modify your subscription information required if Reason = Modify.
     Then I should see the following error message:
       | error messages                                                                               |
-      | Name field is required.                                               |
-      | Surname field is required.                                            |
-      | Email field is required.                                              |
-      | Type of publication(s) field is required.                             |
-      | Are you subscribed for electronic or paper copies? field is required. |
-      | What code is in the image? field is required.                         |
-      | You must agree with the EU Legal notice statement to proceed.         |
+      | Name field is required.                                                                      |
+      | Surname field is required.                                                                   |
+      | Email field is required.                                                                     |
+      | Type of publication(s) field is required.                                                    |
+      | Are you subscribed for electronic or paper copies? field is required.                        |
+      | What code is in the image? field is required.                                                |
+      | You must agree with the ENRD Privacy Statement to proceed.                                   |
       | Please specify how you would like to modify your subscription information field is required. |
     And I should not see the following error messages:
-      | error messages                                                        |
-      | Comments field is required.                                           |
+      | error messages              |
+      | Comments field is required. |
 
     # I should validation errors also when Reason is not selected.
     And I am at "enrd-sfr/add/enrd-sfr-pub-contact-cp"
     And I check "Paper"
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                                               |
-      | Reason field is required.                                                                    |
-      | Name field is required.                                                                      |
-      | Email field is required.                                                                     |
-      | Surname field is required.                                                                   |
-      | Type of publication(s) field is required.                                                    |
-      | What code is in the image? field is required.                                                |
-      | You must agree with the EU Legal notice statement to proceed.                                |
-      | Country field is required.                                                                   |
-      | Address Line 1 field is required.                                                            |
-      | City field is required.                                                                      |
+      | error messages                                             |
+      | Reason field is required.                                  |
+      | Name field is required.                                    |
+      | Email field is required.                                   |
+      | Surname field is required.                                 |
+      | Type of publication(s) field is required.                  |
+      | What code is in the image? field is required.              |
+      | You must agree with the ENRD Privacy Statement to proceed. |
+      | Country field is required.                                 |
+      | Address Line 1 field is required.                          |
+      | City field is required.                                    |
     But I should not see the following error messages:
       | error messages                                                                               |
       | Please specify how you would like to modify your subscription information field is required. |
@@ -444,20 +459,26 @@ Feature: ENRD Publication Subscriptions forms.
     And I wait for AJAX to finish
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                                               |
-      | Address Line 1 field is required.                                                            |
-      | City field is required.                                                                      |
-      | Province field is required.                                                                  |
+      | error messages                    |
+      | Address Line 1 field is required. |
+      | City field is required.           |
+      | Province field is required.       |
     But I should not see the following error messages:
-      | error messages                                                                               |
-      | Address Line 2 field is required.                                                            |
+      | error messages                    |
+      | Address Line 2 field is required. |
+    # Validate Postal code according to country.
+    And I fill in "Postal code" with "ABCDE12345"
+    And I press the "Send request" button
+    Then I should see the following error message:
+      | error messages                                                                            |
+      | Invalid postal code. Postal codes in Italy, San Marino, and the Vatican are like "99999". |
 
-  @authenticated @javascript @enrd-sfr @contact @ehd
+  @authenticated @javascript @enrd-sfr @contact @ehd @privacy
   Scenario: As Authenticated I want to fill in the form to ask for changing sub. data from EHD publications, and I get Name,
   Surname and Email already pre-filled.
   I should not get a confirmation message to validate the e-mail (and the subscription request in turn).
     Given I am logged in as a user with the "authenticated user" role and I have the following fields:
-      | mail            | marie.curie@bdd-example.com |
+      | mail            | marie.curie@example.com |
       | field_firstname | Marie                       |
       | field_lastname  | Curie                       |
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-ehd"
@@ -467,14 +488,16 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see an "#edit-field-enrd-sfr-pub-contehd-email" element
     And I select "Modify your subscription" from "Action"
     And I fill in "Please specify how you would like to modify your subscription information" with "These are BDD requests of modifications."
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     And I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-ehd"
     And I select "Unsubscribe" from "Action"
     And I fill in "Notes" with "These are BDD notes."
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     Then I should see the message "Your submission request has been forwarded correctly."
     And I should not see the message "We have sent a confirmation email to the email address you have specified. Please open it and click on the link in order to finalize the request you have just submitted."
@@ -485,8 +508,8 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the heading "Evaluation contact form requests"
     When I select "Unsubscribe" from "Action"
     And I press "Apply"
-    Then I should see "Marie" in the "marie.curie@bdd-example.com" row
-    And I should see "Curie" in the "marie.curie@bdd-example.com" row
+    Then I should see "Marie" in the "marie.curie@example.com" row
+    And I should see "Curie" in the "marie.curie@example.com" row
     # Test the Contact forms "Export" functionality.
     And I check the box "edit-views-bulk-operations-0"
     And I press the "Export" button
@@ -505,7 +528,7 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the following success messages:
       | success messages            |
       | Performed Delete on 1 item. |
-    And I should not see "marie.curie@bdd-example.com" in the "content" region
+    And I should not see "marie.curie@example.com" in the "content" region
 
   @anonymous @enrd-sfr @contact @ehd
   Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to EHD publications.
@@ -514,12 +537,12 @@ Feature: ENRD Publication Subscriptions forms.
     And I select "Unsubscribe" from "Action"
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                |
-      | Name field is required.                                       |
-      | Surname field is required.                                    |
-      | Email field is required.                                      |
-      | What code is in the image? field is required.                 |
-      | You must agree with the EU Legal notice statement to proceed. |
+      | error messages                                             |
+      | Name field is required.                                    |
+      | Surname field is required.                                 |
+      | Email field is required.                                   |
+      | What code is in the image? field is required.              |
+      | You must agree with the ENRD Privacy Statement to proceed. |
     And I should not see the following error messages:
       | error messages                                                                               |
       | Action field is required.                                                                    |
@@ -529,42 +552,43 @@ Feature: ENRD Publication Subscriptions forms.
     And I press the "Send request" button
     # Custom validation: Please specify... field is required only if Reason = Modify.
     Then I should see the following error message:
-      | error messages                                                                                |
-      | Name field is required.                                                                       |
-      | Surname field is required.                                                                    |
-      | Email field is required.                                                                      |
-      | What code is in the image? field is required.                                                 |
-      | You must agree with the EU Legal notice statement to proceed.                                 |
-      | Please specify how you would like to modify your subscription information field is required.  |
-    And I should not see the following error messages:
       | error messages                                                                               |
-      | Action field is required.                                                                    |
+      | Name field is required.                                                                      |
+      | Surname field is required.                                                                   |
+      | Email field is required.                                                                     |
+      | What code is in the image? field is required.                                                |
+      | You must agree with the ENRD Privacy Statement to proceed.                                   |
+      | Please specify how you would like to modify your subscription information field is required. |
+    And I should not see the following error messages:
+      | error messages            |
+      | Action field is required. |
 
     # I should get validation errors even if no Action is selected.
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-ehd"
     And I press the "Send request" button
     Then I should see the following error messages:
-      | error messages                                                                               |
-      | Action field is required.                                                                    |
-      | Name field is required.                                                                      |
-      | Surname field is required.                                                                   |
-      | Email field is required.                                                                     |
-      | You must agree with the EU Legal notice statement to proceed.                                |
+      | error messages                                             |
+      | Action field is required.                                  |
+      | Name field is required.                                    |
+      | Surname field is required.                                 |
+      | Email field is required.                                   |
+      | You must agree with the ENRD Privacy Statement to proceed. |
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-ehd"
     And I press the "Send request" button
     Then I should not see the following error messages:
       | error messages                                                                               |
       | Please specify how you would like to modify your subscription information field is required. |
 
-  @javascript @ehd-subscriptions-manager @enrd-sfr @subscribe @ehd
+  @javascript @ehd-subscriptions-manager @enrd-sfr @subscribe @ehd @privacy
   Scenario: As EHD Subscriptions manager I want to manage the Evaluation subscription requests.
     Given I am logged in as a user with the "ehd subscriptions manager" role and I have the following fields:
-      | mail            | ehd.subs.manager@bdd-example.com |
+      | mail            | ehd.subs.manager@example.com |
       | field_firstname | John                             |
       | field_lastname  | Doe                              |
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-ehd"
     And I select "Austria" from "Country"
-    And I check the box "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Send request" button
     And I am at "admin/enrd/enrd-sfr/ehd"
     Then I should see the heading "Evaluation subscription requests"
@@ -572,7 +596,7 @@ Feature: ENRD Publication Subscriptions forms.
     # And I should see "Subscription Requests" in the ".nav-tabs" element
     And I fill in "Name, Surname or E-mail contains" with "John"
     And I press "Apply"
-    Then I should see "John" in the "ehd.subs.manager@bdd-example.com" row
+    Then I should see "John" in the "ehd.subs.manager@example.com" row
     And I press "Reset"
     # Test the Subscriptions "Export" functionality.
     And I check the box "edit-views-bulk-operations-0"
@@ -590,5 +614,4 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the following success messages:
       | success messages            |
       | Performed Delete on 1 item. |
-    And I should not see "ehd.subs.manager@bdd-example.com" in the "content" region
-
+    And I should not see "ehd.subs.manager@example.com" in the "content" region

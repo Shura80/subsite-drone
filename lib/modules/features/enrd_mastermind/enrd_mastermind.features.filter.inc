@@ -271,36 +271,36 @@ function enrd_mastermind_filter_default_formats() {
     'status' => 1,
     'weight' => -8,
     'filters' => array(
-      'invisimail_encode_html_entities' => array(
-        'weight' => -49,
-        'status' => 1,
-        'settings' => array(
-          'encoder' => 'html_entities',
-          'chunk' => 1,
-          'link' => 1,
-        ),
-      ),
       'filter_html_escape' => array(
-        'weight' => -48,
+        'weight' => -50,
         'status' => 1,
         'settings' => array(),
       ),
       'filter_basepath' => array(
-        'weight' => -46,
+        'weight' => -49,
         'status' => 1,
         'settings' => array(),
       ),
       'filter_url' => array(
-        'weight' => -39,
+        'weight' => -48,
         'status' => 1,
         'settings' => array(
           'filter_url_length' => 72,
         ),
       ),
       'filter_autop' => array(
-        'weight' => -38,
+        'weight' => -47,
         'status' => 1,
         'settings' => array(),
+      ),
+      'invisimail_encode_html_entities' => array(
+        'weight' => -46,
+        'status' => 1,
+        'settings' => array(
+          'encoder' => 'html_entities',
+          'chunk' => 1,
+          'link' => 1,
+        ),
       ),
     ),
   );

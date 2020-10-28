@@ -1341,9 +1341,14 @@ function enrd_nrn_profiles_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'above',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => FALSE,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 8,
       ),
       'landing_page_teaser' => array(
@@ -3111,7 +3116,7 @@ function enrd_nrn_profiles_field_default_field_instances() {
   // Exported field_instance: 'node-nrn_profile-field_tax_evaluation'.
   $field_instances['node-nrn_profile-field_tax_evaluation'] = array(
     'bundle' => 'nrn_profile',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -3161,15 +3166,16 @@ function enrd_nrn_profiles_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 14,
     ),
   );

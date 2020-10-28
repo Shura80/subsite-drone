@@ -34,13 +34,18 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 27,
+        'weight' => 32,
       ),
       'full' => array(
         'label' => 'above',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => FALSE,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 2,
       ),
       'teaser' => array(
@@ -118,7 +123,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 28,
+        'weight' => 33,
       ),
       'full' => array(
         'label' => 'above',
@@ -163,6 +168,71 @@ function enrd_news_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-event-field_enrd_event_online'.
+  $field_instances['node-event-field_enrd_event_online'] = array(
+    'bundle' => 'event',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => 'Select this checkbox to flag it as "Online event".',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 34,
+      ),
+      'enrd_nrn_toolkit_resource' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'eventlist' => array(
+        'label' => 'hidden',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 8,
+      ),
+      'full' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_enrd_event_online',
+    'label' => 'Display as Online Event',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'display_label' => 1,
+        'enrd_fieldtips_enabled' => 0,
+      ),
+      'type' => 'options_onoff',
+      'weight' => -3,
+    ),
+  );
+
   // Exported field_instance: 'node-event-field_enrd_nrn_alter_description'.
   $field_instances['node-event-field_enrd_nrn_alter_description'] = array(
     'bundle' => 'event',
@@ -198,7 +268,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 15,
       ),
       'full' => array(
         'label' => 'above',
@@ -302,7 +372,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 14,
       ),
       'full' => array(
         'label' => 'above',
@@ -368,10 +438,10 @@ function enrd_news_field_default_field_instances() {
         'weight' => 34,
       ),
       'eventlist' => array(
-        'label' => 'above',
+        'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 2,
       ),
       'full' => array(
         'label' => 'above',
@@ -435,7 +505,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 6,
       ),
       'full' => array(
         'label' => 'above',
@@ -534,7 +604,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 12,
       ),
       'full' => array(
         'label' => 'above',
@@ -649,7 +719,7 @@ function enrd_news_field_default_field_instances() {
         ),
       ),
       'type' => 'addressfield_standard',
-      'weight' => -2,
+      'weight' => -1,
     ),
   );
 
@@ -662,9 +732,12 @@ function enrd_news_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'module' => 'i18n_taxonomy',
-        'settings' => array(),
-        'type' => 'i18n_taxonomy_term_reference_link',
+        'module' => 'ds',
+        'settings' => array(
+          'taxonomy_term_link' => TRUE,
+          'taxonomy_term_separator' => ', ',
+        ),
+        'type' => 'ds_taxonomy_separator_localized',
         'weight' => 17,
       ),
       'enrd_nrn_toolkit_resource' => array(
@@ -690,7 +763,7 @@ function enrd_news_field_default_field_instances() {
           'taxonomy_term_link' => 0,
           'taxonomy_term_separator' => ', ',
         ),
-        'type' => 'ds_taxonomy_separator',
+        'type' => 'ds_taxonomy_separator_localized',
         'weight' => 4,
       ),
       'teaser' => array(
@@ -700,6 +773,7 @@ function enrd_news_field_default_field_instances() {
         'weight' => 0,
       ),
     ),
+    'ds_extras_field_template' => '',
     'entity_type' => 'node',
     'field_name' => 'field_event_type',
     'label' => 'Event type',
@@ -713,9 +787,10 @@ function enrd_news_field_default_field_instances() {
       'module' => 'options',
       'settings' => array(
         'apply_chosen' => '',
+        'enrd_fieldtips_enabled' => 0,
       ),
       'type' => 'options_select',
-      'weight' => -3,
+      'weight' => -2,
     ),
   );
 
@@ -840,7 +915,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 29,
+        'weight' => 34,
       ),
       'full' => array(
         'label' => 'above',
@@ -937,7 +1012,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 17,
+        'weight' => 23,
       ),
       'full' => array(
         'label' => 'above',
@@ -994,7 +1069,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 26,
+        'weight' => 31,
       ),
       'full' => array(
         'label' => 'above',
@@ -1036,7 +1111,7 @@ function enrd_news_field_default_field_instances() {
   // Exported field_instance: 'node-event-field_tax_evaluation'.
   $field_instances['node-event-field_tax_evaluation'] = array(
     'bundle' => 'event',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1056,7 +1131,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 24,
+        'weight' => 29,
       ),
       'full' => array(
         'label' => 'above',
@@ -1081,8 +1156,9 @@ function enrd_news_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1090,7 +1166,7 @@ function enrd_news_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 9,
     ),
   );
@@ -1118,7 +1194,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 25,
+        'weight' => 30,
       ),
       'full' => array(
         'label' => 'above',
@@ -1180,7 +1256,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 23,
+        'weight' => 28,
       ),
       'full' => array(
         'label' => 'above',
@@ -1308,7 +1384,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 22,
+        'weight' => 27,
       ),
       'full' => array(
         'label' => 'above',
@@ -1370,7 +1446,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 21,
+        'weight' => 26,
       ),
       'full' => array(
         'label' => 'above',
@@ -1427,7 +1503,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 20,
+        'weight' => 25,
       ),
       'full' => array(
         'label' => 'above',
@@ -1489,7 +1565,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 19,
+        'weight' => 24,
       ),
       'full' => array(
         'label' => 'above',
@@ -1680,7 +1756,7 @@ function enrd_news_field_default_field_instances() {
   // Exported field_instance: 'node-news-field_tax_evaluation'.
   $field_instances['node-news-field_tax_evaluation'] = array(
     'bundle' => 'news',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1719,8 +1795,9 @@ function enrd_news_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1728,7 +1805,7 @@ function enrd_news_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 7,
     ),
   );
@@ -2067,6 +2144,7 @@ function enrd_news_field_default_field_instances() {
   t('Add an image that represents the news you are adding.');
   t('Country');
   t('Date');
+  t('Display as Online Event');
   t('Display as Stakeholder Event');
   t('Documents selection');
   t('Evaluation');
@@ -2087,6 +2165,7 @@ function enrd_news_field_default_field_instances() {
   t('Registration');
   t('Resource type');
   t('Rural Development Policy');
+  t('Select this checkbox to flag it as "Online event".');
   t('Select this checkbox to flag it as "Stakeholder event".');
   t('Select this checkbox to include it in the NRN Toolkit');
   t('Source');

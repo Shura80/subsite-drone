@@ -2495,11 +2495,14 @@ function enrd_projects_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'hidden',
-        'module' => 'file_entity',
+        'module' => 'enrd_file_formatter',
         'settings' => array(
-          'text' => 'Full project description',
+          'custom_file_title' => 'Full Project description',
+          'display_type' => 'full',
+          'force_file_title' => TRUE,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
         ),
-        'type' => 'file_download_link',
+        'type' => 'enrd_file_formatter',
         'weight' => 2,
       ),
       'project_list' => array(
@@ -3543,7 +3546,7 @@ function enrd_projects_field_default_field_instances() {
   // Exported field_instance: 'node-project-field_tax_evaluation'.
   $field_instances['node-project-field_tax_evaluation'] = array(
     'bundle' => 'project',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -3599,15 +3602,16 @@ function enrd_projects_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 47,
     ),
   );

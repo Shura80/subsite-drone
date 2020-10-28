@@ -1,0 +1,135 @@
+// ENRD File Formatter styles.
+@mixin enrd-file-formatter() {
+    img.file-icon {
+        margin-top: -1px;
+    }
+    .iso {
+        font-size: 0.8em;
+        font-weight: bold;
+        border: 1px solid #333;
+        border-radius: 3px;
+        padding: 0 2px;
+        margin-left: 2px;
+    }
+    .size {
+        font-size: 0.8em;
+        white-space: nowrap;
+    }
+}
+
+/* Define mixin for Portals menu color palettes */
+@mixin enrd-portal-menu($columns, $bg, $bg-hover-active, $border, $icon, $icon-hover-active, $arrow, $arrow-hover-active, $text, $text-hover-active) {
+    ul {
+        border-color: $border;
+    }
+
+    li {
+        // Default shows a predefined one column layout.
+        width: 100%;
+
+        // Shows a predefined two columns layout.
+        @media (min-width: 481px) {
+            width: 50%;
+        }
+
+        // Shows a percentage of custom two or three columns layout.
+        @media (min-width: 768px) {
+            width: $columns;
+        }
+
+        &:nth-child(-n+3) {
+            border-color: $border;
+        }
+
+        a {
+            border-color: $border;
+            background-color: $bg;
+
+            &:after {
+                color: $arrow !important;
+            }
+
+            &:hover {
+                background-color: $bg-hover-active !important;
+                color: $text-hover-active;
+
+                span.glyphicon, span.icon {
+                    color: $icon-hover-active;
+                }
+
+                &:after {
+                    color: $arrow-hover-active !important;
+                }
+            }
+
+            &.active {
+                background-color: $bg-hover-active !important;
+                color: $text-hover-active;
+
+                span.glyphicon, span.icon {
+                    color: $icon-hover-active;
+                }
+
+                &:after {
+                    color: $arrow-hover-active !important;
+                }
+            }
+
+            span.glyphicon, span.icon {
+                color: $icon;
+            }
+
+            span.glyphicon {
+                text-decoration-color: $bg-hover-active;
+            }
+        }
+    }
+}
+
+// Eu Legal notice & Privacy Policy checkboxes.
+@mixin enrd-privacy-policy() {
+    .form-item-eu-legal-notice, .form-item-privacy-policy {
+        display: flex;
+
+        label.option {
+            padding-left: 5px;
+        }
+
+        input.form-checkbox {
+            align-self: flex-start;
+            margin-right: 5px;
+            top: 6px;
+        }
+    }
+
+    .form-item-privacy-policy {
+        margin-top: -3px;
+    }
+}
+
+// Publish Legal Notice chechbox.
+@mixin enrd-publish-legal-notice() {
+    .form-item-field-publish-legal-notice {
+        display: flex;
+        flex-wrap: wrap;
+
+        input.form-checkbox {
+            align-self: flex-start;
+            margin-right: 5px;
+            top: 6px;
+        }
+
+        label.option {
+            padding-left: 5px;
+        }
+
+        .description {
+            font-style: italic;
+        }
+
+        label.option {
+            padding-left: 5px;
+            flex-basis: 80%;
+        }
+    }
+}

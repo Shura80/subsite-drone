@@ -20,7 +20,6 @@ function ds_lag_page() {
       'contact' => t('Contact information'),
       'additional' => t('Additional information'),
       'funding' => t('LAG Funding'),
-      'moderation' => t('Moderation'),
     ),
   );
 }

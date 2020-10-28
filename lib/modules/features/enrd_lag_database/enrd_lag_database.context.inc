@@ -102,6 +102,9 @@ function enrd_lag_database_context_default_contexts() {
         ),
       ),
     ),
+    'menu' => array(
+      0 => 'main-menu:leader-clld/clld-partner-search',
+    ),
   );
   $context->condition_mode = 0;
 
@@ -167,6 +170,9 @@ function enrd_lag_database_context_default_contexts() {
           'weight' => '-5',
         ),
       ),
+    ),
+    'menu' => array(
+      0 => 'main-menu:leader-clld/lag-database',
     ),
   );
   $context->condition_mode = 0;

@@ -99,11 +99,6 @@ function enrd_lag_database_ds_field_settings_info() {
         ),
       ),
     ),
-    'field_enrd_lag_spoken_languages' => array(
-      'formatter_settings' => array(
-        'ft' => array(),
-      ),
-    ),
   );
   $export['node|lag|enrd_lag_database_shared_info'] = $ds_fieldsetting;
 
@@ -114,14 +109,6 @@ function enrd_lag_database_ds_field_settings_info() {
   $ds_fieldsetting->bundle = 'lag';
   $ds_fieldsetting->view_mode = 'full';
   $ds_fieldsetting->settings = array(
-    'enrd_lag_database_ask_for_publishing' => array(
-      'weight' => '35',
-      'label' => 'hidden',
-      'format' => 'default',
-      'formatter_settings' => array(
-        'ft' => array(),
-      ),
-    ),
     'field_enrd_lag_eafrd_contrib' => array(
       'formatter_settings' => array(
         'ft' => array(),
@@ -271,37 +258,39 @@ function enrd_lag_database_ds_layout_settings_info() {
         0 => 'title_field',
         1 => 'field_enrd_coop_expiry_date',
         2 => 'og_lag_group_ref',
-        3 => 'group_enrd_coop_looking_for',
-        4 => 'group_enrd_coop_project_idea',
-        5 => 'field_enrd_coop_type_of_partner',
-        6 => 'field_enrd_coop_partner_country',
-        7 => 'field_enrd_coop_type',
-        8 => 'field_enrd_coop_partner_region',
+        3 => 'field_enrd_coop_spoken_languages',
+        4 => 'field_enrd_coop_type_of_partner',
+        5 => 'group_enrd_coop_looking_for',
+        6 => 'group_enrd_coop_project_idea',
+        7 => 'field_enrd_coop_partner_country',
+        8 => 'field_enrd_coop_type',
         9 => 'field_enrd_coop_topic_of_project',
-        10 => 'field_enrd_coop_addit_keywords',
-        11 => 'field_enrd_coop_context',
+        10 => 'field_enrd_coop_partner_region',
+        11 => 'field_enrd_coop_addit_keywords',
         12 => 'field_enrd_coop_type_of_area',
-        13 => 'field_enrd_coop_brief_summary',
-        14 => 'field_enrd_coop_assets_area',
-        15 => 'field_enrd_coop_objectives',
+        13 => 'field_enrd_coop_assets_area',
+        14 => 'field_enrd_coop_context',
+        15 => 'field_enrd_coop_brief_summary',
+        16 => 'field_enrd_coop_objectives',
       ),
     ),
     'fields' => array(
       'title_field' => 'main',
       'field_enrd_coop_expiry_date' => 'main',
       'og_lag_group_ref' => 'main',
+      'field_enrd_coop_spoken_languages' => 'main',
+      'field_enrd_coop_type_of_partner' => 'main',
       'group_enrd_coop_looking_for' => 'main',
       'group_enrd_coop_project_idea' => 'main',
-      'field_enrd_coop_type_of_partner' => 'main',
       'field_enrd_coop_partner_country' => 'main',
       'field_enrd_coop_type' => 'main',
-      'field_enrd_coop_partner_region' => 'main',
       'field_enrd_coop_topic_of_project' => 'main',
+      'field_enrd_coop_partner_region' => 'main',
       'field_enrd_coop_addit_keywords' => 'main',
-      'field_enrd_coop_context' => 'main',
       'field_enrd_coop_type_of_area' => 'main',
-      'field_enrd_coop_brief_summary' => 'main',
       'field_enrd_coop_assets_area' => 'main',
+      'field_enrd_coop_context' => 'main',
+      'field_enrd_coop_brief_summary' => 'main',
       'field_enrd_coop_objectives' => 'main',
     ),
     'classes' => array(),
@@ -491,13 +480,11 @@ function enrd_lag_database_ds_layout_settings_info() {
       'main' => array(
         0 => 'title',
         1 => 'field_enrd_lag_country',
-        2 => 'field_enrd_lag_spoken_languages',
       ),
     ),
     'fields' => array(
       'title' => 'main',
       'field_enrd_lag_country' => 'main',
-      'field_enrd_lag_spoken_languages' => 'main',
     ),
     'classes' => array(),
     'wrappers' => array(
@@ -508,6 +495,7 @@ function enrd_lag_database_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|lag|enrd_lag_database_shared_info'] = $ds_layout;
 
@@ -564,21 +552,18 @@ function enrd_lag_database_ds_layout_settings_info() {
         32 => 'field_enrd_lag_national_contrib',
         33 => 'field_enrd_lag_private_contrib',
       ),
-      'moderation' => array(
-        34 => 'enrd_lag_database_ask_for_publishing',
-      ),
       'enrd_lag_cooperation_details' => array(
-        35 => 'field_enrd_lag_interested_in',
-        36 => 'field_enrd_lag_themes_interests',
-        37 => 'field_enrd_lag_clld_name',
-        38 => 'field_enrd_lag_clld_email',
+        34 => 'field_enrd_lag_interested_in',
+        35 => 'field_enrd_lag_themes_interests',
+        36 => 'field_enrd_lag_clld_name',
+        37 => 'field_enrd_lag_clld_email',
       ),
       'enrd_lag_other_useful_info' => array(
-        39 => 'field_enrd_lag_project_examples',
-        40 => 'field_enrd_lag_documentation',
+        38 => 'field_enrd_lag_project_examples',
+        39 => 'field_enrd_lag_documentation',
       ),
       'enrd_lag_extended_profile' => array(
-        41 => 'field_enrd_lag_extended_profile',
+        40 => 'field_enrd_lag_extended_profile',
       ),
     ),
     'fields' => array(
@@ -616,7 +601,6 @@ function enrd_lag_database_ds_layout_settings_info() {
       'field_enrd_lag_other_funding' => 'funding',
       'field_enrd_lag_national_contrib' => 'funding',
       'field_enrd_lag_private_contrib' => 'funding',
-      'enrd_lag_database_ask_for_publishing' => 'moderation',
       'field_enrd_lag_interested_in' => 'enrd_lag_cooperation_details',
       'field_enrd_lag_themes_interests' => 'enrd_lag_cooperation_details',
       'field_enrd_lag_clld_name' => 'enrd_lag_cooperation_details',
@@ -632,7 +616,6 @@ function enrd_lag_database_ds_layout_settings_info() {
       'contact' => 'div',
       'additional' => 'div',
       'funding' => 'div',
-      'moderation' => 'div',
     ),
     'layout_wrapper' => 'div',
     'layout_attributes' => '',

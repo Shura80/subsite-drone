@@ -16,6 +16,7 @@ function enrd_focus_on_user_default_permissions() {
     'name' => 'administer entityqueue',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'entityqueue',
   );
@@ -27,6 +28,7 @@ function enrd_focus_on_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -36,6 +38,7 @@ function enrd_focus_on_user_default_permissions() {
     'name' => 'delete any focus_on content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -45,6 +48,7 @@ function enrd_focus_on_user_default_permissions() {
     'name' => 'delete own focus_on content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -55,6 +59,7 @@ function enrd_focus_on_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -66,6 +71,7 @@ function enrd_focus_on_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -75,6 +81,7 @@ function enrd_focus_on_user_default_permissions() {
     'name' => 'manipulate all entityqueues',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'entityqueue',
   );
@@ -85,6 +92,7 @@ function enrd_focus_on_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'entityqueue',
   );
@@ -95,6 +103,7 @@ function enrd_focus_on_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'entityqueue',
   );

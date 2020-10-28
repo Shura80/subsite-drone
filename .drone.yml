@@ -19,7 +19,7 @@ workspace:
 # SERVICES #
 services:
   - name: web
-    image: fpfis/php56-build
+    image: fpfis/httpd-php:7.3
     environment:
       DOCUMENT_ROOT: /test/toolkit/build
       PORT: 8080
@@ -34,7 +34,7 @@ services:
 steps:
   # SETUP TOOLKIT #
   - name: toolkit
-    image: fpfis/php56-dev
+    image: fpfis/httpd-php-dev:7.3
     commands:
       - composer install
       - rm -rf ./.tmp/ ./build
@@ -42,45 +42,22 @@ steps:
 
 # PHPCS CHECKS #
 # Standard #
-#  - name: phpcs
-    # image: fpfis/php56-dev
-    # commands:
-    #  - ./toolkit/phing test-run-phpcs
+  - name: phpcs
+     image: fpfis/httpd-php-dev:7.3
+     commands:
+      - ./toolkit/phing test-run-phpcs
+
+# PHP 7 Compatibility #
+  - name: phpcs
+      image: fpfis/httpd-php-dev:7.3
+      commands:
+        - ./toolkit/phing test-run-phpcs-compatibility
 
   # BUILD PLATFORM AND SUBSITE#
   - name: build
-    image: fpfis/php56-dev
+    image: fpfis/httpd-php-dev:7.3
     commands:
       - ./toolkit/phing build-platform build-subsite-dev
-
-  # SOLR SERVER SECTION #
-  - name: solr
-    image: fpfis/solr5
-    detach: true
-
-  # INSTALL SECTION #
-  # CLEAN #
-  - name: install-clean
-    image: fpfis/php56-dev
-    commands:
-      - rm /test/toolkit/build/sites/sites.php
-      - ./toolkit/phing install-clean
-      - ./toolkit/phing drush-solr-enable
-
-  # TEST SECTION #
-  # SELENIUM #
-  - name: selenium
-    image: selenium/standalone-chrome-debug
-    environment:
-      HUB_PORT_4444_TCP_ADDR: selenium
-      HUB_PORT_4444_TCP_PORT: "4444"
-    detach: true
-
-  # BEHAT #
-  - name: behat
-    image: fpfis/php56-dev
-    commands:
-      - ./toolkit/phing test-run-behat
 
   # TELEGRAM NOTIFICATIONS
   - name: notification

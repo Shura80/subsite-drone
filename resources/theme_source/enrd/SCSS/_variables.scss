@@ -1,9 +1,86 @@
 /* ENRD SCSS Variables */
 
-$lblue		:#009193;  //#008488 wcag2 AA pass ok
-$dblue		:darken($lblue,10%);
-$hlblue		:lighten($lblue,5%);
-$greenwarm	:#83B41C;
-$lightBlue	:#E9F5F5;
-$lblack		:#333333;
-$lgrey      :#c8c8c8;
+$lblue: #009193; //#008488 wcag2 AA pass ok
+$dblue: darken($lblue, 10%);
+$hlblue: lighten($lblue, 5%);
+$greenwarm: #83B41C;
+$lightBlue: #E9F5F5;
+$lblack: #333333;
+$lgrey: #c8c8c8;
+
+/* ENRD Portals */
+/* Columns layout */
+$two_col: calc(100% / 2);
+$three_col: calc(100% / 3);
+
+/* Default - menu-default */
+$columns-default: $three_col;
+$bg-default: $lightBlue;
+$bg-default-hover-active: $lblue;
+$border-default: darken($lightBlue, 20%);
+$icon-default: $lblue;
+$icon-default-hover-active: #fff;
+$arrow-default: $lblack;
+$arrow-default-hover-active: #fff;
+$text-default: #5a5a5a;
+$text-default-hover-active: #fff;
+
+/* CAP 2020 - menu-cap-2020 */
+$columns-cap: $two_col;
+$bg-cap: rgb(244, 245, 225);
+$bg-cap-hover-active: rgb(234, 238, 194);
+$border-cap: $bg-cap-hover-active;
+$icon-cap: rgb(192, 201, 74);
+$icon-cap-hover-active: $icon-cap;
+$arrow-cap: rgb(217, 221, 151);
+$arrow-cap-hover-active: $icon-cap;
+$text-cap-default: $text-default;
+$text-cap-hover-active: $text-default;
+
+/* LEADER Toolkit - menu-leader-toolkit */
+$columns-leader: $two_col;
+$bg-leader: rgb(219, 231, 225);
+$bg-leader-hover-active: darken($bg-leader, 5%);
+$border-leader: $bg-leader-hover-active;
+$icon-leader: rgb(62, 105, 108);
+$icon-leader-hover-active: $icon-leader;
+$arrow-leader: rgb(100, 109, 129);
+$arrow-leader-hover-active: $icon-leader;
+$text-leader-default: $text-default;
+$text-leader-hover-active: $text-default;
+
+/* Smart Villages - menu-smart-villages */
+$columns-smart: $three_col;
+$bg-smart: rgb(234, 239, 242);
+$bg-smart-hover-active: rgb(216, 225, 234);
+$border-smart: $bg-smart-hover-active;
+$icon-smart: rgb(143, 181, 213);
+$icon-smart-hover-active: $icon-smart;
+$arrow-smart: rgb(194, 213, 228);
+$arrow-smart-hover-active: $icon-smart;
+$text-smart-default: $text-default;
+$text-smart-hover-active: $text-default;
+
+/* Rural Bioeconomy - menu-rural-bioeconomy */
+$columns-bioeconomy: $three_col;
+$bg-bioeconomy: rgb(231, 238, 237);
+$bg-bioeconomy-hover-active: rgb(212, 228, 226);
+$border-bioeconomy: $bg-bioeconomy-hover-active;
+$icon-bioeconomy: rgb(117, 159, 161);
+$icon-bioeconomy-hover-active: $icon-bioeconomy;
+$arrow-bioeconomy: rgb(180, 204, 203);
+$arrow-bioeconomy-hover-active: $icon-bioeconomy;
+$text-bioeconomy-default: $text-default;
+$text-bioeconomy-hover-active: $text-default;
+
+/* Long Term Rural Vision - menu-long-term-rural-vision */
+$columns-rural-vision: $three_col;
+$bg-rural-vision: #f5f5f5;
+$bg-rural-vision-hover-active: #e6e6e6;
+$border-rural-vision: #bebebe;
+$icon-rural-vision: #b5b5b5;
+$icon-rural-vision-hover-active: #b5b5b5;
+$arrow-rural-vision: #b5b5b5;
+$arrow-rural-vision-hover-active: #c4c4c4;
+$text-rural-vision-default: #555555;
+$text-rural-vision-hover-active: #555555;

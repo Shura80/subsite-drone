@@ -18,6 +18,8 @@ use Behat\Behat\Hook\Scope\BeforeScenarioScope;
  */
 class FeatureContext extends RawGeneralContext implements SnippetAcceptingContext {
 
+  public static $defaultCronSettings;
+
   /**
    * Disable Devel and Varnish modules and logincheck before testing.
    *
@@ -31,6 +33,19 @@ class FeatureContext extends RawGeneralContext implements SnippetAcceptingContex
         module_disable([$module], FALSE);
       }
     }
+
+    // Get the original cron_safe_threshold value to restore after suite ends.
+    // Used db_select because 'variable_get' surprisingly always returns 0.
+    $result = db_select('variable')
+      ->fields('variable', array('value'))
+      ->condition('name', 'cron_safe_threshold')
+      ->execute()
+      ->fetchField();
+
+    // Collect cron_safe_threshold default value.
+    self::$defaultCronSettings = !empty($result) ? unserialize($result) : NULL;
+    // Set cron_safe_threshold temporarily to never.
+    variable_set('cron_safe_threshold', 0);
   }
 
   /**
@@ -181,6 +196,22 @@ class FeatureContext extends RawGeneralContext implements SnippetAcceptingContex
       }
       $message .= "----------\n";
       throw new \Exception($message);
+    }
+  }
+
+  /**
+   * Restore default cron settings after ending test suite.
+   *
+   * @AfterSuite
+   */
+  public static function restoreDefaultCronSettings() {
+    // Remove temporary setting if variable was never set up.
+    if (is_null(self::$defaultCronSettings)) {
+      variable_del('cron_safe_threshold');
+    }
+    // Otherwise restore original value.
+    else {
+      variable_set('cron_safe_threshold', self::$defaultCronSettings);
     }
   }
 

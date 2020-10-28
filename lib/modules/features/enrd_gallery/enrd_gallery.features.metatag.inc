@@ -14,6 +14,7 @@ function enrd_gallery_metatag_export_default() {
   // Exported Metatag config instance: node:gallery.
   $config['node:gallery'] = array(
     'instance' => 'node:gallery',
+    'disabled' => FALSE,
     'config' => array(
       'robots' => array(
         'value' => array(

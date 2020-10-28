@@ -292,6 +292,9 @@ function enrd_lag_invite_node_insert($node) {
  *   Invitee full name.
  * @param string $og_role
  *   OG role to assign.
+ *
+ * @return bool
+ *   Return TRUE if user has been activated.
  */
 function enrd_lag_invite_invite_by_mail($lag_node, $email, $name, $og_role = ENRD_LAG_DATABASE_USER_CONTACT_ROLE) {
 
@@ -300,9 +303,10 @@ function enrd_lag_invite_invite_by_mail($lag_node, $email, $name, $og_role = ENR
       '%mail' => $email,
       '%user' => $name,
     ), WATCHDOG_NOTICE);
-    return;
+    return FALSE;
   }
 
+  $email = trim($email);
   if (valid_email_address($email) === FALSE) {
     try {
       $lag_wrapper = entity_metadata_wrapper('node', $lag_node);
@@ -317,22 +321,47 @@ function enrd_lag_invite_invite_by_mail($lag_node, $email, $name, $og_role = ENR
       '%user' => $name,
       '%code' => $lag_code,
     ), WATCHDOG_NOTICE, l(t('LAG profile'), 'node/' . $lag_node->nid, array('alias' => TRUE)));
-    return;
+    return FALSE;
   }
 
-  if ($user = user_load_by_mail($email)) {
-    if (user_is_blocked($user->name) === FALSE) {
+  if ($user_loaded = user_load_by_mail($email)) {
+    // Check if user is blocked.
+    if (user_is_blocked($user_loaded->name) !== FALSE) {
+      // Check if current user can activate.
+      if (user_access('activate enrd users')) {
+        // Activate user.
+        user_user_operations_unblock([$user_loaded->uid]);
+      }
+      else {
+        // Get "Contact Webmaster" path based on current user.
+        $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_node->nid);
+
+        drupal_set_message(t('User !name (@username) is blocked and could not be added. Please !contactform to request activation.', [
+          '!name' => theme('username', array(
+            'account' => $user_loaded,
+            'nolink' => TRUE,
+          )),
+          '@username' => $user_loaded->name,
+          '!contactform' => l(t('contact the LAG webmaster'), $path),
+        ]), 'error');
+      }
+    }
+
+    // Perform actions on active user.
+    if (user_is_blocked($user_loaded->name) === FALSE) {
       // Add the user to the group.
-      og_group('node', $lag_node->nid, array(
+      og_group('node', $lag_node->nid, [
         'entity type' => 'user',
-        'entity' => $user,
+        'entity' => $user_loaded,
         'membership type' => OG_MEMBERSHIP_TYPE_DEFAULT,
-      ));
+      ]);
 
       // Assign the role.
       if ($role = multisite_config_service('og')->getOgRole('node', $lag_node->type, $og_role)) {
-        og_role_grant('node', $lag_node->nid, $user->uid, $role->rid);
+        og_role_grant('node', $lag_node->nid, $user_loaded->uid, $role->rid);
       }
+
+      return TRUE;
     }
   }
   else {
@@ -366,6 +395,8 @@ function enrd_lag_invite_invite_by_mail($lag_node, $email, $name, $og_role = ENR
     }
 
   }
+
+  return FALSE;
 }
 
 /**
@@ -530,7 +561,18 @@ function enrd_lag_invite_mail($key, &$message, $params) {
  * Implements hook_FORM_ID_alter().
  */
 function enrd_lag_invite_form_invite_form_alter(&$form, &$form_state, $form_id) {
+
   $invite = $form['#entity'];
+
+  $search_description = t('Search for an existing ENRD website user by full name, email or username.');
+  $admin_msg = $search_description . ' ' . t('Note: adding a blocked user implicates its activation.');
+
+  // Get "Contact Webmaster" path based on current user.
+  $lag_id = isset($form['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']['#value']) ? $form['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']['#value'] : NULL;
+  $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_id);
+  $lag_user_msg = $search_description . ' ' . t('Note: blocked users cannot be added. Please !contactform to request activation.', [
+    '!contactform' => l(t('contact the LAG webmaster'), $path),
+  ]);
 
   if (!empty($invite->type_details()->invite_sending_controller['enrd_lag_invite'])) {
 
@@ -542,9 +584,9 @@ function enrd_lag_invite_form_invite_form_alter(&$form, &$form_state, $form_id) 
     $form['username'] = array(
       '#type' => 'textfield',
       '#title' => t('User'),
-      '#description' => t('Search for an existing ENRD website user by full name, email or username.'),
+      '#description' => user_access('activate enrd users') ? $admin_msg : $lag_user_msg,
       '#maxlength' => 60,
-      '#autocomplete_path' => 'enrd/user/autocomplete',
+      '#autocomplete_path' => 'enrd/user/autocomplete/all',
       '#required' => TRUE,
     );
 
@@ -614,16 +656,18 @@ function enrd_lag_invite_form_invite_add_user_submit($form, &$form_state) {
   $lag_node = node_load($form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']);
   $role = $form_state['values']['field_lag_invitation_role'][LANGUAGE_NONE][0]['value'];
 
-  enrd_lag_invite_invite_by_mail($lag_node, $user_invitee->mail, $user_invitee->realname, $role);
+  $user_added = enrd_lag_invite_invite_by_mail($lag_node, $user_invitee->mail, $user_invitee->realname, $role);
 
-  drupal_set_message(t('User !name is now member of %lag as !role. A notification email was sent to the user.', array(
-    '!name' => theme('username', array(
-      'account' => $user_invitee,
-      'nolink' => TRUE,
-    )),
-    '%lag' => $lag_node->title,
-    '!role' => $role,
-  )));
+  if ($user_added) {
+    drupal_set_message(t('User !name is now member of %lag as !role. A notification email was sent to the user.', array(
+      '!name' => theme('username', array(
+        'account' => $user_invitee,
+        'nolink' => TRUE,
+      )),
+      '%lag' => $lag_node->title,
+      '!role' => $role,
+    )));
+  }
 
   unset($form_state['redirect']);
 }
@@ -653,8 +697,29 @@ function enrd_lag_invite_form_invite_form_validate($form, &$form_state) {
   // Direct OG subscription.
   if ($form_state['values']['use_invite'] == 0) {
     if (!empty($form_state['values']['username'])) {
-      if (user_load_by_name($form_state['values']['username']) === FALSE) {
+      $user_loaded = user_load_by_name($form_state['values']['username']);
+
+      if ($user_loaded === FALSE) {
         form_set_error('username', t('%user is not a valid ENRD website user.', array('%user' => $form_state['values']['username'])));
+      }
+
+      // Check if user is blocked.
+      $user_is_blocked = !empty($user_loaded->name) && user_is_blocked($user_loaded->name);
+      if ($user_is_blocked && !user_access('activate enrd users')) {
+
+        // Get "Contact Webmaster" path based on current user.
+        $lag_nid = isset($form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']) ? $form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id'] : NULL;
+        $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_nid);
+
+        form_set_error('username', t('User !name (@username) is blocked. Please !contactform to request activation.', [
+          '!name' => theme('username', array(
+            'account' => $user_loaded,
+            'nolink' => TRUE,
+
+          )),
+          '@username' => $user_loaded->name,
+          '!contactform' => l(t('contact the LAG webmaster'), $path),
+        ]));
       }
     }
   }

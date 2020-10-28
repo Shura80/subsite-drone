@@ -129,6 +129,7 @@ function enrd_notifications_flag_default_flags() {
       'search_index' => 0,
       'search_result' => 0,
       'diff_standard' => 0,
+      'gallery' => 0,
       'newsroom' => 0,
       'eventlist' => 0,
       'print' => 0,
@@ -268,6 +269,7 @@ function enrd_notifications_flag_default_flags() {
       'search_index' => 0,
       'search_result' => 0,
       'diff_standard' => 0,
+      'gallery' => 0,
       'newsroom' => 0,
       'eventlist' => 0,
       'print' => 0,
@@ -365,7 +367,8 @@ function enrd_notifications_default_message_type() {
     "category" : "message_type",
     "data" : {
       "token options" : { "clear" : 0 },
-      "purge" : { "override" : 1, "enabled" : 1, "quota" : "", "days" : "90" }
+      "purge" : { "override" : 1, "enabled" : 1, "quota" : "", "days" : "90" },
+      "enrd_notifications_message_auto_delete" : { "node" : "node" }
     },
     "language" : "en",
     "arguments" : [],
@@ -388,7 +391,8 @@ function enrd_notifications_default_message_type() {
     "category" : "message_type",
     "data" : {
       "token options" : { "clear" : 0 },
-      "purge" : { "override" : 1, "enabled" : 1, "quota" : "", "days" : "90" }
+      "purge" : { "override" : 1, "enabled" : 1, "quota" : "", "days" : "90" },
+      "enrd_notifications_message_auto_delete" : { "node" : "node" }
     },
     "language" : "en",
     "arguments" : [],

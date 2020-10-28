@@ -191,27 +191,29 @@ function enrd_news_ds_layout_settings_info() {
       ),
       'headline' => array(
         1 => 'title',
+        8 => 'field_enrd_event_online',
       ),
       'meta' => array(
         2 => 'field_event_date',
-        3 => 'group_event_fieldset_eventlist',
-        4 => 'field_event_location',
-        5 => 'field_event_type',
-        6 => 'field_tax_origin',
+        3 => 'field_event_location',
+        5 => 'group_event_fieldset_eventlist',
+        6 => 'field_event_type',
+        7 => 'field_tax_origin',
       ),
       'abstract' => array(
-        7 => 'body',
+        4 => 'body',
       ),
     ),
     'fields' => array(
       'field_picture_upload' => 'thumb',
       'title' => 'headline',
       'field_event_date' => 'meta',
-      'group_event_fieldset_eventlist' => 'meta',
       'field_event_location' => 'meta',
+      'body' => 'abstract',
+      'group_event_fieldset_eventlist' => 'meta',
       'field_event_type' => 'meta',
       'field_tax_origin' => 'meta',
-      'body' => 'abstract',
+      'field_enrd_event_online' => 'headline',
     ),
     'limit' => array(
       'field_picture_upload' => '1',
@@ -228,6 +230,7 @@ function enrd_news_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|event|eventlist'] = $ds_layout;
 
@@ -245,30 +248,30 @@ function enrd_news_ds_layout_settings_info() {
       ),
       'meta' => array(
         1 => 'field_event_date',
-        4 => 'field_event_location',
-        7 => 'field_event_type',
-        8 => 'field_tax_origin',
+        3 => 'field_event_location',
+        6 => 'field_event_type',
+        9 => 'field_tax_origin',
         10 => 'group_event_fieldset_eventlist',
       ),
       'abstract' => array(
-        2 => 'body',
-        3 => 'field_core_attachments',
+        2 => 'field_core_attachments',
+        4 => 'body',
         5 => 'field_location',
-        6 => 'field_registration',
-        9 => 'comments',
+        7 => 'field_registration',
+        8 => 'comments',
       ),
     ),
     'fields' => array(
       'field_picture_upload' => 'thumb',
       'field_event_date' => 'meta',
-      'body' => 'abstract',
       'field_core_attachments' => 'abstract',
       'field_event_location' => 'meta',
+      'body' => 'abstract',
       'field_location' => 'abstract',
-      'field_registration' => 'abstract',
       'field_event_type' => 'meta',
-      'field_tax_origin' => 'meta',
+      'field_registration' => 'abstract',
       'comments' => 'abstract',
+      'field_tax_origin' => 'meta',
       'group_event_fieldset_eventlist' => 'meta',
     ),
     'classes' => array(),
@@ -283,6 +286,7 @@ function enrd_news_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|event|full'] = $ds_layout;
 

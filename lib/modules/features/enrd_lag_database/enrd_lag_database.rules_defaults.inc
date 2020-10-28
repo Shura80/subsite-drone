@@ -15,7 +15,7 @@ function enrd_lag_database_default_rules_configuration() {
       "PLUGIN" : "reaction rule",
       "OWNER" : "rules",
       "TAGS" : [ "ENRD LAG DATABASE" ],
-      "REQUIRES" : [ "rules", "enrd_lag_database", "og" ],
+      "REQUIRES" : [ "rules", "og" ],
       "ON" : { "og_user_insert" : [] },
       "IF" : [
         { "data_is" : { "data" : [ "og-membership:state" ], "value" : "1" } },
@@ -40,19 +40,11 @@ function enrd_lag_database_default_rules_configuration() {
             "language" : [ "" ]
           }
         },
-        { "enrd_lag_database_get_lag_admin_users" : { "PROVIDE" : { "lag_admin_users" : { "lag_admin_users" : "List of LAG Admin users" } } } },
-        { "LOOP" : {
-            "USING" : { "list" : [ "lag-admin-users" ] },
-            "ITEM" : { "list_item" : "Current list item" },
-            "DO" : [
-              { "mail" : {
-                  "to" : [ "list-item:mail" ],
-                  "subject" : "ENRD LAG Database - [account:name] joined [group:title_field]",
-                  "message" : "Dear [list-item:name],\\r\\n\\r\\n[account:name] joined: [group:title_field]\\r\\n\\r\\nlocated at: [group:url] .\\r\\n\\r\\nBest regards,\\r\\n\\r\\nThe ENRD Contact Point team",
-                  "language" : [ "" ]
-                }
-              }
-            ]
+        { "mail" : {
+            "to" : "LAG-database-webmaster@enrd.eu",
+            "subject" : "ENRD LAG Database - [account:name] joined [group:title_field]",
+            "message" : "Dear LAG Database webmaster,\\r\\n\\r\\n[account:name] joined: [group:title_field]\\r\\n\\r\\nlocated at: [group:url] .\\r\\n\\r\\nBest regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "language" : [ "" ]
           }
         }
       ]
@@ -145,7 +137,7 @@ function enrd_lag_database_default_rules_configuration() {
       "PLUGIN" : "reaction rule",
       "OWNER" : "rules",
       "TAGS" : [ "ENRD COOPERATION OFFER" ],
-      "REQUIRES" : [ "rules", "workbench_moderation", "enrd_lag_database" ],
+      "REQUIRES" : [ "rules", "workbench_moderation" ],
       "ON" : { "workbench_moderation_after_moderation_transition" : [] },
       "IF" : [
         { "node_is_of_type" : {
@@ -160,19 +152,11 @@ function enrd_lag_database_default_rules_configuration() {
         }
       ],
       "DO" : [
-        { "enrd_lag_database_get_lag_admin_users" : { "PROVIDE" : { "lag_admin_users" : { "lag_admin_users" : "List of LAG Admin users" } } } },
-        { "LOOP" : {
-            "USING" : { "list" : [ "lag-admin-users" ] },
-            "ITEM" : { "list_item" : "Current list item" },
-            "DO" : [
-              { "mail" : {
-                  "to" : "[list-item:mail]",
-                  "subject" : "ENRD LAG Database - Cooperation Offer update ready for publication online",
-                  "message" : "Dear [list-item:name],\\r\\n\\r\\nThe following LAG\\u2019s Cooperation Offer [node:title] has been submitted for publication and is ready for your review.\\r\\n\\r\\nYou can see the offer by clicking this link: [node:url]\\r\\n \\r\\nThis is the log message:\\r\\n[node:log].\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
-                  "language" : [ "" ]
-                }
-              }
-            ]
+        { "mail" : {
+            "to" : "LAG-database-webmaster@enrd.eu",
+            "subject" : "ENRD LAG Database - Cooperation Offer update ready for publication online",
+            "message" : "Dear LAG Database webmaster,\\r\\n\\r\\nThe following LAG\\u2019s Cooperation Offer [node:title] has been submitted for publication and is ready for your review.\\r\\n\\r\\nYou can see the offer by clicking this link: [node:url]\\r\\n \\r\\nThis is the log message:\\r\\n[node:log].\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "language" : [ "" ]
           }
         }
       ]
@@ -546,7 +530,7 @@ function enrd_lag_database_default_rules_configuration() {
       "PLUGIN" : "reaction rule",
       "OWNER" : "rules",
       "TAGS" : [ "ENRD LAG DATABASE" ],
-      "REQUIRES" : [ "rules", "workbench_moderation", "enrd_lag_database" ],
+      "REQUIRES" : [ "rules", "workbench_moderation" ],
       "ON" : { "workbench_moderation_after_moderation_transition" : [] },
       "IF" : [
         { "node_is_of_type" : { "node" : [ "node" ], "type" : { "value" : { "lag" : "lag" } } } },
@@ -557,19 +541,11 @@ function enrd_lag_database_default_rules_configuration() {
         }
       ],
       "DO" : [
-        { "enrd_lag_database_get_lag_admin_users" : { "PROVIDE" : { "lag_admin_users" : { "lag_admin_users" : "List of LAG Admin users" } } } },
-        { "LOOP" : {
-            "USING" : { "list" : [ "lag-admin-users" ] },
-            "ITEM" : { "list_item" : "Current list item" },
-            "DO" : [
-              { "mail" : {
-                  "to" : "[list-item:mail]",
-                  "subject" : "LAG profile update ready for publication online",
-                  "message" : "Dear [list-item:name],\\r\\n\\r\\nThe following LAG has been submitted for publication and is ready for your review: [node:title] .\\r\\n\\r\\nYou can see the updated LAG profile by clicking this link: [node:url] .\\r\\n\\r\\nThis is the log message:\\r\\n[node:log]\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
-                  "language" : [ "" ]
-                }
-              }
-            ]
+        { "mail" : {
+            "to" : "LAG-database-webmaster@enrd.eu",
+            "subject" : "LAG profile update ready for publication online",
+            "message" : "Dear LAG Database webmaster,\\r\\n\\r\\nThe following LAG has been submitted for publication and is ready for your review: [node:title] .\\r\\n\\r\\nYou can see the updated LAG profile by clicking this link: [node:url] .\\r\\n\\r\\nThis is the log message:\\r\\n[node:log]\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "language" : [ "" ]
           }
         }
       ]

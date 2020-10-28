@@ -944,6 +944,28 @@ function enrd_news_views_default_views() {
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['vocabulary'] = 'event_types';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['hierarchy'] = 1;
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['depth'] = '0';
+  /* Filter criterion: Content: Display as Online Event (field_enrd_event_online) */
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['id'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['table'] = 'field_data_field_enrd_event_online';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['field'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group'] = 1;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator_id'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['is_grouped'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['group_items'] = array(
+    1 => array(
+      'title' => 'Online only',
+      'operator' => 'or',
+      'value' => array(
+        1 => '1',
+      ),
+    ),
+  );
   /* Filter criterion: Content: Has taxonomy terms (with depth, translated) */
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['id'] = 'term_node_tid_depth_i18n_2';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['table'] = 'node';
@@ -1309,6 +1331,28 @@ function enrd_news_views_default_views() {
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['vocabulary'] = 'event_types';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['hierarchy'] = 1;
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['depth'] = '0';
+  /* Filter criterion: Content: Display as Online Event (field_enrd_event_online) */
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['id'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['table'] = 'field_data_field_enrd_event_online';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['field'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group'] = 1;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator_id'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['is_grouped'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['group_items'] = array(
+    1 => array(
+      'title' => 'Online only',
+      'operator' => 'or',
+      'value' => array(
+        1 => '1',
+      ),
+    ),
+  );
   /* Filter criterion: Content: Has taxonomy terms (with depth, translated) */
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['id'] = 'term_node_tid_depth_i18n_2';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['table'] = 'node';
@@ -1740,6 +1784,28 @@ function enrd_news_views_default_views() {
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['vocabulary'] = 'event_types';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['hierarchy'] = 1;
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['depth'] = '0';
+  /* Filter criterion: Content: Display as Online Event (field_enrd_event_online) */
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['id'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['table'] = 'field_data_field_enrd_event_online';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['field'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group'] = 1;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator_id'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['is_grouped'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['group_items'] = array(
+    1 => array(
+      'title' => 'Online only',
+      'operator' => 'or',
+      'value' => array(
+        1 => '1',
+      ),
+    ),
+  );
   /* Filter criterion: Content: Has taxonomy terms (with depth, translated) */
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['id'] = 'term_node_tid_depth_i18n_2';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['table'] = 'node';
@@ -2100,6 +2166,28 @@ function enrd_news_views_default_views() {
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['vocabulary'] = 'event_types';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['hierarchy'] = 1;
   $handler->display->display_options['filters']['term_node_tid_depth_i18n']['depth'] = '0';
+  /* Filter criterion: Content: Display as Online Event (field_enrd_event_online) */
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['id'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['table'] = 'field_data_field_enrd_event_online';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['field'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group'] = 1;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator_id'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['operator'] = 'field_enrd_event_online_value_op';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['expose']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['is_grouped'] = TRUE;
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['label'] = 'Format';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['identifier'] = 'field_enrd_event_online_value';
+  $handler->display->display_options['filters']['field_enrd_event_online_value']['group_info']['group_items'] = array(
+    1 => array(
+      'title' => 'Online only',
+      'operator' => 'or',
+      'value' => array(
+        1 => '1',
+      ),
+    ),
+  );
   /* Filter criterion: Content: Has taxonomy terms (with depth, translated) */
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['id'] = 'term_node_tid_depth_i18n_2';
   $handler->display->display_options['filters']['term_node_tid_depth_i18n_2']['table'] = 'node';

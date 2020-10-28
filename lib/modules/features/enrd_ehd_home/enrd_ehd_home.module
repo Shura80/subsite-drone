@@ -60,7 +60,7 @@ function enrd_ehd_home_views_pre_render(&$view) {
 
     $view->attachment_after = render($all_publ_link);
   }
-};
+}
 
 /**
  * Implements hook_block_view_MODULE_DELTA_alter().
@@ -104,4 +104,20 @@ function enrd_ehd_home_last_update_ignore_list() {
   return [
     'evaluation',
   ];
+}
+
+/**
+ * Implements template_preprocess_enrd_mastermind_media_plugin_rows().
+ */
+function enrd_ehd_home_preprocess_enrd_mastermind_media_plugin_rows(&$vars) {
+  // Show online events on "Events" block.
+  if ($vars['view']->name == 'enrd_evaluation_events_landing_page' && $vars['view']->current_display == 'evaluation_events') {
+    $is_online_event = isset($vars['row']->_field_data['nid']['entity']->field_enrd_event_online[LANGUAGE_NONE][0]['value']) && $vars['row']->_field_data['nid']['entity']->field_enrd_event_online[LANGUAGE_NONE][0]['value'] == '1';
+
+    // Check if "Online event" field is checked.
+    if ($is_online_event) {
+      // Append online icon to Event title.
+      $vars['fields']['title']->wrapper_suffix = _enrd_news_event_online_icon();
+    }
+  }
 }

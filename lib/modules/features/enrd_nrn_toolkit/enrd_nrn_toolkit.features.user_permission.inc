@@ -18,6 +18,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -27,6 +28,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'delete any nrn_resource content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -36,6 +38,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'delete own nrn_resource content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -45,6 +48,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'delete terms in enrd_networking',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -54,6 +58,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'delete terms in enrd_resource_type',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -64,6 +69,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -75,6 +81,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -84,6 +91,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'edit terms in enrd_networking',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -93,6 +101,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
     'name' => 'edit terms in enrd_resource_type',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -104,6 +113,7 @@ function enrd_nrn_toolkit_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_nrn_toolkit',
   );

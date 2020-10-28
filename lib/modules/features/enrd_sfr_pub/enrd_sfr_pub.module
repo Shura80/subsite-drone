@@ -89,27 +89,30 @@ function enrd_sfr_pub_block_view($delta = '') {
  * @see _enrd_sfr_pub_contact_ehd_customizations()
  */
 function enrd_sfr_pub_form_enrd_sfr_form_alter(&$form, &$form_state, $form_id) {
-  // Load shared functionalities declared into include file.
-  form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms');
+  // Apply custom behaviors to Subscriptions bundles.
+  if ($form['#entity_type'] == ENRD_SFR_ENTITY_NAME) {
+    if (in_array($form['#bundle'], _enrd_sfr_pub_bundles())) {
+      // Load shared functionalities declared into include file.
+      form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms');
 
-  // Load specific include file for each bundle.
-  form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms.' . $form['#bundle']);
-  $form_alter_function = '_' . $form['#bundle'] . '_customizations';
+      // Load specific include file for each bundle.
+      form_load_include($form_state, 'inc', 'enrd_sfr_pub', 'includes/enrd_sfr_pub.forms.' . $form['#bundle']);
+      $form_alter_function = '_' . $form['#bundle'] . '_customizations';
 
-  if (function_exists($form_alter_function)) {
-    $form_alter_function($form, $form_state);
+      if (function_exists($form_alter_function)) {
+        $form_alter_function($form, $form_state);
+      }
+
+      if (user_is_anonymous()) {
+        $form['actions'] = [
+          'captcha' => [
+            '#type' => 'captcha',
+            '#captcha_type' => 'image_captcha/Image',
+          ],
+        ] + $form['actions'];
+      }
+    }
   }
-
-  // Image captcha for Anonymous.
-  if (user_is_anonymous()) {
-    $form['actions'] = array(
-      'captcha' => array(
-        '#type' => 'captcha',
-        '#captcha_type' => 'image_captcha/Image',
-      ),
-    ) + $form['actions'];
-  }
-
 }
 
 /**
@@ -350,4 +353,41 @@ function _enrd_sfr_pub_enrd_sfr_pub_subscribe_menu_prepopulate() {
 
   $items = _enrd_sfr_pub_menu_enrd_sfr_pub_subscribe();
   _enrd_mastermind_menu_prepopulate($items);
+}
+
+/**
+ * Get list of ENRD Publication Subscriptions bundles.
+ *
+ * @return array
+ *   List of ENRD Sfr Pub bundles.
+ */
+function _enrd_sfr_pub_bundles() {
+  return [
+    ENRD_SFR_PUB_SUB_CP_FORM,
+    ENRD_SFR_PUB_SUB_EHD_FORM,
+    ENRD_SFR_PUB_CONT_CP_FORM,
+    ENRD_SFR_PUB_CONT_EHD_FORM,
+  ];
+}
+
+/**
+ * Implements hook_enrd_sfr_finalize().
+ */
+function enrd_sfr_pub_enrd_sfr_finalize($enrd_sfr) {
+  if (in_array($enrd_sfr->type, _enrd_sfr_pub_bundles())) {
+    // Show custom confirmation message on finalization.
+    enrd_sfr_set_confirmation_msg(t('Your submission request has been forwarded correctly.'));
+  }
+}
+
+/**
+ * Implements hook_enrd_sfr_access().
+ */
+function enrd_sfr_pub_enrd_sfr_access($op, $enrd_sfr, $account = NULL, $entity_type = NULL) {
+  // Deny access to view ENRD Sfr Publications entities.
+  if ($op == 'view') {
+    if (in_array($enrd_sfr->type, _enrd_sfr_pub_bundles())) {
+      return ENRD_SFR_ENTITY_ACCESS_DENY;
+    }
+  }
 }

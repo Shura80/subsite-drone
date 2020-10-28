@@ -55,87 +55,6 @@ function enrd_mastermind_context_default_contexts() {
   $context = new stdClass();
   $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
   $context->api_version = 3;
-  $context->name = 'communicating_rural_development';
-  $context->description = 'The context for the communicating Rural development subsite';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'policy-in-action/communicating-rural-development/eafrd' => 'policy-in-action/communicating-rural-development/eafrd',
-        'policy-in-action/communicating-rural-development/eafrd/*' => 'policy-in-action/communicating-rural-development/eafrd/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-rural-development' => array(
-          'module' => 'menu',
-          'delta' => 'menu-rural-development',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-    'region' => array(
-      'ec_resp' => array(
-        'disable' => array(
-          'header_top' => 0,
-          'header_right' => 0,
-          'featured' => 0,
-          'tools' => 0,
-          'help' => 0,
-          'sidebar_left' => 0,
-          'sidebar_right' => 0,
-          'content_top' => 0,
-          'content' => 0,
-          'content_right' => 0,
-          'content_bottom' => 0,
-          'footer' => 0,
-        ),
-      ),
-      'enrd' => array(
-        'disable' => array(
-          'header_top' => 0,
-          'header_right' => 0,
-          'featured' => 0,
-          'tools' => 0,
-          'help' => 0,
-          'sidebar_left' => 0,
-          'sidebar_right' => 0,
-          'content_top' => 0,
-          'content' => 0,
-          'content_right' => 0,
-          'content_bottom' => 0,
-          'footer' => 0,
-        ),
-      ),
-      'seven' => array(
-        'disable' => array(
-          'content' => 0,
-          'help' => 0,
-          'page_top' => 0,
-          'page_bottom' => 0,
-          'sidebar_first' => 0,
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'communicating_rural_development',
-      'subtitle' => '',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the communicating Rural development subsite');
-  $export['communicating_rural_development'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
   $context->name = 'enrd_communities_all';
   $context->description = 'ENRD context for all page into community';
   $context->tag = 'ENRD communities';
@@ -330,7 +249,7 @@ function enrd_mastermind_context_default_contexts() {
           'module' => 'enrd_mastermind',
           'delta' => 'agri_block',
           'region' => 'sidebar_left',
-          'weight' => '-7',
+          'weight' => '-5',
         ),
         'views-enrd_focus_on-focus_on_carousel' => array(
           'module' => 'views',
@@ -480,6 +399,12 @@ function enrd_mastermind_context_default_contexts() {
           'region' => 'sidebar_left',
           'weight' => '-9',
         ),
+        'menu-menu-enrd-portals' => array(
+          'module' => 'menu',
+          'delta' => 'menu-enrd-portals',
+          'region' => 'sidebar_left',
+          'weight' => '-8',
+        ),
         'menu-menu-enrd-join-us' => array(
           'module' => 'menu',
           'delta' => 'menu-enrd-join-us',
@@ -525,6 +450,12 @@ function enrd_mastermind_context_default_contexts() {
           'region' => 'header_top',
           'weight' => '0',
         ),
+        'enrd_mastermind-enrd_easy_breadcrumb' => array(
+          'module' => 'enrd_mastermind',
+          'delta' => 'enrd_easy_breadcrumb',
+          'region' => 'featured',
+          'weight' => '-10',
+        ),
         'system-user-menu' => array(
           'module' => 'system',
           'delta' => 'user-menu',
@@ -548,6 +479,24 @@ function enrd_mastermind_context_default_contexts() {
           'delta' => 'sharebuttons',
           'region' => 'tools_buttons',
           'weight' => '-87',
+        ),
+        'views-registration-block' => array(
+          'module' => 'views',
+          'delta' => 'registration-block',
+          'region' => 'sidebar_right',
+          'weight' => '-7',
+        ),
+        'views-registration_management-block' => array(
+          'module' => 'views',
+          'delta' => 'registration_management-block',
+          'region' => 'sidebar_right',
+          'weight' => '-6',
+        ),
+        'language_selector_page-language_selector_page' => array(
+          'module' => 'language_selector_page',
+          'delta' => 'language_selector_page',
+          'region' => 'content_top',
+          'weight' => '-10',
         ),
         'bean-footertopdisclaimer' => array(
           'module' => 'bean',
@@ -608,221 +557,6 @@ function enrd_mastermind_context_default_contexts() {
   $context = new stdClass();
   $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
   $context->api_version = 3;
-  $context->name = 'evaluation_network';
-  $context->description = 'The context for the evaluation network subsite';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'evaluation' => 'evaluation',
-        'evaluation/*' => 'evaluation/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu_block-1' => array(
-          'module' => 'menu_block',
-          'delta' => '1',
-          'region' => 'sidebar_left',
-          'weight' => '-9',
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'Evaluation network for rural development',
-      'subtitle' => 'Evaluation expert network',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the evaluation network subsite');
-  $export['evaluation_network'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'knowledge_innovation';
-  $context->description = 'The context for the knowledge transfer and innovation gateway';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'themes/research-and-innovation-gateway-development' => 'themes/research-and-innovation-gateway-development',
-        'themes/research-and-innovation-gateway-development/*' => 'themes/research-and-innovation-gateway-development/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-knowledge-innovation' => array(
-          'module' => 'menu',
-          'delta' => 'menu-knowledge-innovation',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'youth and young farmers',
-      'subtitle' => '',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the knowledge transfer and innovation gateway');
-  $export['knowledge_innovation'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'leader_gateway';
-  $context->description = '';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'leader/*' => 'leader/*',
-        '~leader/leader-tool-kit' => '~leader/leader-tool-kit',
-        '~leader/leader-tool-kit/*' => '~leader/leader-tool-kit/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-leader-gateway' => array(
-          'module' => 'menu',
-          'delta' => 'menu-leader-gateway',
-          'region' => 'content_top',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  $export['leader_gateway'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'leader_tnc_guide';
-  $context->description = 'The context for the Leader tnc subsite';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'leader/tnc_guide' => 'leader/tnc_guide',
-        'leader/tnc_guide/*' => 'leader/tnc_guide/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-menu-leader-tnc-guide' => array(
-          'module' => 'menu',
-          'delta' => 'menu-menu-leader-tnc-guide',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the Leader tnc subsite');
-  $export['leader_tnc_guide'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'leader_toolkit';
-  $context->description = '';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'leader/leader-tool-kit' => 'leader/leader-tool-kit',
-        'leader/leader-tool-kit/*' => 'leader/leader-tool-kit/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-leader-toolkit' => array(
-          'module' => 'menu',
-          'delta' => 'menu-leader-toolkit',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  $export['leader_toolkit'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'nrn_toolkit';
-  $context->description = 'The context for the nrn toolkit website';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'networks-and-networking/nrn-toolkit' => 'networks-and-networking/nrn-toolkit',
-        'networks-and-networking/nrn-toolkit/*' => 'networks-and-networking/nrn-toolkit/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-nrn-toolkit' => array(
-          'module' => 'menu',
-          'delta' => 'menu-nrn-toolkit',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'NRN-Toolkit',
-      'subtitle' => 'NRN toolkit',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the nrn toolkit website');
-  $export['nrn_toolkit'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
   $context->name = 'organization';
   $context->description = 'The context for the organization block';
   $context->tag = 'ENRD views';
@@ -853,158 +587,6 @@ function enrd_mastermind_context_default_contexts() {
   t('ENRD views');
   t('The context for the organization block');
   $export['organization'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'rural_development_priority';
-  $context->description = 'The context for the Rural development priorities subsite';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'policy-in-action/cap-towards-2020/rdp-programming-2014-2020' => 'policy-in-action/cap-towards-2020/rdp-programming-2014-2020',
-        'policy-in-action/cap-towards-2020/rdp-programming-2014-2020/*' => 'policy-in-action/cap-towards-2020/rdp-programming-2014-2020/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-rural-development-gt-top' => array(
-          'module' => 'menu',
-          'delta' => 'menu-rural-development-gt-top',
-          'region' => 'content_top',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-    'region' => array(
-      'ec_resp' => array(
-        'disable' => array(
-          'header_top' => 0,
-          'header_right' => 0,
-          'featured' => 0,
-          'tools' => 0,
-          'help' => 0,
-          'sidebar_left' => 0,
-          'sidebar_right' => 0,
-          'content_top' => 0,
-          'content' => 0,
-          'content_right' => 0,
-          'content_bottom' => 0,
-          'footer' => 0,
-        ),
-      ),
-      'enrd' => array(
-        'disable' => array(
-          'header_top' => 0,
-          'header_right' => 0,
-          'featured' => 0,
-          'tools' => 0,
-          'help' => 0,
-          'sidebar_left' => 0,
-          'sidebar_right' => 0,
-          'content_top' => 0,
-          'content' => 0,
-          'content_right' => 0,
-          'content_bottom' => 0,
-          'footer' => 0,
-        ),
-      ),
-      'seven' => array(
-        'disable' => array(
-          'content' => 0,
-          'help' => 0,
-          'page_top' => 0,
-          'page_bottom' => 0,
-          'sidebar_first' => 0,
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'rural_development',
-      'subtitle' => '',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the Rural development priorities subsite');
-  $export['rural_development_priority'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'rural_entrepreneurshi';
-  $context->description = '';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'themes/entrepreneurship/rural-entrepreneurship-gateway' => 'themes/entrepreneurship/rural-entrepreneurship-gateway*',
-        'themes/entrepreneurship/rural-entrepreneurship-gateway/*' => 'themes/entrepreneurship/rural-entrepreneurship-gateway/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-rural-entrepreneurship' => array(
-          'module' => 'menu',
-          'delta' => 'menu-rural-entrepreneurship',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  $export['rural_entrepreneurshi'] = $context;
-
-  $context = new stdClass();
-  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
-  $context->api_version = 3;
-  $context->name = 'youth_and_young_farmers';
-  $context->description = 'The context for the youth_and_young_farmers gateway';
-  $context->tag = 'ENRD subsite';
-  $context->conditions = array(
-    'path' => array(
-      'values' => array(
-        'themes/youth-and-young-farmers' => 'themes/youth-and-young-farmers',
-        'themes/youth-and-young-farmers/*' => 'themes/youth-and-young-farmers/*',
-      ),
-    ),
-  );
-  $context->reactions = array(
-    'block' => array(
-      'blocks' => array(
-        'menu-menu-youth-and-young-farmers' => array(
-          'module' => 'menu',
-          'delta' => 'menu-youth-and-young-farmers',
-          'region' => 'sidebar_left',
-          'weight' => '-10',
-        ),
-      ),
-    ),
-    'theme' => array(
-      'title' => 'youth and young farmers',
-      'subtitle' => '',
-    ),
-  );
-  $context->condition_mode = 1;
-
-  // Translatables
-  // Included for use with string extractors like potx.
-  t('ENRD subsite');
-  t('The context for the youth_and_young_farmers gateway');
-  $export['youth_and_young_farmers'] = $context;
 
   return $export;
 }

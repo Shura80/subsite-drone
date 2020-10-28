@@ -608,37 +608,46 @@ function enrd_sfr_pub_views_default_views() {
     ),
   );
   $handler->display->display_options['filters']['field_enrd_sfr_pub_subcp_electr_value']['reduce_duplicates'] = TRUE;
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    4 => 0,
+    5 => 0,
+    12 => 0,
+    8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
+  );
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = 'enrd_sfr_pub_subscribe_cp';
   $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
-    2 => '2',
-    1 => 0,
-    5 => 0,
-    3 => 0,
-    4 => 0,
-    9 => 0,
-    7 => 0,
-    6 => 0,
-    10 => 0,
-    8 => 0,
-  );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
   /* Filter criterion: ENRD Subscription Form Request: Status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
@@ -871,42 +880,52 @@ function enrd_sfr_pub_views_default_views() {
     ),
   );
   $handler->display->display_options['filters']['field_enrd_sfr_pub_subcp_electr_value']['reduce_duplicates'] = TRUE;
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    4 => 0,
+    5 => 0,
+    12 => 0,
+    8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
+  );
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = 'enrd_sfr_pub_subscribe_cp';
   $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
-    2 => '2',
-    1 => 0,
-    6 => 0,
-    3 => 0,
-    4 => 0,
-    5 => 0,
-    10 => 0,
-    8 => 0,
-    7 => 0,
-    11 => 0,
-    9 => 0,
-    12 => 0,
-  );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
   /* Filter criterion: ENRD Subscription Form Request: Status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['status']['field'] = 'status';
   $handler->display->display_options['filters']['status']['value']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
   $handler->display->display_options['path'] = 'admin/enrd/enrd-sfr/cp/subscriptions/export';
   $handler->display->display_options['displays'] = array(
     'default' => 0,
@@ -1176,31 +1195,40 @@ function enrd_sfr_pub_views_default_views() {
     10 => 0,
     8 => 0,
   );
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
-    5 => 0,
     3 => 0,
     4 => 0,
-    9 => 0,
-    7 => 0,
-    6 => 0,
-    10 => 0,
+    5 => 0,
+    12 => 0,
     8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
   );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
@@ -1212,6 +1240,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['status']['field'] = 'status';
   $handler->display->display_options['filters']['status']['value']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
   $handler->display->display_options['path'] = 'admin/enrd/enrd-sfr/cp/contact';
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Unsubscribed / Modified';
@@ -1404,19 +1433,19 @@ function enrd_sfr_pub_views_default_views() {
     16 => 0,
     17 => 0,
   );
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
     3 => 0,
@@ -1430,8 +1459,14 @@ function enrd_sfr_pub_views_default_views() {
     14 => 0,
     16 => 0,
     17 => 0,
+    18 => 0,
   );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
@@ -1443,6 +1478,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['status']['field'] = 'status';
   $handler->display->display_options['filters']['status']['value']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
   $handler->display->display_options['path'] = 'admin/content/enrd-sfr/cp/contact/export/csv';
   $handler->display->display_options['sitename_title'] = 0;
   $handler->display->display_options['use_batch'] = 'batch';
@@ -1702,31 +1738,40 @@ function enrd_sfr_pub_views_default_views() {
     10 => 0,
     8 => 0,
   );
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
-    5 => 0,
     3 => 0,
     4 => 0,
-    9 => 0,
-    7 => 0,
-    6 => 0,
-    10 => 0,
+    5 => 0,
+    12 => 0,
     8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
   );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
@@ -1738,6 +1783,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['status']['field'] = 'status';
   $handler->display->display_options['filters']['status']['value']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
   $handler->display->display_options['path'] = 'admin/enrd/enrd-sfr/ehd/subscriptions';
   $handler->display->display_options['menu']['type'] = 'default tab';
   $handler->display->display_options['menu']['title'] = 'Subscription requests EHD';
@@ -1865,30 +1911,40 @@ function enrd_sfr_pub_views_default_views() {
     10 => 0,
     8 => 0,
   );
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
-    5 => 0,
     3 => 0,
     4 => 0,
-    9 => 0,
-    7 => 0,
-    6 => 0,
-    10 => 0,
+    5 => 0,
+    12 => 0,
     8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
   );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
@@ -2146,41 +2202,52 @@ function enrd_sfr_pub_views_default_views() {
     10 => 0,
     8 => 0,
   );
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    4 => 0,
+    5 => 0,
+    12 => 0,
+    8 => 0,
+    9 => 0,
+    11 => 0,
+    15 => 0,
+    14 => 0,
+    16 => 0,
+    17 => 0,
+    18 => 0,
+  );
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
   /* Filter criterion: ENRD Subscription Form Request: Bundle type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = 'enrd_sfr_pub_contact_ehd';
   $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
-    2 => '2',
-    1 => 0,
-    5 => 0,
-    3 => 0,
-    4 => 0,
-    9 => 0,
-    7 => 0,
-    6 => 0,
-    10 => 0,
-    8 => 0,
-  );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
   /* Filter criterion: ENRD Subscription Form Request: Status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';
   $handler->display->display_options['filters']['status']['field'] = 'status';
   $handler->display->display_options['filters']['status']['value']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
   $handler->display->display_options['path'] = 'admin/enrd/enrd-sfr/ehd/contact';
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Unsubscribed / Modified';
@@ -2325,25 +2392,19 @@ function enrd_sfr_pub_views_default_views() {
     16 => 0,
     17 => 0,
   );
-  /* Filter criterion: ENRD Subscription Form Request: Bundle type */
-  $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = 'enrd_sfr_pub_contact_ehd';
-  $handler->display->display_options['filters']['type']['group'] = 1;
-  /* Filter criterion: ENRD Subscription Form Request: Finalized */
-  $handler->display->display_options['filters']['finalized']['id'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['table'] = 'enrd_sfr';
-  $handler->display->display_options['filters']['finalized']['field'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['operator'] = 'between';
-  $handler->display->display_options['filters']['finalized']['group'] = 1;
-  $handler->display->display_options['filters']['finalized']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['finalized']['expose']['operator_id'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['label'] = 'Submission Date';
-  $handler->display->display_options['filters']['finalized']['expose']['description'] = 'Select both start and end date';
-  $handler->display->display_options['filters']['finalized']['expose']['operator'] = 'finalized_op';
-  $handler->display->display_options['filters']['finalized']['expose']['identifier'] = 'finalized';
-  $handler->display->display_options['filters']['finalized']['expose']['remember_roles'] = array(
+  /* Filter criterion: Date: Date (enrd_sfr) */
+  $handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+  $handler->display->display_options['filters']['date_filter']['operator'] = 'between';
+  $handler->display->display_options['filters']['date_filter']['group'] = 1;
+  $handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['label'] = 'Submission Date';
+  $handler->display->display_options['filters']['date_filter']['expose']['description'] = 'Select both start and end date';
+  $handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+  $handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'finalized';
+  $handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
     3 => 0,
@@ -2357,8 +2418,20 @@ function enrd_sfr_pub_views_default_views() {
     14 => 0,
     16 => 0,
     17 => 0,
+    18 => 0,
   );
-  $handler->display->display_options['filters']['finalized']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['form_type'] = 'date_popup';
+  $handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+  $handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+    'enrd_sfr.finalized' => 'enrd_sfr.finalized',
+  );
+  $handler->display->display_options['filters']['date_filter']['date_method'] = 'AND';
+  /* Filter criterion: ENRD Subscription Form Request: Bundle type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'enrd_sfr';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = 'enrd_sfr_pub_contact_ehd';
+  $handler->display->display_options['filters']['type']['group'] = 1;
   /* Filter criterion: ENRD Subscription Form Request: Status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'enrd_sfr';

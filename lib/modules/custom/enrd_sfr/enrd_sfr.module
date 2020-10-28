@@ -12,6 +12,21 @@ define('ENRD_SFR_PURGE_DAYS', 30);
 define('ENRD_SFR_STATUS_FINALIZED', 1);
 define('ENRD_SFR_STATUS_NOT_FINALIZED', 0);
 
+/**
+ * Return this value from hook_enrd_sfr_access() to allow access.
+ */
+define('ENRD_SFR_ENTITY_ACCESS_ALLOW', TRUE);
+
+/**
+ * Return this value from hook_enrd_sfr_access() to deny access.
+ */
+define('ENRD_SFR_ENTITY_ACCESS_DENY', FALSE);
+
+/**
+ * Return this value from hook_enrd_sfr_access() to not affect access.
+ */
+define('ENRD_SFR_ENTITY_ACCESS_IGNORE', NULL);
+
 // The class autoload done by registry_autoload module works perfectly
 // BUT not during a registry rebuild (drush rr) because the autoload is executed
 // later than checks done by the "Entity" module on the controller class.
@@ -44,12 +59,12 @@ function enrd_sfr_entity_info() {
     'load hook' => 'enrd_sfr_load',
     'view modes' => array(
       'full' => array(
-        'label' => t('Default'),
+        'label' => t('Full'),
         'custom settings' => FALSE,
       ),
     ),
     'module' => 'enrd_sfr',
-    'views controller class' => 'Drupal\enrd_sfr\Views\EnrdSfrViewsController',
+    'metadata controller class' => 'Drupal\enrd_sfr\Controller\EnrdSfrMetadataController',
     'access callback' => 'enrd_sfr_access',
   );
 
@@ -76,55 +91,6 @@ function enrd_sfr_entity_info() {
   );
 
   return $entities;
-}
-
-/**
- * Implements hook_entity_property_info().
- */
-function enrd_sfr_entity_property_info() {
-  $info = array();
-  $properties = &$info[ENRD_SFR_ENTITY_NAME]['properties'];
-
-  $properties['sfrid'] = array(
-    'label' => t('ENRD Sfr unique id'),
-    'type' => 'integer',
-    'description' => t('The primary identifier for the ENRD Sfr.'),
-    'schema field' => 'sfrid',
-  );
-  $properties['type'] = array(
-    'label' => t('Bundle type'),
-    'description' => t('The bundle type of the ENRD Sfr entity.'),
-    'setter callback' => 'entity_property_verbatim_set',
-    'getter callback' => 'entity_property_verbatim_get',
-    'sanitize' => 'filter_xss',
-    'type' => 'token',
-    'schema field' => 'type',
-    'required' => TRUE,
-  );
-  $properties['created'] = array(
-    'label' => t('Created'),
-    'description' => t('The Unix timestamp when the ENRD Sfr was created.'),
-    'type' => 'date',
-    'schema field' => 'created',
-  );
-  $properties['finalized'] = array(
-    'label' => t('Finalized'),
-    'description' => 'The Unix timestamp when the ENRD Sfr was finalized.',
-    'setter callback' => 'entity_property_verbatim_set',
-    'getter callback' => 'entity_property_verbatim_get',
-    'type' => 'date',
-    'schema field' => 'finalized',
-  );
-  $properties['status'] = array(
-    'label' => t('Status'),
-    'description' => t('ENRD Sfr status (Finalized/Not finalized).'),
-    'setter callback' => 'entity_property_verbatim_set',
-    'getter callback' => 'entity_property_verbatim_get',
-    'type' => 'integer',
-    'schema field' => 'status',
-  );
-
-  return $info;
 }
 
 /**
@@ -195,6 +161,19 @@ function enrd_sfr_delete_multiple(array $enrd_sfrs_ids) {
 }
 
 /**
+ * Sets a confirmation message to display after submission.
+ *
+ * @param string $message
+ *   The translated message to be displayed to the user.
+ * @param string $type
+ *   (optional) The message's type.
+ */
+function enrd_sfr_set_confirmation_msg($message, $type = 'modal') {
+  // Show general confirmation message.
+  drupal_set_message($message, $type);
+}
+
+/**
  * Load ENRD Sfr Type.
  *
  * @param string $enrd_sfr_type_name
@@ -204,7 +183,7 @@ function enrd_sfr_delete_multiple(array $enrd_sfrs_ids) {
  *   List of ENRD Sfr Types.
  */
 function enrd_sfr_type_load($enrd_sfr_type_name) {
-  return enrd_sfr_get_types($enrd_sfr_type_name);
+  return enrd_sfr_get_types(str_replace('-', '_', $enrd_sfr_type_name));
 }
 
 /**
@@ -271,6 +250,35 @@ function enrd_sfr_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * Implements hook_entity_delete().
+ */
+function enrd_sfr_entity_delete($entity, $type) {
+
+  if ($type == ENRD_SFR_ENTITY_NAME) {
+    // Get info about bundle fields.
+    $entity_fields = field_info_instances(ENRD_SFR_ENTITY_NAME, $entity->type);
+    foreach ($entity_fields as $entity_field) {
+      // Find info about instance fields.
+      $info = field_info_field($entity_field['field_name']);
+      // When a file type field is found delete related uploaded file objects.
+      if ($info['type'] == 'file') {
+        foreach ($entity->{$info['field_name']} as $items) {
+          foreach ($items as $item) {
+            $fid = $item['fid'];
+            $file = file_load($fid);
+            // Deletes a file and its database record.
+            // Used with $force parameter not set, to determine if the file
+            // is being used by any modules. If the file is being used
+            // the delete will be canceled.
+            file_delete($file);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Access callback for enrd_sfr type.
  *
  * @param object $enrd_sfr
@@ -289,6 +297,16 @@ function enrd_sfr_access($op, $enrd_sfr = NULL, $account = NULL, $entity_type = 
   }
 
   $type = isset($enrd_sfr) && is_object($enrd_sfr) ? $enrd_sfr->type : $enrd_sfr;
+
+  // Allow modules to modify access.
+  $access = module_invoke_all('enrd_sfr_access', $op, $enrd_sfr, $account);
+  if (in_array(ENRD_SFR_ENTITY_ACCESS_DENY, $access, TRUE)) {
+    return FALSE;
+  }
+  elseif (in_array(ENRD_SFR_ENTITY_ACCESS_ALLOW, $access, TRUE)) {
+    return TRUE;
+  }
+
   switch ($op) {
     case 'create':
       return user_access('administer enrd_sfrs', $account)
@@ -298,14 +316,15 @@ function enrd_sfr_access($op, $enrd_sfr = NULL, $account = NULL, $entity_type = 
     case 'view':
       return user_access('administer enrd_sfrs', $account)
         || user_access('view any enrd_sfr entities', $account)
-        || ($enrd_sfr->uid == $account->uid);
+        || user_access('view ' . $type . ' entity');
 
     case 'delete':
       return user_access('administer enrd_sfrs')
         || user_access('delete any enrd_sfr entities')
         || user_access('delete ' . $type . ' entity');
   }
-  return TRUE;
+
+  return FALSE;
 }
 
 /**
@@ -353,21 +372,26 @@ function enrd_sfr_permission() {
   foreach (enrd_sfr_get_types(NULL, TRUE) as $enrd_sfr_type) {
     $permissions['create ' . $enrd_sfr_type->name . ' entity'] = array(
       'title' => t('%name create new ENRD Sfrs.', array('%name' => $enrd_sfr_type->label)),
-      'description' => '',
+      'description' => t('Allows users to create an ENRD Sfr entity of bundle %name', array('%name' => $enrd_sfr_type->label)),
+      'restrict access' => FALSE,
+    );
+    $permissions['view ' . $enrd_sfr_type->name . ' entity'] = array(
+      'title' => t('view %name ENRD Sfrs.', array('%name' => $enrd_sfr_type->label)),
+      'description' => t('Allows users to view an ENRD Sfr entity of bundle %name', array('%name' => $enrd_sfr_type->label)),
       'restrict access' => FALSE,
     );
     // Permissions used for specific managers.
     $permissions['delete ' . $enrd_sfr_type->name . ' entity'] = array(
       'title' => t('%name delete new ENRD Sfrs.', array('%name' => $enrd_sfr_type->label)),
-      'description' => '',
+      'description' => t('Allows users to delete an ENRD Sfr entity of bundle %name', array('%name' => $enrd_sfr_type->label)),
       'restrict access' => FALSE,
     );
 
-    // Permissions used in the admin. views.
+    // Permissions used in the admin views.
     $permissions['manage ' . $enrd_sfr_type->name . ' entity'] = array(
       'title' => t('Manage ENRD Sfr %name submission results.', array('%name' => $enrd_sfr_type->label)),
-      'description' => '',
-      'restrict access' => FALSE,
+      'description' => t('Allows users to manage an ENRD Sfr entity of bundle %name', array('%name' => $enrd_sfr_type->label)),
+      'restrict access' => TRUE,
     );
   }
 
@@ -380,8 +404,8 @@ function enrd_sfr_permission() {
 function enrd_sfr_menu() {
   $items = array();
 
-  // Access ENRD Sfr form interface.
   foreach (enrd_sfr_get_types(NULL, TRUE) as $type => $info) {
+    // Access ENRD Sfr form add page.
     $items[ENRD_SFR_PUB_ADD_REQUEST . _enrd_sfr_type_path_replace($type)] = array(
       'title' => $info->label,
       'title callback' => 'check_plain',
@@ -392,8 +416,39 @@ function enrd_sfr_menu() {
       'file' => 'includes/enrd_sfr.admin.inc',
     );
   }
+  // View ENRD Sfr details page.
+  $items['enrd-sfr/%enrd_sfr_type/%enrd_sfr'] = array(
+    'title callback' => 'entity_class_label',
+    'title arguments' => array(2),
+    'page callback' => 'enrd_sfr_page_view',
+    'page arguments' => array(2),
+    'access callback' => 'enrd_sfr_view_access',
+    'access arguments' => array(1, 2),
+    'file' => 'includes/enrd_sfr.page.inc',
+  );
 
   return $items;
+}
+
+/**
+ * Menu access callback: wrap ENRD Sfr entity access.
+ *
+ * @param \Drupal\enrd_sfr\Entity\EnrdSfrType $enrd_sfr_type
+ *   The ENRD Sfr Type object.
+ * @param \Drupal\enrd_sfr\Entity\EnrdSfr $enrd_sfr
+ *   The ENRD Sfr object.
+ *
+ * @return bool
+ *   TRUE/FALSE for access.
+ */
+function enrd_sfr_view_access($enrd_sfr_type, $enrd_sfr) {
+  // Make sure path param is equal to the ENRD Sfr type.
+  if ($enrd_sfr_type->name !== $enrd_sfr->type) {
+    return ENRD_SFR_ENTITY_ACCESS_DENY;
+  }
+
+  // Check ENRD Sfr access rights.
+  return enrd_sfr_access('view', $enrd_sfr);
 }
 
 /**
@@ -405,11 +460,51 @@ function _enrd_sfr_type_path_replace($type) {
 }
 
 /**
+ * Implements hook_token_info().
+ */
+function enrd_sfr_token_info() {
+  // Create a token for each Enrd Sfr display.
+  $info = entity_get_info(ENRD_SFR_ENTITY_NAME);
+
+  foreach ($info['view modes'] as $mode => $mode_info) {
+    $info['tokens'][ENRD_SFR_ENTITY_NAME]['view-mode:' . $mode] = [
+      'name' => t('The ENRD Sfr @label display', array('@label' => $mode_info['label'])),
+      'description' => t('Print the @label display of the ENRD Sfr.', array('@label' => $mode_info['label'])),
+    ];
+  }
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function enrd_sfr_tokens($type, $tokens, array $data = [], array $options = []) {
+  $replacements = [];
+
+  if ($type == ENRD_SFR_ENTITY_NAME && !empty($data[ENRD_SFR_ENTITY_NAME])) {
+    $info = entity_get_info(ENRD_SFR_ENTITY_NAME);
+
+    foreach ($tokens as $name => $original) {
+      foreach ($info['view modes'] as $mode => $mode_info) {
+        if ($name == 'view-mode:' . $mode) {
+          // Print a token for each Enrd Sfr display.
+          $display = entity_view(ENRD_SFR_ENTITY_NAME, [entity_id(ENRD_SFR_ENTITY_NAME, $data[ENRD_SFR_ENTITY_NAME]) => $data[ENRD_SFR_ENTITY_NAME]], $mode);
+          $replacements[$original] = render($display);
+        }
+      }
+    }
+  }
+
+  return $replacements;
+}
+
+/**
  * Implements hook_cron().
  */
 function enrd_sfr_cron() {
   // Delete the oldest not finalized ENRD Sfrs after 30 days.
-  $query = new \EntityFieldQuery();
+  $query = new EntityFieldQuery();
   $results = $query->entityCondition('entity_type', 'enrd_sfr')
     ->propertyCondition('status', ENRD_SFR_STATUS_NOT_FINALIZED, '=')
     ->propertyOrderBy('created', 'ASC')

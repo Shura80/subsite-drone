@@ -17,8 +17,19 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'publisher' => 'publisher',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt',
+  );
+
+  // Exported permission: 'administer entity translation'.
+  $permissions['administer entity translation'] = array(
+    'name' => 'administer entity translation',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
   );
 
   // Exported permission: 'administer tmgmt'.
@@ -26,6 +37,7 @@ function enrd_multilingual_user_default_permissions() {
     'name' => 'administer tmgmt',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt',
   );
@@ -36,6 +48,7 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt_local',
   );
@@ -46,6 +59,7 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt',
   );
@@ -56,6 +70,7 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'local translator' => 'local translator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt_local',
   );
@@ -66,8 +81,49 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'tmgmt',
+  );
+
+  // Exported permission: 'toggle field translatability'.
+  $permissions['toggle field translatability'] = array(
+    'name' => 'toggle field translatability',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
+  );
+
+  // Exported permission: 'translate bean entities'.
+  $permissions['translate bean entities'] = array(
+    'name' => 'translate bean entities',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
+  );
+
+  // Exported permission: 'translate field_collection_item entities'.
+  $permissions['translate field_collection_item entities'] = array(
+    'name' => 'translate field_collection_item entities',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
+  );
+
+  // Exported permission: 'translate file entities'.
+  $permissions['translate file entities'] = array(
+    'name' => 'translate file entities',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
   );
 
   // Exported permission: 'translate node entities'.
@@ -76,6 +132,17 @@ function enrd_multilingual_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'entity_translation',
+  );
+
+  // Exported permission: 'translate taxonomy_term entities'.
+  $permissions['translate taxonomy_term entities'] = array(
+    'name' => 'translate taxonomy_term entities',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'entity_translation',
   );

@@ -132,9 +132,9 @@ Feature: ENRD Basic functionalities
       | focus_group  |
       | organization |
 
-  @javascript @administrator @filters
+  @javascript @webmaster @filters
   Scenario: Insert links in content textareas through CKEditor "Insert internal links" functionality
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And "page" content:
       | title             | status |
       | BDD Linkable page | 1      |
@@ -152,7 +152,7 @@ Feature: ENRD Basic functionalities
       | title      | BDD CKEditor filter fallback            |
       | body:value | <a href="/node/999999999">Fake link</a> |
       | :format    | full_html                               |
-    When I am logged in as a "administrator"
+    When I am logged in as a "webmaster"
     And I go to "admin/reports/dblog"
     And select "Nexteuropa Tokens" from "Type"
     And I press the "Filter" button
@@ -175,9 +175,9 @@ Feature: ENRD Basic functionalities
       | filtered_html  |
       | enrd_safe_html |
 
-  @admin @clean
-  Scenario: As Admin I want to be able to display a sitewide disclaimer in the Footer Top region.
-    Given I am logged in as a user with the "administrator" role
+  @webmaster @clean
+  Scenario: As webmaster I want to be able to display a sitewide disclaimer in the Footer Top region.
+    Given I am logged in as a user with the "webmaster" role
     And I am at "block/footertopdisclaimer/edit"
     And I fill in "Block Body" with "<div class=\"alert alert-warning\" role=\"alert\" style=\"margin:0; padding:0.6em 1em; font-size:10px;word-spacing: -0.5px;\">This is a Footer Top disclaimer.</div>"
     And I press "Save"
@@ -187,7 +187,7 @@ Feature: ENRD Basic functionalities
   @footer @last-update-info
   Scenario: As user I should receive different messages in the footer content block
   depending on what I am watching (node, user, file, view, solr page, junction page, etc...).
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster, User management" roles
     # Create user to check later visibility of 'Last accessed' user info.
     And users:
       | name            |
@@ -209,12 +209,77 @@ Feature: ENRD Basic functionalities
     Then I should see "Last uploaded:" in the footer
     And I should not see "Last updated:" in the footer
     # User profiles.
-    When I am at "admin/people"
-    And I fill in "Username" with "bdd-user-footer"
+    When I am at "admin/nexteuropa-user-management"
+    And I fill in "Ecas username" with "bdd-user-footer"
     And I press "Apply"
-    And I click "edit" in the "bdd-user-footer" row
+    And I click "bdd-user-footer"
     Then I should see "Last accessed: never" in the footer
     And I should not see "Last updated:" in the footer
     # Taxonomy terms.
     When I am at "tags/bdd-keyword"
     Then I should see "Last updated:" in the footer
+
+  @webmasters @menu-token
+  Scenario: As a webmaster I can set a menu token to render 2nd level navigation of a custom menu
+  and use icons and classes to apply custom styles.
+    Given I am logged in as a user with the "webmaster" role
+      # Create the parent page with token and menu item.
+    And "page" content:
+      | title                | status |
+      | BDD menu parent page | 1      |
+    And I am at "bdd-menu-parent-page"
+    And I click "New draft"
+    And I fill in "Body" with "[menu:menu-enrd-portals]"
+    And I check the box "Provide a menu link"
+    And I fill in "Menu link title" with "BDD Parent"
+    And I select "<Portals>" from "Parent item"
+    And I select "right-open" from "Icon"
+    And I fill in "Classes" with "bdd-menu-parent"
+    And I select "Published" from "Moderation state"
+    And I press "Save"
+      # Create the child page with token and menu item.
+    And "page" content:
+      | title               | status |
+      | BDD menu child page | 1      |
+    And I am at "bdd-menu-child-page"
+    And I click "New draft"
+    And I fill in "Body" with "[menu:menu-enrd-portals]"
+    And I check the box "Provide a menu link"
+    And I fill in "Menu link title" with "BDD Child"
+    And I select "BDD Parent" from "Parent item"
+    And I select "ok" from "Icon"
+    And I select "Published" from "Moderation state"
+    And I press "Save"
+      # Parent item page.
+    When I am at "bdd-menu-parent-page"
+    Then I should see the heading "BDD menu parent page"
+      # Check that parent menu item, data-image attribute and icon classes have been set in left sidebar menu block.
+    And I should see "BDD Parent" in the "left sidebar" region
+    And I should see the ".block-icons-menu a" element with the "data-image" attribute set to "right-open" in the "left sidebar" region
+    And I should see the ".block-icons-menu span.icon.icon-right-open" element in the "left sidebar" region
+      # Check that parent item class has been applied on menu container.
+    And I should see the ".enrd-token-menu.bdd-menu-parent" element in the "content" region
+      # Check that child menu item, data-image attribute and icon classes have been set in the content menu navigation block.
+    And I should see the "div.bdd-menu-parent a" element with the "data-image" attribute set to "ok" in the "content" region
+    And I should see the "div.bdd-menu-parent span.glyphicon.glyphicon-ok" element in the "content" region
+    And I should see the link "BDD Child" in the "content" region
+    When I click "BDD Child" in the "content" region
+    Then I should see the heading "BDD menu child page"
+      # Check that also active class has been added to child menu item when visiting current page.
+    And I should see the "div.bdd-menu-parent a.active" element with the "data-image" attribute set to "ok" in the "content" region
+    And I should see the "div.bdd-menu-parent span.glyphicon.glyphicon-ok" element in the "content" region
+
+  @easy_breadcrumb
+  Scenario: As a webmaster I want to modify an existing page
+  and give it a short menu title to be used also as breadcrumb segment.
+    Given I am logged in as a user with the "webmaster" role
+    And I am viewing a "page" content in "published" status:
+      | title | BDD my personal page content |
+    And I should see "ENRD Home" in the "featured" region
+    And I should see "BDD my personal page content" in the "featured" region
+    When I click "New draft"
+    And I check the box "Provide a menu link"
+    And I fill in "Menu link title" with "BDD my page"
+    And I select "Published" from "Moderation state"
+    And I press "Save"
+    Then I should see "BDD my page" in the "featured" region

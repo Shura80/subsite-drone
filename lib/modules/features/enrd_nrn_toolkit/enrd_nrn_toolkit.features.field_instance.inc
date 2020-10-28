@@ -534,7 +534,7 @@ function enrd_nrn_toolkit_field_default_field_instances() {
   // Exported field_instance: 'node-nrn_resource-field_tax_evaluation'.
   $field_instances['node-nrn_resource-field_tax_evaluation'] = array(
     'bundle' => 'nrn_resource',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -566,15 +566,16 @@ function enrd_nrn_toolkit_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 18,
     ),
   );

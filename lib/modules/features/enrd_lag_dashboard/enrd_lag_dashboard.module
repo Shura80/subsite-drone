@@ -12,6 +12,7 @@ define('ENRD_LAG_DASHBOARD_WORKFLOW_ACTIONS_TAG', 'ENRD LAG DASHBOARD');
 define('ENRD_LAG_DASHBOARD_MENU', 'user-menu');
 define('ENRD_LAG_DASHBOARD_NSU_REDIRECT', 'lag-dashboard');
 define('ENRD_LAG_DASHBOARD_LAG_REDIRECT', 'my-lags');
+define('ENRD_LAG_DASHBOARD_SEND_EMAIL_NSU', 'rules_enrd_lag_dashboard_add_new_national_manager');
 
 // Contact the Webmaster contact form.
 define('ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID', '420e5009-ae60-48de-b46c-166ef46627d7');
@@ -188,6 +189,18 @@ function enrd_lag_dashboard_menu() {
     'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
   );
 
+  $items['lag-dashboard/users/nsu/add'] = array(
+    'title' => 'Add new NSU',
+    'description' => 'Enable existing users to manage LAGs of a country and one or more funds.',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_lag_dashboard_add_nsu_form'),
+    'access arguments' => array('administer nsu users'),
+    'file' => 'includes/enrd_lag_dashboard.nsu_admin.inc',
+    'file path' => drupal_get_path('module', 'enrd_lag_dashboard'),
+  );
+
   return $items;
 }
 
@@ -340,6 +353,11 @@ function enrd_lag_dashboard_permission() {
   $perms['administer lag dashboard login redirects'] = array(
     'title' => t('Administer LAG Dashboard login redirects'),
     'description' => t('Allow users with this permission to manage LAG Dashboard login redirect form.'),
+  );
+
+  $perms['administer nsu users'] = array(
+    'title' => t('Administer NSU Users'),
+    'description' => t('Allow users with this permission to manage NSU LAG Users.'),
   );
 
   return $perms;
@@ -1265,7 +1283,6 @@ function enrd_lag_dashboard_form_workbench_moderation_moderate_form_alter(&$form
     if ($node->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE || $node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
 
       if (!user_access('skip alter moderation form')) {
-        // Add EU Legal notice checkbox to the form.
         $options = array(
           '#states' => array(
             'visible' => array(
@@ -1276,8 +1293,9 @@ function enrd_lag_dashboard_form_workbench_moderation_moderate_form_alter(&$form
             ),
           ),
         );
-        // Load node.admin.inc from the node module.
-        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+
+        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+        // EU Legal notice & Privacy Policy statements.
         $form['eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox($options);
 
         $form['submit']['#weight'] = 99;
@@ -1316,6 +1334,10 @@ function enrd_lag_dashboard_form_workbench_moderation_moderate_form_alter(&$form
 function enrd_lag_dashboard_form_webform_client_form_alter(&$form, &$form_state, $form_id) {
   // Custom behaviors for the "Contact the Webmaster" webform.
   if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_LAG_DASHBOARD_CONTACT_WEBMASTER_UUID) {
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
 
     // Disclaimer msg below "Submit" btn of the "Contact the Webmaster" Webform.
     if ($form['actions']['submit']['#type'] == 'submit') {
@@ -1459,4 +1481,39 @@ function _enrd_lag_dashboard_og_context_views_page_access($group_type, $perm, $g
     // Try to get context.
     return og_user_access($group_type, $group['gid'], $perm);
   }
+}
+
+/**
+ * Show "Contact the Webmaster" path according to logged in user.
+ *
+ * @param mixed $lag_id
+ *   The LAG node id.
+ * @param mixed $account
+ *   (optional) The account to check, if not given use currently logged in user.
+ *
+ * @return string|null
+ *   The form path according to the logged user, null if it's not a LAG user.
+ */
+function _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_id, $account = NULL) {
+
+  global $user;
+  $contact_form_path = '';
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  // Exclude Webmaster.
+  if (!user_access('access lag dashboards', $account)) {
+    if (_enrd_lag_dashboard_check_esi_fund_perm(NULL, 'access lag dashboards', NULL, $account)) {
+      // Show customised msg for NSU.
+      $contact_form_path = 'lag-dashboard/contact-webmaster';
+    }
+    elseif (_enrd_lag_dashboard_check_esi_fund_perm(NULL, NULL, 'access lag dashboards', $account)) {
+      // Show customised msg for LAG user.
+      $contact_form_path = 'my-lags/' . $lag_id . '/manage/contact-webmaster';
+    }
+  }
+
+  return $contact_form_path;
 }

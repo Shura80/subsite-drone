@@ -16,6 +16,7 @@ function enrd_lag_invite_user_default_permissions() {
     'name' => 'administer invite types',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'invite',
   );
@@ -25,6 +26,7 @@ function enrd_lag_invite_user_default_permissions() {
     'name' => 'administer lag invites',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_invite',
   );
@@ -48,6 +50,7 @@ function enrd_lag_invite_user_default_permissions() {
     'name' => 'create lag invite',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_invite',
   );

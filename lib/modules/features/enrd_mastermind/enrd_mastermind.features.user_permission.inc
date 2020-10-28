@@ -15,9 +15,12 @@ function enrd_mastermind_user_default_permissions() {
   $permissions['access administration menu'] = array(
     'name' => 'access administration menu',
     'roles' => array(
+      'User management' => 'User management',
       'administrator' => 'administrator',
       'editor' => 'editor',
       'ehd subscriptions manager' => 'ehd subscriptions manager',
+      'rural story submissions manager' => 'rural story submissions manager',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'admin_menu',
   );
@@ -26,9 +29,12 @@ function enrd_mastermind_user_default_permissions() {
   $permissions['access administration pages'] = array(
     'name' => 'access administration pages',
     'roles' => array(
+      'User management' => 'User management',
       'administrator' => 'administrator',
       'editor' => 'editor',
       'ehd subscriptions manager' => 'ehd subscriptions manager',
+      'rural story submissions manager' => 'rural story submissions manager',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'system',
   );
@@ -38,8 +44,19 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'access bean overview',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
+  );
+
+  // Exported permission: 'activate enrd users'.
+  $permissions['activate enrd users'] = array(
+    'name' => 'activate enrd users',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'enrd_mastermind',
   );
 
   // Exported permission: 'administer bean types'.
@@ -47,6 +64,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'administer bean types',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -56,8 +74,19 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'administer beans',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
+  );
+
+  // Exported permission: 'administer enrd configuration'.
+  $permissions['administer enrd configuration'] = array(
+    'name' => 'administer enrd configuration',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'enrd_mastermind',
   );
 
   // Exported permission: 'administer menu'.
@@ -67,8 +96,19 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'menu',
+  );
+
+  // Exported permission: 'administer redirects'.
+  $permissions['administer redirects'] = array(
+    'name' => 'administer redirects',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'redirect',
   );
 
   // Exported permission: 'create any enrd_bean bean'.
@@ -76,6 +116,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'create any enrd_bean bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -85,6 +126,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'create any webtools bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -96,6 +138,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -107,6 +150,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -118,6 +162,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -129,6 +174,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'path',
   );
@@ -138,6 +184,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'create webform content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -147,6 +194,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any enrd_bean bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -156,6 +204,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any focus_group content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -165,6 +214,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any organization content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -174,6 +224,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any page content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -183,6 +234,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any webform content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -192,6 +244,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete any webtools bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -201,6 +254,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete own focus_group content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -210,6 +264,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete own organization content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -219,6 +274,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete own page content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -228,6 +284,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'delete own webform content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -239,6 +296,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'anonymous user' => 'anonymous user',
       'authenticated user' => 'authenticated user',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'file_entity',
   );
@@ -248,6 +306,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'edit any enrd_bean bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -258,6 +317,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -268,6 +328,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -278,6 +339,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -287,6 +349,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'edit any webform content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -296,6 +359,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'edit any webtools bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -305,6 +369,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'edit bean view mode',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -316,6 +381,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -327,6 +393,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -338,6 +405,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -347,6 +415,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'edit own webform content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -358,8 +427,19 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_mastermind',
+  );
+
+  // Exported permission: 'import media'.
+  $permissions['import media'] = array(
+    'name' => 'import media',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'media_bulk_upload',
   );
 
   // Exported permission: 'moderate content from needs_review to validated'.
@@ -368,6 +448,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'workbench_moderation',
   );
@@ -379,6 +460,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'editor' => 'editor',
       'publisher' => 'publisher',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'workbench_moderation',
   );
@@ -389,6 +471,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'publisher' => 'publisher',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'workbench_moderation',
   );
@@ -398,6 +481,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'node-specific print configuration',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'print_ui',
   );
@@ -407,6 +491,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'show format selection for bean',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'better_formats',
   );
@@ -418,6 +503,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'better_formats',
   );
@@ -428,6 +514,7 @@ function enrd_mastermind_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'authenticated user' => 'authenticated user',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'captcha',
   );
@@ -439,6 +526,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'filter',
   );
@@ -460,6 +548,7 @@ function enrd_mastermind_user_default_permissions() {
       'administrator' => 'administrator',
       'anonymous user' => 'anonymous user',
       'authenticated user' => 'authenticated user',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -469,6 +558,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'view bean page',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );
@@ -478,6 +568,7 @@ function enrd_mastermind_user_default_permissions() {
     'name' => 'view bean revisions',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'bean',
   );

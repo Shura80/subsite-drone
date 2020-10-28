@@ -147,7 +147,7 @@ div.node-cooperation-offer-expired.node-full {
       }
     }
     /* LAGs Sidebar right lists style */
-    ul, ul.enrd-list {
+    ul, ul.enrd-list {
       padding-left: 20px;
 
       &.contextual-links {
@@ -180,22 +180,23 @@ div.node-cooperation-offer-expired.node-full {
   .ds-additional .field {
     margin-bottom: 10px;
   }
+}
 
-  // Workbench Moderation block.
-  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
-    display: block;
-    margin-top: 0;
+// Privacy Policy in moderate dashboard.
+.page-my-lags div.moderation-actions {
+  .form-item-privacy-policy {
+    margin-bottom: 8px;
+  }
 
-    label.option {
-      padding-left: 5px;
-    }
+  .form-item-eu-legal-notice, .form-item-privacy-policy {
+    white-space: inherit;
   }
 }
 
 /* Cooperation Offers Sidebar right lists style */
 .page-node.node-type-cooperation-offer {
   div.region-sidebar-right {
-    ul, ul.enrd-list  {
+    ul, ul.enrd-list {
       padding-left: 20px;
 
       &.contextual-links {
@@ -214,7 +215,7 @@ div.node-cooperation-offer-expired.node-full {
   }
 }
 
-.page-node.page-node-add.page-node-add-lag, .page-node.page-node-edit.node-type-lag {
+.page-node.page-node-add.page-node-add-lag, .page-lag-dashboard-lag-profiles-add, .page-node.page-node-edit.node-type-lag {
   .shs-select{
     @media(max-width: 564px) {
       margin-right: 15px;
@@ -276,12 +277,9 @@ div.node-cooperation-offer-expired.node-full {
     margin-bottom: 15px;
     padding-right: 10px;
 
-    label {
-      padding-left: 5px;
-    }
-    .form-item-field-publish-legal-notice .description {
-      font-style: italic;
-    }
+    @include enrd-privacy-policy;
+
+    @include enrd-publish-legal-notice;
   }
 
 }
@@ -409,6 +407,12 @@ div.node-cooperation-offer-expired.node-full {
     margin-left: 0.5em;
   }
 }
+
+// Contact the Webmaster Form.
+.page-my-lags-manage-contact-webmaster, .page-lag-dashboard-contact-webmaster, .node-type-webform {
+  @include enrd-privacy-policy;
+}
+
 .page-my-lags {
   #enrd-lag-dashboard-lag-profile-form {
     caption {
@@ -610,16 +614,6 @@ div.node-cooperation-offer-expired.node-full {
       width: 100%;
     }
   }
-
-  // Workbench Moderation block.
-  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
-    display: block;
-    margin-top: 0;
-
-    label.option {
-      padding-left: 5px;
-    }
-  }
 }
 
 .node-cooperation_offer-form {
@@ -628,12 +622,9 @@ div.node-cooperation-offer-expired.node-full {
     margin-bottom: 15px;
     padding-right: 10px;
 
-    label {
-      padding-left: 5px;
-    }
-    .form-item-field-publish-legal-notice .description {
-      font-style: italic;
-    }
+    @include enrd-privacy-policy;
+
+    @include enrd-publish-legal-notice;
   }
 }
 
@@ -658,16 +649,6 @@ div.node-cooperation-offer-expired.node-full {
   .field-name-field-enrd-lag-extended-profile a:hover {
     text-decoration: none;
   }
-}
-
-
-
-
-
-/* Ask for publishing node view button for LAG Users */
-div.field-name-enrd-lag-database-ask-for-publishing {
-  position: relative;
-  top: 48px;
 }
 
 /* LAG && CLLD Solr Search Pages intro text */

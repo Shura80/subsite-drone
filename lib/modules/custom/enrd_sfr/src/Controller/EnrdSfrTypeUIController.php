@@ -2,10 +2,12 @@
 
 namespace Drupal\enrd_sfr\Controller;
 
+use EntityDefaultUIController;
+
 /**
  * UI controller for ENRD Sfr Type.
  */
-class EnrdSfrTypeUIController extends \EntityDefaultUIController {
+class EnrdSfrTypeUIController extends EntityDefaultUIController {
 
   /**
    * Overrides hook_menu() defaults.

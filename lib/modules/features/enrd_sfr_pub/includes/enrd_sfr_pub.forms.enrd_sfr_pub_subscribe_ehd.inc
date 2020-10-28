@@ -71,8 +71,8 @@ function _enrd_sfr_pub_subscribe_ehd_customizations(&$form, &$form_state) {
     }
   }
 
-  // Create EU Legal notice checkbox.
-  form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+  form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+  // EU Legal notice & Privacy Policy statements.
   $form['field_enrd_sfr_pub_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
   // Disclaimer "Legal notice" msg below "Type(s) of Publication" field.
   if (isset($form['field_enrd_sfr_pub_subehd_type'])) {

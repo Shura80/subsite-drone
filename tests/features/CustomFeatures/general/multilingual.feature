@@ -27,8 +27,8 @@ Feature: ENRD Multilingual Environment
     But the url should match "_fr"
     # Check for translated messages on language fallback.
     And I am viewing a multilingual "page" content:
-      | language | title            |
-      | en       | Page with no translations|
+      | language | title                     |
+      | en       | Page with no translations |
     When I follow "Français"
     Then I should see the heading "Page with no translations"
     And I should see "Français non disponible" in the ".lang-select-page__not-available" element

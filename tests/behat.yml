@@ -11,6 +11,7 @@ default:
         - Drupal\enrd\Context\TaxonomiesContext
         - Drupal\enrd\Context\CommunityContext
         - Drupal\enrd\Context\SolrContext
+        - Drupal\enrd\Context\EntityContext
         - Drupal\enrd\Context\FieldCollectionContext
         - Drupal\enrd\Context\InviteContext
         - Drupal\enrd\Context\MediaContext
@@ -21,13 +22,13 @@ default:
         - Drupal\DrupalExtension\Context\MarkupContext
         - Drupal\DrupalExtension\Context\BatchContext
       filters:
-        tags: "~@wip&&~@online"
+        tags: "~@wip&&~@clean&&~@online"
   extensions:
     Behat\MinkExtension:
       browser_name: 'chrome'
       goutte: ~
       selenium2:
-        wd_host: 'localhost:4444/wd/hub'
+        wd_host: 'http://host.docker.internal:4444/wd/hub'
         capabilities:
           browser: 'chrome'
           extra_capabilities:

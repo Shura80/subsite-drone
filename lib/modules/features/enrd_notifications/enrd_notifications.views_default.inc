@@ -268,6 +268,7 @@ function enrd_notifications_views_default_views() {
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['id'] = 'field_enrd_notif_target_nodes_target_id';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['table'] = 'field_data_field_enrd_notif_target_nodes';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['field'] = 'field_enrd_notif_target_nodes_target_id';
+  $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['required'] = TRUE;
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Bulk operations: Message */
   $handler->display->display_options['fields']['views_bulk_operations']['id'] = 'views_bulk_operations';
@@ -458,6 +459,7 @@ function enrd_notifications_views_default_views() {
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['id'] = 'field_enrd_notif_target_nodes_target_id';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['table'] = 'field_data_field_enrd_notif_target_nodes';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['field'] = 'field_enrd_notif_target_nodes_target_id';
+  $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['required'] = TRUE;
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Flags: Flagged */
   $handler->display->display_options['fields']['flagged']['id'] = 'flagged';
@@ -602,6 +604,7 @@ function enrd_notifications_views_default_views() {
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['id'] = 'field_enrd_notif_target_nodes_target_id';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['table'] = 'field_data_field_enrd_notif_target_nodes';
   $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['field'] = 'field_enrd_notif_target_nodes_target_id';
+  $handler->display->display_options['relationships']['field_enrd_notif_target_nodes_target_id']['required'] = TRUE;
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Message: User uid */
   $handler->display->display_options['fields']['user']['id'] = 'user';
@@ -641,12 +644,14 @@ function enrd_notifications_views_default_views() {
     'enrd_notifications_content_publication_no_groups' => 'enrd_notifications_content_publication_no_groups',
     'enrd_notifications_lag_content_publication' => 'enrd_notifications_lag_content_publication',
   );
+  $handler->display->display_options['filters']['type']['group'] = 1;
   /* Filter criterion: Flags: Flagged */
   $handler->display->display_options['filters']['flagged']['id'] = 'flagged';
   $handler->display->display_options['filters']['flagged']['table'] = 'flagging';
   $handler->display->display_options['filters']['flagged']['field'] = 'flagged';
   $handler->display->display_options['filters']['flagged']['relationship'] = 'flag_content_rel';
   $handler->display->display_options['filters']['flagged']['value'] = '0';
+  $handler->display->display_options['filters']['flagged']['group'] = 1;
   $export['enrd_notifications_messages'] = $view;
 
   $view = new view();

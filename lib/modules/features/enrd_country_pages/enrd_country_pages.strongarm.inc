@@ -155,6 +155,9 @@ function enrd_country_pages_strongarm() {
       'diff_standard' => array(
         'custom_settings' => FALSE,
       ),
+      'gallery' => array(
+        'custom_settings' => FALSE,
+      ),
       'print' => array(
         'custom_settings' => TRUE,
       ),

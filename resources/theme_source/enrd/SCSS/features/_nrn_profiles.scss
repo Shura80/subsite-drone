@@ -216,16 +216,10 @@
   form.node-nrn_profile-form .form-legal-notice-disclaimer {
     border: 1px solid #c0c0c0;
     margin-bottom: 15px;
-  }
 
-  // Workbench Moderation block.
-  div.block-workbench form.workbench-moderation-moderate-form .form-item-eu-legal-notice {
-    display: block;
-    margin-top: 0;
+    @include enrd-privacy-policy;
 
-    label.option {
-      padding-left: 5px;
-    }
+    @include enrd-publish-legal-notice;
   }
 }
 
@@ -254,15 +248,6 @@
   .field-name-field-enrd-nrnp-contact-persons {
     .field-type-text {
       margin-bottom: 10px;
-    }
-  }
-
-  fieldset.form-legal-notice-disclaimer {
-    label {
-      padding-left: 5px;
-    }
-    .form-item-field-publish-legal-notice .description {
-      font-style: italic;
     }
   }
 

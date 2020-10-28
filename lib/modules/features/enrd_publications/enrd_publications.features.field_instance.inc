@@ -12,103 +12,6 @@ function enrd_publications_field_default_field_instances() {
   $field_instances = array();
 
   // Exported field_instance:
-  // 'field_collection_item-field_enrd_publ_ehd_file-field_enrd_publ_ehd_file_lang'.
-  $field_instances['field_collection_item-field_enrd_publ_ehd_file-field_enrd_publ_ehd_file_lang'] = array(
-    'bundle' => 'field_enrd_publ_ehd_file',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'hidden',
-        'module' => 'ds',
-        'settings' => array(
-          'taxonomy_term_reference_view_mode' => 'token',
-          'use_content_language' => 0,
-        ),
-        'type' => 'ds_taxonomy_view_mode',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'field_collection_item',
-    'field_name' => 'field_enrd_publ_ehd_file_lang',
-    'label' => 'File Language',
-    'required' => 1,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(
-        'apply_chosen' => 0,
-      ),
-      'type' => 'options_select',
-      'weight' => 0,
-    ),
-  );
-
-  // Exported field_instance:
-  // 'field_collection_item-field_enrd_publ_ehd_file-field_enrd_publ_ehd_files'.
-  $field_instances['field_collection_item-field_enrd_publ_ehd_file-field_enrd_publ_ehd_files'] = array(
-    'bundle' => 'field_enrd_publ_ehd_file',
-    'default_value' => array(),
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'hidden',
-        'module' => 'file_entity',
-        'settings' => array(
-          'text' => '[file:name]',
-        ),
-        'type' => 'file_download_link',
-        'weight' => 1,
-      ),
-    ),
-    'entity_type' => 'field_collection_item',
-    'field_name' => 'field_enrd_publ_ehd_files',
-    'label' => 'File',
-    'required' => 1,
-    'settings' => array(
-      'description_field' => 0,
-      'entity_translation_sync' => FALSE,
-      'file_directory' => 'evaluation_publications',
-      'file_extensions' => 'pdf doc docx ppt pptx xls xlsx',
-      'max_filesize' => '',
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'media',
-      'settings' => array(
-        'allowed_schemes' => array(
-          'node' => 0,
-          'private' => 0,
-          'public' => 'public',
-          'youtube' => 0,
-        ),
-        'allowed_types' => array(
-          'audio' => 0,
-          'document' => 'document',
-          'image' => 0,
-          'video' => 0,
-        ),
-        'browser_plugins' => array(
-          'elibrary_browser_tab--media_browser_1' => 0,
-          'media_default--media_browser_1' => 0,
-          'media_default--media_browser_my_files' => 0,
-          'media_internet' => 0,
-          'upload' => 0,
-        ),
-      ),
-      'type' => 'media_generic',
-      'weight' => 1,
-    ),
-  );
-
-  // Exported field_instance:
   // 'node-publication-field_enrd_nrn_alter_description'.
   $field_instances['node-publication-field_enrd_nrn_alter_description'] = array(
     'bundle' => 'publication',
@@ -894,9 +797,14 @@ function enrd_publications_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'inline',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'short',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 4,
       ),
       'search_index' => array(
@@ -907,9 +815,14 @@ function enrd_publications_field_default_field_instances() {
       ),
       'search_result' => array(
         'label' => 'inline',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'short',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 3,
       ),
       'teaser' => array(
@@ -919,12 +832,13 @@ function enrd_publications_field_default_field_instances() {
         'weight' => 0,
       ),
     ),
+    'ds_extras_field_template' => '',
     'entity_type' => 'node',
     'field_name' => 'field_enrd_publication_file',
     'label' => 'File',
     'required' => 1,
     'settings' => array(
-      'description_field' => 1,
+      'description_field' => 0,
       'entity_translation_sync' => FALSE,
       'file_directory' => 'enrd_publications',
       'file_extensions' => 'pdf doc docx ppt pptx xls xlsx',
@@ -936,9 +850,12 @@ function enrd_publications_field_default_field_instances() {
       'module' => 'media',
       'settings' => array(
         'allowed_schemes' => array(
+          'avportal' => 0,
+          'dailymotion' => 0,
           'node' => 0,
           'private' => 0,
           'public' => 'public',
+          'vimeo' => 0,
           'youtube' => 0,
         ),
         'allowed_types' => array(
@@ -954,6 +871,7 @@ function enrd_publications_field_default_field_instances() {
           'media_internet' => 0,
           'upload' => 0,
         ),
+        'enrd_fieldtips_enabled' => 0,
       ),
       'type' => 'media_generic',
       'weight' => 11,
@@ -1395,9 +1313,14 @@ function enrd_publications_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'inline',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 5,
       ),
       'search_index' => array(
@@ -1529,7 +1452,7 @@ function enrd_publications_field_default_field_instances() {
   // Exported field_instance: 'node-publication-field_tax_evaluation'.
   $field_instances['node-publication-field_tax_evaluation'] = array(
     'bundle' => 'publication',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1579,15 +1502,16 @@ function enrd_publications_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 31,
     ),
   );
@@ -2182,7 +2106,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 20,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -2194,7 +2118,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 17,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2292,7 +2216,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 28,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -2304,7 +2228,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 20,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2364,7 +2288,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 29,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -2376,7 +2300,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 19,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2432,7 +2356,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 31,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -2444,7 +2368,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 23,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2537,7 +2461,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 30,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -2549,7 +2473,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 18,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2613,7 +2537,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 30,
+        'weight' => 36,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -2627,7 +2551,7 @@ function enrd_publications_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 29,
+        'weight' => 2,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -2746,7 +2670,7 @@ function enrd_publications_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 10,
+        'weight' => 6,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2836,7 +2760,6 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'module' => 'invisimail',
         'settings' => array(
-          'chunk' => 1,
           'encoder' => 'html_entities',
           'link' => 1,
         ),
@@ -2853,7 +2776,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 17,
+        'weight' => 36,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -2920,7 +2843,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 11,
+        'weight' => 31,
       ),
       'teaser' => array(
         'label' => 'inline',
@@ -2987,7 +2910,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 24,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3092,7 +3015,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 7,
+        'weight' => 27,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3192,7 +3115,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 14,
+        'weight' => 34,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3288,56 +3211,55 @@ function enrd_publications_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-publication_ehd-field_enrd_publ_ehd_file'.
-  $field_instances['node-publication_ehd-field_enrd_publ_ehd_file'] = array(
+  // Exported field_instance:
+  // 'node-publication_ehd-field_enrd_publ_ehd_file_upload'.
+  $field_instances['node-publication_ehd-field_enrd_publ_ehd_file_upload'] = array(
     'bundle' => 'publication_ehd',
-    'default_value' => NULL,
     'deleted' => 0,
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'inline',
-        'module' => 'field_collection',
-        'settings' => array(
-          'add' => '',
-          'delete' => '',
-          'description' => 0,
-          'edit' => '',
-          'view_mode' => 'full',
-        ),
-        'type' => 'field_collection_view',
-        'weight' => 4,
+        'label' => 'above',
+        'module' => 'file',
+        'settings' => array(),
+        'type' => 'file_default',
+        'weight' => 34,
       ),
       'enrd_nrn_toolkit_resource' => array(
-        'label' => 'inline',
+        'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 4,
+        'weight' => 0,
       ),
       'full' => array(
-        'label' => 'inline',
-        'module' => 'field_collection',
+        'label' => 'above',
+        'module' => 'enrd_file_formatter',
         'settings' => array(
-          'add' => '',
-          'delete' => '',
-          'description' => 0,
-          'edit' => '',
-          'view_mode' => 'full',
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
         ),
-        'type' => 'field_collection_view',
+        'type' => 'enrd_file_formatter',
         'weight' => 4,
       ),
       'search_index' => array(
-        'label' => 'inline',
+        'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 4,
+        'weight' => 0,
       ),
       'search_result' => array(
         'label' => 'inline',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 4,
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'short',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
+        'weight' => 3,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3346,20 +3268,49 @@ function enrd_publications_field_default_field_instances() {
         'weight' => 0,
       ),
     ),
+    'ds_extras_field_template' => '',
     'entity_type' => 'node',
-    'field_name' => 'field_enrd_publ_ehd_file',
+    'field_name' => 'field_enrd_publ_ehd_file_upload',
     'label' => 'File',
     'required' => 1,
     'settings' => array(
+      'description_field' => 0,
       'entity_translation_sync' => FALSE,
+      'file_directory' => 'evaluation_publications',
+      'file_extensions' => 'pdf doc docx ppt pptx ppsx xls xlsx',
+      'max_filesize' => '',
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'active' => 0,
-      'module' => 'field_collection',
-      'settings' => array(),
-      'type' => 'field_collection_embed',
-      'weight' => 10,
+      'active' => 1,
+      'module' => 'media',
+      'settings' => array(
+        'allowed_schemes' => array(
+          'avportal' => 0,
+          'dailymotion' => 0,
+          'node' => 0,
+          'private' => 0,
+          'public' => 'public',
+          'vimeo' => 0,
+          'youtube' => 0,
+        ),
+        'allowed_types' => array(
+          'audio' => 0,
+          'document' => 'document',
+          'image' => 0,
+          'video' => 0,
+        ),
+        'browser_plugins' => array(
+          'elibrary_browser_tab--media_browser_1' => 0,
+          'media_default--media_browser_1' => 0,
+          'media_default--media_browser_my_files' => 0,
+          'media_internet' => 0,
+          'upload' => 0,
+        ),
+        'enrd_fieldtips_enabled' => 0,
+      ),
+      'type' => 'media_generic',
+      'weight' => 11,
     ),
   );
 
@@ -3401,7 +3352,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 16,
+        'weight' => 35,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3485,7 +3436,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 22,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3603,7 +3554,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 21,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3688,7 +3639,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 3,
+        'weight' => 25,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3700,7 +3651,7 @@ function enrd_publications_field_default_field_instances() {
     'entity_type' => 'node',
     'field_name' => 'field_enrd_publ_ehd_pages',
     'label' => 'Pages',
-    'required' => 1,
+    'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'max' => '',
@@ -3757,7 +3708,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 13,
+        'weight' => 33,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3845,7 +3796,7 @@ function enrd_publications_field_default_field_instances() {
           'show_remaining_days' => 0,
         ),
         'type' => 'date_default',
-        'weight' => 0,
+        'weight' => 4,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3921,7 +3872,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 9,
+        'weight' => 29,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3980,11 +3931,14 @@ function enrd_publications_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'inline',
-        'module' => 'file_entity',
+        'module' => 'enrd_file_formatter',
         'settings' => array(
-          'text' => '[file:name]',
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => 0,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
         ),
-        'type' => 'file_download_link',
+        'type' => 'enrd_file_formatter',
         'weight' => 5,
       ),
       'search_index' => array(
@@ -3997,7 +3951,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 5,
+        'weight' => 26,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -4014,7 +3968,7 @@ function enrd_publications_field_default_field_instances() {
       'description_field' => 0,
       'entity_translation_sync' => FALSE,
       'file_directory' => 'evaluation_publications',
-      'file_extensions' => 'pdf doc docx ppt pptx xls xlsx',
+      'file_extensions' => 'pdf doc docx ppt pptx ppsx xls xlsx',
       'max_filesize' => '',
       'user_register_form' => FALSE,
     ),
@@ -4043,7 +3997,7 @@ function enrd_publications_field_default_field_instances() {
         ),
       ),
       'type' => 'media_generic',
-      'weight' => 11,
+      'weight' => 12,
     ),
   );
 
@@ -4186,13 +4140,9 @@ function enrd_publications_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'inline',
-        'module' => 'ds',
-        'settings' => array(
-          'taxonomy_term_link' => 0,
-          'taxonomy_term_separator' => ', ',
-        ),
-        'type' => 'ds_taxonomy_separator_localized',
-        'weight' => 10,
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 34,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4205,7 +4155,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 10,
+        'weight' => 30,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -4216,7 +4166,7 @@ function enrd_publications_field_default_field_instances() {
     ),
     'entity_type' => 'node',
     'field_name' => 'field_tags',
-    'label' => 'Keywords',
+    'label' => 'Tags',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -4230,7 +4180,7 @@ function enrd_publications_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'taxonomy_autocomplete',
-      'weight' => 14,
+      'weight' => 3,
     ),
   );
 
@@ -4278,7 +4228,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 8,
+        'weight' => 28,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -4315,9 +4265,9 @@ function enrd_publications_field_default_field_instances() {
   // Exported field_instance: 'node-publication_ehd-field_tax_evaluation'.
   $field_instances['node-publication_ehd-field_tax_evaluation'] = array(
     'bundle' => 'publication_ehd',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
-    'description' => '',
+    'description' => 'Shown with the "Keywords" label on the content page and on the Solr Search page.',
     'display' => array(
       'default' => array(
         'label' => 'hidden',
@@ -4332,10 +4282,14 @@ function enrd_publications_field_default_field_instances() {
         'weight' => 25,
       ),
       'full' => array(
-        'label' => 'hidden',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 34,
+        'label' => 'inline',
+        'module' => 'ds',
+        'settings' => array(
+          'taxonomy_term_link' => 0,
+          'taxonomy_term_separator' => ', ',
+        ),
+        'type' => 'ds_taxonomy_separator_localized',
+        'weight' => 10,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4344,10 +4298,14 @@ function enrd_publications_field_default_field_instances() {
         'weight' => 33,
       ),
       'search_result' => array(
-        'label' => 'hidden',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 33,
+        'label' => 'inline',
+        'module' => 'ds',
+        'settings' => array(
+          'taxonomy_term_link' => 0,
+          'taxonomy_term_separator' => ', ',
+        ),
+        'type' => 'ds_taxonomy_separator_localized',
+        'weight' => 7,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4365,15 +4323,16 @@ function enrd_publications_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 25,
     ),
   );
@@ -4421,7 +4380,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'inline',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 12,
+        'weight' => 32,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -4478,7 +4437,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 33,
+        'weight' => 38,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4490,7 +4449,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 32,
+        'weight' => 40,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4547,7 +4506,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 35,
+        'weight' => 39,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4559,7 +4518,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 34,
+        'weight' => 41,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4609,7 +4568,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 32,
+        'weight' => 37,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4621,7 +4580,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 31,
+        'weight' => 39,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4676,7 +4635,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 36,
+        'weight' => 40,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4688,7 +4647,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 35,
+        'weight' => 42,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4739,7 +4698,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 31,
+        'weight' => 42,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4751,7 +4710,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 30,
+        'weight' => 38,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4805,7 +4764,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 37,
+        'weight' => 41,
       ),
       'search_index' => array(
         'label' => 'above',
@@ -4817,7 +4776,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 36,
+        'weight' => 43,
       ),
       'teaser' => array(
         'label' => 'hidden',
@@ -4867,7 +4826,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 29,
+        'weight' => 35,
       ),
       'search_index' => array(
         'label' => 'hidden',
@@ -4880,7 +4839,7 @@ function enrd_publications_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 28,
+        'weight' => 37,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -5164,6 +5123,49 @@ function enrd_publications_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'taxonomy_term-enrd_publications-name_field'.
+  $field_instances['taxonomy_term-enrd_publications-name_field'] = array(
+    'bundle' => 'enrd_publications',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 4,
+      ),
+      'enrd_publication_type_details' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'taxonomy_term',
+    'field_name' => 'name_field',
+    'label' => 'Name',
+    'required' => TRUE,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => FALSE,
+        'page' => FALSE,
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => -5,
+    ),
+  );
+
   // Translatables
   // Included for use with string extractors like potx.
   t('Abstract');
@@ -5181,7 +5183,6 @@ function enrd_publications_field_default_field_instances() {
   t('Evaluation Theme');
   t('Evaluation Type');
   t('File');
-  t('File Language');
   t('Full update history');
   t('Further information');
   t('Include in the NRN Toolkit');
@@ -5193,6 +5194,7 @@ function enrd_publications_field_default_field_instances() {
   t('NRN Classification');
   t('NRN Description');
   t('NRN Title');
+  t('Name');
   t('Optionally specify a description to be displayed on the NRN Toolkit search results list.');
   t('Optionally specify a title to be displayed on the NRN Toolkit search results list.');
   t('Origin');
@@ -5214,7 +5216,9 @@ function enrd_publications_field_default_field_instances() {
   t('Resource type');
   t('Rural Development Policy');
   t('Select this checkbox to include it into the NRN Toolkit');
+  t('Shown with the "Keywords" label on the content page and on the Solr Search page.');
   t('Subscription information');
+  t('Tags');
   t('This informative text will be displayed on the Publication page.');
   t('Title');
   t('Title page image');

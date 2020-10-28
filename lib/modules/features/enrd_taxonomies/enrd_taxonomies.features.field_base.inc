@@ -171,6 +171,45 @@ function enrd_taxonomies_field_default_field_bases() {
     'type' => 'text',
   );
 
+  // Exported field_base: 'field_enrd_taxonomies_file_lang'.
+  $field_bases['field_enrd_taxonomies_file_lang'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_enrd_taxonomies_file_lang',
+    'indexes' => array(
+      'target_id' => array(
+        0 => 'target_id',
+      ),
+    ),
+    'locked' => 1,
+    'module' => 'entityreference',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'handler' => 'base',
+      'handler_settings' => array(
+        'behaviors' => array(
+          'entityqueue' => array(
+            'status' => 0,
+          ),
+          'views-select-list' => array(
+            'status' => 0,
+          ),
+        ),
+        'sort' => array(
+          'type' => 'none',
+        ),
+        'target_bundles' => array(
+          'enrd_languages' => 'enrd_languages',
+        ),
+      ),
+      'target_type' => 'taxonomy_term',
+    ),
+    'translatable' => 0,
+    'type' => 'entityreference',
+  );
+
   // Exported field_base: 'field_tax_country'.
   $field_bases['field_tax_country'] = array(
     'active' => 1,

@@ -6,6 +6,7 @@ package = ENRD
 dependencies[] = bean
 dependencies[] = context
 dependencies[] = enrd_mastermind
+dependencies[] = enrd_news
 dependencies[] = image
 dependencies[] = views
 dependencies[] = views_bootstrap

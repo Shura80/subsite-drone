@@ -111,19 +111,6 @@ function enrd_lag_database_rules_action_info() {
     'access callback' => 'og_rules_integration_access',
   );
 
-  $items['enrd_lag_database_get_lag_admin_users'] = array(
-    'label' => t('Get LAG admin users'),
-    'group' => t('ENRD LAG Database'),
-    'provides' => array(
-      'lag_admin_users' => array(
-        'type' => 'list<user>',
-        'label' => t('List of LAG Admin users'),
-      ),
-    ),
-    'base' => '_enrd_lag_database_get_lag_admin_users',
-    'access callback' => 'og_rules_integration_access',
-  );
-
   return $items;
 }
 
@@ -245,33 +232,6 @@ function _enrd_lag_database_get_nsu_managers_in_group(EntityDrupalWrapper $group
   );
 
   return $result;
-}
-
-/**
- * Helper function to get the list of LAG admin users.
- *
- * @return array
- *   Returns an array with users retrieved.
- */
-function _enrd_lag_database_get_lag_admin_users() {
-  // Get the list of "LAG User" / "Admin" users.
-  $query = db_select('users_roles', 'ur');
-  $query->join('role', 'r', 'r.rid = ur.rid');
-  $query->fields('ur', array('uid'))
-    ->condition('r.name', 'administrator');
-  $sub_query = db_select('users_roles', 'ur');
-  $sub_query->join('role', 'r', 'r.rid = ur.rid');
-  $sub_query->fields('ur', array('uid'));
-  $sub_query->condition('r.name', 'LAG User');
-  $query->condition('uid', $sub_query, 'IN')
-    ->distinct();
-
-  $result = array(
-    'lag_admin_users' => $query->execute()->fetchCol(),
-  );
-
-  return $result;
-
 }
 
 /**

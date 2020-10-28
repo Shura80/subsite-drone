@@ -16,6 +16,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'access all webform results',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'webform',
   );
@@ -25,6 +26,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'create cooperation_offer content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -34,6 +36,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'create lag content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -43,6 +46,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete any cooperation_offer content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -52,6 +56,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete any lag content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -61,6 +66,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete own cooperation_offer content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -70,6 +76,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete own lag content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -79,6 +86,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_additional_keywords',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -88,6 +96,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_assets',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -97,6 +106,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_esi_funds',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -106,6 +116,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_esif_programme',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -115,6 +126,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_key_themes_of_strategy',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -124,6 +136,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_physical_demographic_characteristics_of_lag_area',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -133,6 +146,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'delete terms in enrd_project_types',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -142,6 +156,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit any cooperation_offer content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -151,6 +166,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit any lag content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -160,6 +176,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit own cooperation_offer content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -169,6 +186,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit own lag content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -178,6 +196,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_additional_keywords',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -187,6 +206,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_assets',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -196,6 +216,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_esi_funds',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -205,6 +226,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_esif_programme',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -214,6 +236,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_key_themes_of_strategy',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -223,6 +246,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_physical_demographic_characteristics_of_lag_area',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -232,6 +256,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit terms in enrd_project_types',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -241,6 +266,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'edit user profile LAG fields',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_database',
   );
@@ -250,6 +276,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'import enrd_lag_database feeds',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'feeds',
   );
@@ -259,6 +286,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'skip alter moderation form',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_database',
   );
@@ -268,6 +296,16 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'skip field access control',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'enrd_lag_database',
+  );
+
+  // Exported permission: 'skip lag access control'.
+  $permissions['skip lag access control'] = array(
+    'name' => 'skip lag access control',
+    'roles' => array(
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_database',
   );
@@ -277,6 +315,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'skip lag country restriction',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_database',
   );
@@ -286,6 +325,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'use Rules component rules_enrd_lag_database_set_nsu_schedule',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'rules',
   );
@@ -295,6 +335,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'use Rules component rules_enrd_lag_database_set_schedule',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'rules',
   );
@@ -304,6 +345,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'use Rules component rules_enrd_lag_database_solicit_manager_notification',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'rules',
   );
@@ -313,6 +355,7 @@ function enrd_lag_database_user_default_permissions() {
     'name' => 'use Rules component rules_enrd_lag_database_solicit_nsu_notification',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'rules',
   );

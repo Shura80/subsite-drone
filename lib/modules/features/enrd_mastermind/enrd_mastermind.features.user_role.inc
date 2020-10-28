@@ -23,5 +23,11 @@ function enrd_mastermind_user_default_roles() {
     'weight' => 7,
   );
 
+  // Exported role: webmaster.
+  $roles['webmaster'] = (object) array(
+    'name' => 'webmaster',
+    'weight' => 13,
+  );
+
   return $roles;
 }

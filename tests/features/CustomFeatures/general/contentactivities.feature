@@ -1,23 +1,23 @@
 @api @contentactivities
 Feature: ENRD Content Activities
 
-  This feature is aimed at allowing a site administrator to supervise any site contents' activities, all listed in tabular form.
+  This feature is aimed at allowing a site webmaster to supervise any site contents' activities, all listed in tabular form.
   It also allows to search for content activities by applying several filter criteria and to download a CSV report listing the search results in tabular form.
 
   @workflow @no-og
   Scenario: Test if a general Basic page creation, modification, moderation and deletion is reported on the Content Activities report page.
     Given users:
-      | name           | mail                       | pass | roles         |
-      | bdd-user-admin | bdd-user-admin@example.com | test | administrator |
-      | bdd-john-doe   | bdd-john-doe@example.com   | test | administrator |
+      | name               | mail                           | pass | roles     |
+      | bdd-user-webmaster | bdd-user-webmaster@example.com | test | webmaster |
+      | bdd-john-doe       | bdd-john-doe@example.com       | test | webmaster |
     # New content creation + New Draft creation.
-    Given I am logged in as "bdd-user-admin"
+    Given I am logged in as "bdd-user-webmaster"
     And I am at "node/add/page"
     And I fill in "title_field[en][0][value]" with "BDD Content Activities test page"
     And I press "Save"
     When I go to "admin/reports/content-activities"
-    Then I should see the text 'A new Basic page: BDD Content Activities test page has been created by bdd-user-admin'
-    And I should see the text 'A Draft of the Basic page: BDD Content Activities test page has been created by bdd-user-admin'
+    Then I should see the text 'A new Basic page: BDD Content Activities test page has been created by bdd-user-webmaster'
+    And I should see the text 'A Draft of the Basic page: BDD Content Activities test page has been created by bdd-user-webmaster'
     # Draft -> Needs Review Workbench Transition.
     Given I am logged in as "bdd-john-doe"
     When I go to "admin/workbench"
@@ -29,7 +29,7 @@ Feature: ENRD Content Activities
     Then I should see the text 'The Basic page: BDD Content Activities test page has changed moderation state from Draft to Needs Review'
     # Content update.
     And I should see the text 'The Basic page: BDD Content Activities test page has been updated by bdd-john-doe'
-    But I should not see the text 'The Basic page: BDD Content Activities test page has been updated by bdd-user-admin'
+    But I should not see the text 'The Basic page: BDD Content Activities test page has been updated by bdd-user-webmaster'
     # Needs Review -> Validated Workbench Transition.
     When I go to "admin/workbench"
     And I click "Moderate All"
@@ -61,15 +61,15 @@ Feature: ENRD Content Activities
     And I press "Delete"
     When I go to "admin/reports/content-activities"
     Then I should see the text 'The Basic page: BDD Content Activities test page has been deleted by bdd-john-doe'
-    But I should not see the text 'The Basic page: BDD Content Activities test page has been deleted by bdd-user-admin'
+    But I should not see the text 'The Basic page: BDD Content Activities test page has been deleted by bdd-user-webmaster'
 
   # Messages related to OG Workbench moderation are obsolete and no more applicable if OG content is LAG or Coop. offer.
   @workflow @og
   Scenario: Test if OG content creation, modification, moderation and deletion is reported on the Activities report page.
     Given users:
-      | name                | mail                           | pass | roles                             |
-      | bdd-comm-adm        | bdd-comm-adm@example.com       | test | authenticated user, administrator |
-      | bdd-comm-jane-doe   | bdd-comm-jane-doe@example.com  | test | authenticated user, administrator |
+      | name              | mail                          | pass | roles                         |
+      | bdd-comm-adm      | bdd-comm-adm@example.com      | test | authenticated user, webmaster |
+      | bdd-comm-jane-doe | bdd-comm-jane-doe@example.com | test | authenticated user, webmaster |
     Given I am viewing a "community" content in "published" status:
       | title | BDD Content Activities Comm |
     When I am logged in as "bdd-comm-adm"

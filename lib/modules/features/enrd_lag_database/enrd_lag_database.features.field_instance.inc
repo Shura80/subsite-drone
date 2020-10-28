@@ -111,7 +111,7 @@ function enrd_lag_database_field_default_field_instances() {
           'taxonomy_term_separator' => ', ',
         ),
         'type' => 'ds_taxonomy_separator_localized',
-        'weight' => 9,
+        'weight' => 8,
       ),
       'rss' => array(
         'label' => 'above',
@@ -124,7 +124,7 @@ function enrd_lag_database_field_default_field_instances() {
         'module' => 'taxonomy',
         'settings' => array(),
         'type' => 'taxonomy_term_reference_plain',
-        'weight' => 12,
+        'weight' => 11,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -443,7 +443,7 @@ function enrd_lag_database_field_default_field_instances() {
           'show_remaining_days' => FALSE,
         ),
         'type' => 'date_default',
-        'weight' => 10,
+        'weight' => 9,
       ),
       'search_result' => array(
         'label' => 'hidden',
@@ -521,7 +521,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 21,
+        'weight' => 15,
       ),
       'rss' => array(
         'label' => 'above',
@@ -564,7 +564,7 @@ function enrd_lag_database_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'email_textfield',
-      'weight' => 8,
+      'weight' => 10,
     ),
   );
 
@@ -782,7 +782,7 @@ function enrd_lag_database_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_plain',
-        'weight' => 17,
+        'weight' => 15,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -847,6 +847,83 @@ function enrd_lag_database_field_default_field_instances() {
       ),
       'type' => 'text_textfield',
       'weight' => 116,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'node-cooperation_offer-field_enrd_coop_spoken_languages'.
+  $field_instances['node-cooperation_offer-field_enrd_coop_spoken_languages'] = array(
+    'bundle' => 'cooperation_offer',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'i18n_taxonomy_term_reference_link',
+        'weight' => 31,
+      ),
+      'full' => array(
+        'label' => 'inline',
+        'module' => 'ds',
+        'settings' => array(
+          'taxonomy_term_link' => 0,
+          'taxonomy_term_separator' => ' - ',
+        ),
+        'type' => 'ds_taxonomy_separator_localized',
+        'weight' => 3,
+      ),
+      'rss' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'search_index' => array(
+        'label' => 'above',
+        'module' => 'taxonomy',
+        'settings' => array(),
+        'type' => 'taxonomy_term_reference_plain',
+        'weight' => 13,
+      ),
+      'search_result' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_enrd_coop_spoken_languages',
+    'label' => 'Spoken languages',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'shs',
+      'settings' => array(
+        'enrd_fieldtips_enabled' => 0,
+        'shs' => array(
+          'create_new_levels' => 0,
+          'create_new_terms' => 0,
+          'force_deepest' => 0,
+          'use_chosen' => 'always',
+        ),
+      ),
+      'type' => 'taxonomy_shs',
+      'weight' => 9,
     ),
   );
 
@@ -1043,7 +1120,7 @@ function enrd_lag_database_field_default_field_instances() {
           'taxonomy_term_separator' => ', ',
         ),
         'type' => 'ds_taxonomy_separator_localized',
-        'weight' => 8,
+        'weight' => 7,
       ),
       'rss' => array(
         'label' => 'inline',
@@ -1056,7 +1133,7 @@ function enrd_lag_database_field_default_field_instances() {
         'module' => 'taxonomy',
         'settings' => array(),
         'type' => 'taxonomy_term_reference_plain',
-        'weight' => 11,
+        'weight' => 10,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1124,7 +1201,7 @@ function enrd_lag_database_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_plain',
-        'weight' => 13,
+        'weight' => 12,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1211,7 +1288,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 25,
+        'weight' => 19,
       ),
       'rss' => array(
         'label' => 'inline',
@@ -1225,7 +1302,7 @@ function enrd_lag_database_field_default_field_instances() {
         'module' => 'taxonomy',
         'settings' => array(),
         'type' => 'taxonomy_term_reference_plain',
-        'weight' => 19,
+        'weight' => 16,
       ),
       'search_result' => array(
         'label' => 'hidden',
@@ -1267,7 +1344,7 @@ function enrd_lag_database_field_default_field_instances() {
   // Exported field_instance: 'node-cooperation_offer-field_tax_evaluation'.
   $field_instances['node-cooperation_offer-field_tax_evaluation'] = array(
     'bundle' => 'cooperation_offer',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1281,7 +1358,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 24,
+        'weight' => 18,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1293,7 +1370,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 21,
+        'weight' => 18,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1317,15 +1394,16 @@ function enrd_lag_database_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 103,
     ),
   );
@@ -1347,7 +1425,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 23,
+        'weight' => 17,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1359,7 +1437,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 25,
+        'weight' => 22,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1413,7 +1491,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 27,
+        'weight' => 20,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1425,7 +1503,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 22,
+        'weight' => 19,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1476,7 +1554,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 30,
+        'weight' => 23,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1488,7 +1566,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 20,
+        'weight' => 17,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1543,7 +1621,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 29,
+        'weight' => 22,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1555,7 +1633,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 26,
+        'weight' => 23,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1606,7 +1684,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 28,
+        'weight' => 21,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1618,7 +1696,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 23,
+        'weight' => 20,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -1672,7 +1750,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 22,
+        'weight' => 16,
       ),
       'rss' => array(
         'label' => 'above',
@@ -1684,7 +1762,7 @@ function enrd_lag_database_field_default_field_instances() {
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 24,
+        'weight' => 21,
       ),
       'search_result' => array(
         'label' => 'above',
@@ -2095,7 +2173,7 @@ function enrd_lag_database_field_default_field_instances() {
   // Exported field_instance: 'node-esi_funds_og-field_tax_evaluation'.
   $field_instances['node-esi_funds_og-field_tax_evaluation'] = array(
     'bundle' => 'esi_funds_og',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -2133,15 +2211,16 @@ function enrd_lag_database_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 15,
     ),
   );
@@ -3426,9 +3505,14 @@ function enrd_lag_database_field_default_field_instances() {
       ),
       'full' => array(
         'label' => 'above',
-        'module' => 'file',
-        'settings' => array(),
-        'type' => 'file_default',
+        'module' => 'enrd_file_formatter',
+        'settings' => array(
+          'custom_file_title' => '',
+          'display_type' => 'full',
+          'force_file_title' => FALSE,
+          'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+        ),
+        'type' => 'enrd_file_formatter',
         'weight' => 41,
       ),
       'search_index' => array(
@@ -5659,7 +5743,7 @@ function enrd_lag_database_field_default_field_instances() {
   // Exported field_instance: 'node-lag-field_enrd_lag_spoken_languages'.
   $field_instances['node-lag-field_enrd_lag_spoken_languages'] = array(
     'bundle' => 'lag',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -5675,12 +5759,8 @@ function enrd_lag_database_field_default_field_instances() {
       ),
       'enrd_lag_database_shared_info' => array(
         'label' => 'inline',
-        'module' => 'ds',
-        'settings' => array(
-          'taxonomy_term_link' => 0,
-          'taxonomy_term_separator' => ' - ',
-        ),
-        'type' => 'ds_taxonomy_separator_localized',
+        'settings' => array(),
+        'type' => 'hidden',
         'weight' => 2,
       ),
       'full' => array(
@@ -5713,6 +5793,7 @@ function enrd_lag_database_field_default_field_instances() {
         'weight' => 22,
       ),
     ),
+    'ds_extras_field_template' => '',
     'entity_type' => 'node',
     'field_name' => 'field_enrd_lag_spoken_languages',
     'label' => 'Spoken languages',
@@ -5723,11 +5804,18 @@ function enrd_lag_database_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'options',
+      'module' => 'shs',
       'settings' => array(
         'apply_chosen' => 1,
+        'enrd_fieldtips_enabled' => 0,
+        'shs' => array(
+          'create_new_levels' => 0,
+          'create_new_terms' => 0,
+          'force_deepest' => 0,
+          'use_chosen' => 'always',
+        ),
       ),
-      'type' => 'options_select',
+      'type' => 'taxonomy_shs',
       'weight' => 49,
     ),
   );
@@ -6373,7 +6461,7 @@ function enrd_lag_database_field_default_field_instances() {
   // Exported field_instance: 'node-lag-field_tax_evaluation'.
   $field_instances['node-lag-field_tax_evaluation'] = array(
     'bundle' => 'lag',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -6423,15 +6511,16 @@ function enrd_lag_database_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => FALSE,
           'create_new_terms' => FALSE,
           'force_deepest' => FALSE,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 83,
     ),
   );

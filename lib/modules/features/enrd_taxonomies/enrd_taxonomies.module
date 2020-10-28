@@ -7,6 +7,8 @@
 
 include_once 'enrd_taxonomies.features.inc';
 
+define('ENRD_TAXONOMIES_COUNTRY_EU', 'European Union');
+
 /**
  * Implements hook_menu().
  */
@@ -19,7 +21,7 @@ function enrd_taxonomies_menu() {
     'position' => 'left',
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer fields'),
     'file' => 'system.admin.inc',
     'file path' => drupal_get_path('module', 'system'),
   );
@@ -58,12 +60,34 @@ function enrd_taxonomies_form_node_form_alter(&$form, &$form_state, $form_id) {
       $field_list['group_technical_taxonomy']['field_tax_menu_tree'] = t('Menu tree');
     }
 
-    foreach ($field_list as $group_name => $group) {
-      foreach ($group as $field_name => $field_label) {
-        if (!empty($form[$field_name])) {
-          $right_position = (isset($form['#group_children'][$field_name]) && $form['#group_children'][$field_name] == $group_name);
+    foreach ($field_list as $group_name => $widgets) {
+      foreach ($widgets as $fields) {
+        foreach ($fields as $field_name => $field_label) {
+          if (!empty($form[$field_name])) {
+            $right_position = (isset($form['#group_children'][$field_name]) && $form['#group_children'][$field_name] == $group_name);
 
-          $form[$field_name]['#access'] = user_access('tag enrd taxonomies tag') || !$right_position;
+            $form[$field_name]['#access'] = user_access('tag enrd taxonomies tag') || !$right_position;
+
+            // Append description to "Evaluation" field to allow term addition.
+            $enrd_evaluation = taxonomy_vocabulary_machine_name_load('enrd_evaluation');
+
+            if (!empty($enrd_evaluation) && user_access('edit terms in ' . $enrd_evaluation->vid)) {
+              if (isset($form[$field_name][LANGUAGE_NONE]) && $form[$field_name][LANGUAGE_NONE]['#field_name'] == 'field_tax_evaluation') {
+                if (!empty($form[$field_name][LANGUAGE_NONE]['#description'])) {
+                  $form[$field_name][LANGUAGE_NONE]['#description'] .= '<br>';
+                }
+
+                $form[$field_name][LANGUAGE_NONE]['#description'] .= t('In order to add a new term to the "@eval" taxonomy, go to the !add and finally refresh this page to see the new value.', [
+                  '@eval' => $enrd_evaluation->name,
+                  '!add' => l(t('term addition page'), 'admin/structure/taxonomy/' . $enrd_evaluation->machine_name . '/add', [
+                    'html' => TRUE,
+                    'attributes' => ['target' => '_blank'],
+                  ]),
+                ]);
+              }
+            }
+
+          }
         }
       }
     }
@@ -79,16 +103,22 @@ function enrd_taxonomies_form_node_form_alter(&$form, &$form_state, $form_id) {
 function _enrd_taxonomies_field_base_list() {
   return array(
     'group_enrd_classification' => array(
-      'field_tax_country' => t('Country'),
-      'field_tax_languages' => t('Language'),
-      'field_tax_transversal_topics' => t('Transversal topics'),
-      'field_tax_rural_dev_policy' => t('Rural Development Policy'),
-      'field_tax_evaluation' => t('Evaluation'),
+      'taxonomy_shs' => array(
+        'field_tax_country' => t('Country'),
+        'field_tax_languages' => t('Language'),
+        'field_tax_transversal_topics' => t('Transversal topics'),
+        'field_tax_rural_dev_policy' => t('Rural Development Policy'),
+      ),
+      'options_select' => array(
+        'field_tax_evaluation' => t('Evaluation'),
+      ),
     ),
     'group_technical_taxonomy' => array(
-      'field_tax_origin' => t('Origin'),
-      'field_tax_translation_status' => t('Translation status'),
-      'field_tax_update_status' => t('Update status'),
+      'options_select' => array(
+        'field_tax_origin' => t('Origin'),
+        'field_tax_translation_status' => t('Translation status'),
+        'field_tax_update_status' => t('Update status'),
+      ),
     ),
   );
 }
@@ -103,11 +133,9 @@ function _enrd_taxonomies_field_group_list() {
   return array(
     'group_enrd_classification' => array(
       'label' => t('Classification'),
-      'widget' => 'taxonomy_shs',
     ),
     'group_technical_taxonomy' => array(
       'label' => t('Technical taxonomy'),
-      'widget' => 'options_select',
     ),
   );
 }
@@ -126,9 +154,11 @@ function _enrd_taxonomies_field_group_list() {
 function _enrd_taxonomies_check_content_type($entity_type, $bundle_name) {
   $instances = field_info_instances($entity_type, $bundle_name);
 
-  foreach (_enrd_taxonomies_field_base_list() as $fields) {
-    if (!empty(array_intersect_key($fields, $instances))) {
-      return TRUE;
+  foreach (_enrd_taxonomies_field_base_list() as $widgets) {
+    foreach ($widgets as $fields) {
+      if (!empty(array_intersect_key($fields, $instances))) {
+        return TRUE;
+      }
     }
   }
   return FALSE;
@@ -154,18 +184,22 @@ function _enrd_taxonomies_set_instance($entity_type, $bundle, $force = FALSE) {
     $service_group = multisite_config_service('field_group');
 
     $field_groups = _enrd_taxonomies_field_group_list();
-    foreach (_enrd_taxonomies_field_base_list() as $group_name => $group) {
+    $field_list = _enrd_taxonomies_field_base_list();
+
+    foreach ($field_list as $group_name => $widgets) {
 
       $added_field = array();
-      foreach ($group as $field_name => $field_label) {
-        if (!field_info_instance($entity_type, $field_name, $bundle)) {
-          $service_field->createInstanceField($field_name, $entity_type, $bundle)
-            ->label($field_label)
-            ->widget($field_groups[$group_name]['widget'])
-            ->display('default', 'shs_default', 'hidden')
-            ->display('teaser', 'shs_default', 'hidden')
-            ->save();
-          $added_field[] = $field_name;
+      foreach ($widgets as $widget_name => $fields) {
+        foreach ($fields as $field_name => $field_label) {
+          if (!field_info_instance($entity_type, $field_name, $bundle)) {
+            $service_field->createInstanceField($field_name, $entity_type, $bundle)
+              ->label($field_label)
+              ->widget($widget_name)
+              ->display('default', 'shs_default', 'hidden')
+              ->display('teaser', 'shs_default', 'hidden')
+              ->save();
+            $added_field[] = $field_name;
+          }
         }
       }
 
@@ -227,8 +261,10 @@ function _enrd_taxonomies_import_taxonomies($vocabularies = NULL) {
  *   Parent term id.
  * @param bool $pathauto
  *   Set or not pathauto when creating term.
+ * @param string $lang
+ *   The term language. Defaults to LANGUAGE_NONE.
  */
-function _enrd_taxonomies_save_taxo(array $array, $vocabulary, $parent = 0, $pathauto = FALSE) {
+function _enrd_taxonomies_save_taxo(array $array, $vocabulary, $parent = 0, $pathauto = FALSE, $lang = LANGUAGE_NONE) {
 
   // Check the vocabulary.
   if ($vocabulary === FALSE) {
@@ -246,12 +282,13 @@ function _enrd_taxonomies_save_taxo(array $array, $vocabulary, $parent = 0, $pat
         'path' => array(
           'pathauto' => $pathauto,
         ),
+        'language' => $lang,
       );
       taxonomy_term_save($t);
       $tid = $t->tid;
     }
     else {
-      _enrd_taxonomies_save_taxo($term, $vocabulary, $tid, $pathauto);
+      _enrd_taxonomies_save_taxo($term, $vocabulary, $tid, $pathauto, $lang);
     }
   }
 }
@@ -281,6 +318,123 @@ function _enrd_taxonomies_save_rdp() {
 
   $t = get_t();
   drupal_set_message($t('Updated RDP Taxonomy terms with MS code.'));
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build().
+ */
+function enrd_taxonomies_apachesolr_index_document_build(ApacheSolrDocument $document, $parent_entity, $entity_type, $env_id) {
+
+  list(, , $parent_entity_bundle) = entity_extract_ids($entity_type, $parent_entity);
+
+  // Proceed with combining attachment content to entity document only if the
+  // parent entity is flagged for indexing attachments with parent entity.
+  if (variable_get('apachesolr_attachments_entity_bundle_indexing_' . $parent_entity_bundle, 'seperate') == 'parent') {
+    $file_field_names = array();
+    $fields = field_info_field_by_ids();
+    if (is_array($fields)) {
+      foreach ($fields as $field_info) {
+        if ($field_info['type'] == 'file') {
+          foreach ($field_info['bundles'] as $entity_type => $bundles) {
+            if (in_array($parent_entity_bundle, $bundles)) {
+              $file_field_names[$field_info['field_name']] = $field_info['field_name'];
+            }
+          }
+        }
+      }
+    }
+    foreach ($file_field_names as $file_field) {
+      if (isset($parent_entity->$file_field)) {
+        $parent_entity_file_fields = $parent_entity->$file_field;
+        foreach ($parent_entity_file_fields as $files) {
+          foreach ($files as $file) {
+
+            $file = (object) $file;
+
+            $status = ($file->status == 1 ? 1 : 0);
+            $is_file = ($file->type == 'document');
+            if ($status || $is_file) {
+              field_apachesolr_index_document_build($document, $file, 'file', $env_id);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_node().
+ *
+ * @see apachesolr_multilingual_entityreference_indexing_callback_implementation
+ */
+function enrd_taxonomies_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
+
+  // Merge Apache document language fields.
+  $content_langs = $document->getField('sm_vid_ENRD_Language');
+  if ($content_langs) {
+    foreach ($content_langs['value'] as $content_lang) {
+      $document->addField('sm_enrd_eu_languages', $content_lang);
+    }
+  }
+  // File languages.
+  $file_langs = $document->getField('sm_field_enrd_taxonomies_file_la');
+  if ($file_langs) {
+    // Add the values to be indexed as term names.
+    foreach ($file_langs['value'] as $file_lang) {
+      // Default callback for entityreference set values as "taxonomy_term:tid".
+      $lang_term = taxonomy_term_load(drupal_substr($file_lang, 14));
+      $lang_name = $lang_term->name;
+      $document->addField('sm_enrd_eu_languages', $lang_name);
+    }
+  }
+
+  // Index only EU countries, even from their children.
+  if (isset($entity->field_tax_country[LANGUAGE_NONE])) {
+    $countries = $entity->field_tax_country[LANGUAGE_NONE];
+
+    foreach ($countries as $country) {
+      $terms_tree = taxonomy_get_parents_all($country['tid']);
+      $terms_tree_assoc = array_map('get_object_vars', $terms_tree);
+      $parent_terms_names = array_column($terms_tree_assoc, 'name');
+
+      // Check if it's a EU country/region.
+      if (!empty($parent_terms_names) && !empty($eu = array_search(ENRD_TAXONOMIES_COUNTRY_EU, $parent_terms_names))) {
+        $current_term = $terms_tree[$eu - 1];
+        // Index only the EU country.
+        $document->addField('sm_enrd_eu_countries', $current_term->name);
+      }
+    }
+  }
+
+}
+
+/**
+ * Implements hook_facetapi_facet_info().
+ */
+function enrd_taxonomies_facetapi_facet_info(array $searcher_info) {
+  $facets = array();
+
+  if (isset($searcher_info['types']['node'])) {
+    // Adds a facet to show the languages of content and/or attached file.
+    $facets['sm_enrd_eu_languages'] = array(
+      'label' => t('Language'),
+      'description' => t('Custom filter exposing Languages from content/file.'),
+      'field' => 'sm_enrd_eu_languages',
+    );
+
+    // Custom European Union countries facet.
+    $facets['sm_enrd_eu_countries'] = array(
+      'label' => t('Countries'),
+      'description' => t('Custom filter that exposes the European Union Countries.'),
+      'field' => 'sm_enrd_eu_countries',
+    );
+
+    // Create custom facets for the Publications search page.
+    $facets = array_merge($facets, apachesolr_entity_field_facets('node'));
+  }
+
+  return $facets;
 }
 
 /**
@@ -508,5 +662,53 @@ function enrd_taxonomies_preprocess_views_view_rss(&$vars) {
         $vars['title'] .= ': ' . check_plain($filter_term_names);
       }
     }
+  }
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function enrd_taxonomies_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+  // Content Tagging View: customize vbo options and field tabs.
+  if ($form['#form_id'] == 'views_form_taxonomy_node_tagging_page' && isset($vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'])) {
+    $fields = field_info_fields();
+
+    if (!empty($fields)) {
+      $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'] = [];
+
+      foreach ($fields as $name => $field) {
+        // Fetch all taxonomy fields referencing nodes.
+        if ($field['type'] == 'taxonomy_term_reference' && !empty($field['bundles']['node'])) {
+
+          // If "Type" filter is set, only provide fields for those types.
+          if (!empty($vbo->view->exposed_input['type'])) {
+            $types = $vbo->view->exposed_input['type'];
+
+            foreach ($types as $type) {
+              $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'][$type . '::' . $name] = $type . '::' . $name;
+            }
+          }
+          else {
+            // If no filter is set, show fields for all bundles.
+            foreach ($field['bundles']['node'] as $bundle) {
+              $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'][$bundle . '::' . $name] = $bundle . '::' . $name;
+            }
+          }
+
+        }
+      }
+    }
+
+    // Arrange all fields in vertical tabs.
+    foreach (element_children($form) as $child) {
+      if (preg_match('#^bundle_#', $child) === 1) {
+        if (!empty($form[$child]['#fieldgroups'])) {
+          foreach ($form[$child]['#fieldgroups'] as $fieldgroup) {
+            $fieldgroup->format_type = 'tab';
+          }
+        }
+      }
+    }
+
   }
 }

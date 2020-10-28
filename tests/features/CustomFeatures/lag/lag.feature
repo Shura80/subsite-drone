@@ -101,7 +101,7 @@ Feature: ENRD LAG Database.
       | LAG manager email field is required.              |
       | LAG manager (Name and Surname) field is required. |
 
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     When I am at "node/add/cooperation-offer"
     # Check if third level terms options in Country(ies) select are hidden.
     Then I should not have the following options for "Country(ies)":
@@ -205,7 +205,7 @@ Feature: ENRD LAG Database.
 
   @javascript @lags @phone
   Scenario: View a basic LAG with a wrong phone number format and check if the warning message is displayed.
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     And I am viewing a "lag" content in "published" status:
       | field_enrd_lag_code    | BDD-BE-02                                                |
       | title                  | BDD LAG 02                                               |
@@ -262,7 +262,7 @@ Feature: ENRD LAG Database.
   @feeds
   Scenario: Check that feeds importer is correctly set up.
     # Check that feeds mapping and tampers exist.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am at "admin/structure/feeds/enrd_lag_database"
     Then I should get a "200" HTTP response
     When I am at "admin/structure/feeds/enrd_lag_database/tamper"
@@ -274,9 +274,9 @@ Feature: ENRD LAG Database.
 
   @feeds @feeds-importer @javascript @wip
   # May fail because warning: Creating default object from empty value in _enrd_feeds_taxonomy_hierarchy_set_caches().
-  Scenario: As an administrator, I want to import some basic data (LAG contact info) into LAGs,
+  Scenario: As a webmaster, I want to import some basic data (LAG contact info) into LAGs,
   to give users the possibility to edit them and add detailed info.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am at "import/enrd_lag_database"
     And I attach the file "BDD_LAG_data-import-export_template.csv" to "File"
     And I press "Import"
@@ -285,7 +285,7 @@ Feature: ENRD LAG Database.
 
   @og @og-settings
   Scenario: Check that OG permissions config pages exists for LAGs and Funds.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am at "admin/config/group/permissions/node/lag"
     Then I should get a "200" HTTP response
     When I am at "admin/config/group/permissions/node/esi_funds_og"
@@ -294,7 +294,7 @@ Feature: ENRD LAG Database.
   @og @og-roles
   Scenario: Check that OG roles have been added to LAG and ESI Funds groups.
     # LAGs
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am at "admin/config/group/roles/node/lag"
     Then I should get a "200" HTTP response
     And I should see the text "LAG Contact"
@@ -306,7 +306,7 @@ Feature: ENRD LAG Database.
   # Webmaster
   @og @webmasters @workflow @lags
   Scenario: Check Webmaster moderation tasks:
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     # From Draft state
     And I am at "lag/bdd-be-lag-dra"
     When I click "Moderate"
@@ -372,7 +372,7 @@ Feature: ENRD LAG Database.
 
   @og @webmaster @workflow @lags @ask-publishing
   Scenario: Check that webmasters do not see the single button "Ask for publishing".
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     And I am at "lag/bdd-be-lag-dra"
     Then I should not see "Ask for publishing"
     When I am at "lag/bdd-be-lag-rbp"
@@ -382,30 +382,34 @@ Feature: ENRD LAG Database.
     When I am at "lag/bdd-be-lag-arc"
     Then I should not see "Ask for publishing"
 
-  @og @workflow @lags @ask-publishing
+  @og @workflow @lags @ask-publishing @privacy
   Scenario: As "LAG Manager" I ask publication through checkbox into node edit.
     Given I am logged in as a user with the "LAG User" roles
     And I have the "LAG Manager" role in the "BDD LAG Published" group
     And I am at "lag/bdd-be-lag-pub"
     Then I click "Update LAG profile"
-    And I check "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
-    And I check "I confirm that the data I have added in my LAG can be published by the Webmaster."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
+    And I check the box "field_publish_legal_notice"
     When I press "Save"
     Then I should see "This update is the most recent revision of this LAG, it has been submitted for publication and is currently under evaluation by the Webmaster. You will be able to create a new update again after the revision has been approved/rejected. If needed, you can Contact the Webmaster." in the ".workbench-info-block" element
     When I click "Currently online"
     Then I should see "A most recent updates of this LAG has been submitted for publication and is currently under evaluation by the Webmaster. You will be able to edit it again after the update has been approved/rejected. If needed, you can Contact the Webmaster." in the ".workbench-info-block" element
 
-  @og @workflow @lags @ask-publishing
+  @og @workflow @lags @ask-publishing @privacy
   Scenario: As "LAG Manager" I ask publication through button in the node full view.
     Given I am logged in as a user with the "LAG User" roles
     And I have the "LAG Manager" role in the "BDD LAG Published" group
     And I am at "lag/bdd-be-lag-pub"
     Then I click "Update LAG profile"
-    And I check "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press "Save"
     When I press "Ask for publishing"
-    Then I should see the error message containing "You must agree with the EU Legal notice statement to proceed."
-    When I check "By checking this box, you acknowledge that you have read and understood the European Commission's legal notice."
+    Then I should see the error message containing "You must agree with the ENRD Privacy Statement to proceed."
+    Then I should see the error message containing "You must agree with the Collection of Data Statement to proceed."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press "Ask for publishing"
     Then I should see "Ready to be published" in the ".workbench-info-block" element
 
@@ -452,7 +456,7 @@ Feature: ENRD LAG Database.
   # Check node creation permission.
   @og @webmasters
   Scenario: Check LAG Webmaster node creation permission:
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     When I am at "node/add"
     Then I should see the link "LAG"
     And I should see the link "Cooperation Offer"

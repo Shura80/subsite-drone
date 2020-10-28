@@ -11,6 +11,87 @@
 function enrd_taxonomies_field_default_field_instances() {
   $field_instances = array();
 
+  // Exported field_instance: 'file-document-field_enrd_taxonomies_file_lang'.
+  $field_instances['file-document-field_enrd_taxonomies_file_lang'] = array(
+    'bundle' => 'document',
+    'default_value' => NULL,
+    'default_value_function' => '',
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'colorbox' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'default' => array(
+        'label' => 'above',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 1,
+      ),
+      'enrd_media_colorbox' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'enrd_media_preview' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'preview' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'wysiwyg' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'file',
+    'field_name' => 'field_enrd_taxonomies_file_lang',
+    'label' => 'Language',
+    'required' => 1,
+    'settings' => array(
+      'behaviors' => array(
+        'prepopulate' => array(
+          'status' => 0,
+        ),
+      ),
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'apply_chosen' => 1,
+        'enrd_fieldtips_enabled' => 0,
+      ),
+      'type' => 'options_select',
+      'weight' => 31,
+    ),
+  );
+
   // Exported field_instance: 'node-article-field_tax_country'.
   $field_instances['node-article-field_tax_country'] = array(
     'bundle' => 'article',
@@ -59,7 +140,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-article-field_tax_evaluation'.
   $field_instances['node-article-field_tax_evaluation'] = array(
     'bundle' => 'article',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -87,8 +168,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -96,7 +178,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 13,
     ),
   );
@@ -404,7 +486,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-discussion-field_tax_evaluation'.
   $field_instances['node-discussion-field_tax_evaluation'] = array(
     'bundle' => 'discussion',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -432,8 +514,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -441,7 +524,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 149,
     ),
   );
@@ -715,6 +798,13 @@ function enrd_taxonomies_field_default_field_instances() {
         'type' => 'hidden',
         'weight' => 14,
       ),
+      'full' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 14,
+      ),
       'teaser' => array(
         'label' => 'above',
         'settings' => array(),
@@ -749,11 +839,18 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-document-field_tax_evaluation'.
   $field_instances['node-document-field_tax_evaluation'] = array(
     'bundle' => 'document',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
       'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 15,
+      ),
+      'full' => array(
         'label' => 'above',
         'module' => 'i18n_taxonomy',
         'settings' => array(),
@@ -777,8 +874,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -786,7 +884,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 7,
     ),
   );
@@ -799,6 +897,13 @@ function enrd_taxonomies_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 14,
+      ),
+      'full' => array(
         'label' => 'above',
         'module' => 'i18n_taxonomy',
         'settings' => array(),
@@ -850,6 +955,13 @@ function enrd_taxonomies_field_default_field_instances() {
         'type' => 'hidden',
         'weight' => 23,
       ),
+      'full' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 23,
+      ),
       'teaser' => array(
         'label' => 'above',
         'settings' => array(),
@@ -884,6 +996,13 @@ function enrd_taxonomies_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 21,
+      ),
+      'full' => array(
         'label' => 'above',
         'module' => 'i18n_taxonomy',
         'settings' => array(),
@@ -935,6 +1054,13 @@ function enrd_taxonomies_field_default_field_instances() {
         'type' => 'hidden',
         'weight' => 23,
       ),
+      'full' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 23,
+      ),
       'teaser' => array(
         'label' => 'above',
         'settings' => array(),
@@ -969,6 +1095,13 @@ function enrd_taxonomies_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 23,
+      ),
+      'full' => array(
         'label' => 'above',
         'module' => 'i18n_taxonomy',
         'settings' => array(),
@@ -1014,6 +1147,13 @@ function enrd_taxonomies_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
+        'label' => 'above',
+        'module' => 'i18n_taxonomy',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 24,
+      ),
+      'full' => array(
         'label' => 'above',
         'module' => 'i18n_taxonomy',
         'settings' => array(),
@@ -1094,7 +1234,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-f_a_q-field_tax_evaluation'.
   $field_instances['node-f_a_q-field_tax_evaluation'] = array(
     'bundle' => 'f_a_q',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1122,8 +1262,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1131,7 +1272,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 12,
     ),
   );
@@ -1445,7 +1586,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-focus_group-field_tax_evaluation'.
   $field_instances['node-focus_group-field_tax_evaluation'] = array(
     'bundle' => 'focus_group',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1479,8 +1620,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1488,7 +1630,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 9,
     ),
   );
@@ -1838,7 +1980,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-organization-field_tax_evaluation'.
   $field_instances['node-organization-field_tax_evaluation'] = array(
     'bundle' => 'organization',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1872,8 +2014,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1881,7 +2024,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 6,
     ),
   );
@@ -2237,7 +2380,7 @@ function enrd_taxonomies_field_default_field_instances() {
   // Exported field_instance: 'node-page-field_tax_evaluation'.
   $field_instances['node-page-field_tax_evaluation'] = array(
     'bundle' => 'page',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -2277,8 +2420,9 @@ function enrd_taxonomies_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -2286,7 +2430,7 @@ function enrd_taxonomies_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 47,
     ),
   );

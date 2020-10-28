@@ -14,6 +14,35 @@ function enrd_publications_context_default_contexts() {
   $context = new stdClass();
   $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
   $context->api_version = 3;
+  $context->name = 'enrd_evaluation_publications_page';
+  $context->description = 'Custom context for Evaluation Publications Nodes';
+  $context->tag = 'ENRD Evaluation';
+  $context->conditions = array(
+    'node' => array(
+      'values' => array(
+        'publication_ehd' => 'publication_ehd',
+      ),
+      'options' => array(
+        'node_form' => '0',
+      ),
+    ),
+  );
+  $context->reactions = array(
+    'menu' => array(
+      0 => 'main-menu:evaluation/publications',
+    ),
+  );
+  $context->condition_mode = 0;
+
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Custom context for Evaluation Publications Nodes');
+  t('ENRD Evaluation');
+  $export['enrd_evaluation_publications_page'] = $context;
+
+  $context = new stdClass();
+  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
+  $context->api_version = 3;
   $context->name = 'enrd_evaluation_publications_solr';
   $context->description = 'Custom context for the Apache Solr page of the Evaluation eLibrary.';
   $context->tag = 'ENRD Evaluation';
@@ -51,21 +80,15 @@ function enrd_publications_context_default_contexts() {
           'region' => 'sidebar_right',
           'weight' => '-7',
         ),
-        'facetapi-9uxBiiw2UwhERdAiSGbU4teSAxKc0BVB' => array(
+        'facetapi-eSH6Rz1AhtKNFudKbiuFXt33nReNYY6M' => array(
           'module' => 'facetapi',
-          'delta' => '9uxBiiw2UwhERdAiSGbU4teSAxKc0BVB',
+          'delta' => 'eSH6Rz1AhtKNFudKbiuFXt33nReNYY6M',
           'region' => 'sidebar_right',
-          'weight' => '-6',
+          'weight' => '-5',
         ),
         'facetapi-tmf1t3xQRdCLpZ0F4qbAaRLsM41oTFkR' => array(
           'module' => 'facetapi',
           'delta' => 'tmf1t3xQRdCLpZ0F4qbAaRLsM41oTFkR',
-          'region' => 'sidebar_right',
-          'weight' => '-5',
-        ),
-        'facetapi-8o8kdtP8CKjahDIu1Wy5LGxnDHg3ZYnT' => array(
-          'module' => 'facetapi',
-          'delta' => '8o8kdtP8CKjahDIu1Wy5LGxnDHg3ZYnT',
           'region' => 'sidebar_right',
           'weight' => '-4',
         ),
@@ -79,6 +102,35 @@ function enrd_publications_context_default_contexts() {
   t('Custom context for the Apache Solr page of the Evaluation eLibrary.');
   t('ENRD Evaluation');
   $export['enrd_evaluation_publications_solr'] = $context;
+
+  $context = new stdClass();
+  $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
+  $context->api_version = 3;
+  $context->name = 'enrd_publications_page';
+  $context->description = 'Custom context for Publications Nodes';
+  $context->tag = 'ENRD Publications';
+  $context->conditions = array(
+    'node' => array(
+      'values' => array(
+        'publication' => 'publication',
+      ),
+      'options' => array(
+        'node_form' => '0',
+      ),
+    ),
+  );
+  $context->reactions = array(
+    'menu' => array(
+      0 => 'main-menu:publications/search',
+    ),
+  );
+  $context->condition_mode = 0;
+
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Custom context for Publications Nodes');
+  t('ENRD Publications');
+  $export['enrd_publications_page'] = $context;
 
   $context = new stdClass();
   $context->disabled = FALSE; /* Edit this to true to make a default context disabled initially */
@@ -119,6 +171,12 @@ function enrd_publications_context_default_contexts() {
           'delta' => 'ZENrjErqh30eLI81BlfE0v1khbnTj7zN',
           'region' => 'sidebar_right',
           'weight' => '-7',
+        ),
+        'facetapi-akHdBqiI8AS0rSWbxE0VtGHyoBFoqUgC' => array(
+          'module' => 'facetapi',
+          'delta' => 'akHdBqiI8AS0rSWbxE0VtGHyoBFoqUgC',
+          'region' => 'sidebar_right',
+          'weight' => '-6',
         ),
       ),
     ),

@@ -98,8 +98,8 @@ function _enrd_sfr_pub_contact_cp_customizations(&$form, &$form_state) {
     }
   }
 
-  // Add EU Legal notice checkbox to the form.
-  form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+  form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+  // EU Legal notice & Privacy Policy statements.
   $form['field_enrd_sfr_pub_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
 
   $contact_textarea_fields = array(
@@ -175,6 +175,19 @@ function _enrd_sfr_pub_contact_cp_form_validate($form, &$form_state) {
       if (empty($form_state['values']['field_enrd_sfr_pub_contcp_modif'][LANGUAGE_NONE][0]['value'])) {
         form_set_error('field_enrd_sfr_pub_contcp_modif', t('!name field is required.', array('!name' => $form['field_enrd_sfr_pub_contcp_modif'][LANGUAGE_NONE]['#title'])));
       }
+    }
+  }
+
+  // Validate "To what postal address.." Postal/Zip code of available countries.
+  if (isset($form_state['values']['field_enrd_sfr_pub_contcp_oldadd'][LANGUAGE_NONE][0]['postal_code'])) {
+    $field_concp_addr = $form_state['values']['field_enrd_sfr_pub_contcp_oldadd'][LANGUAGE_NONE][0];
+    $postal_code = $field_concp_addr['postal_code'];
+    $country = isset($field_concp_addr['country']) ? $field_concp_addr['country'] : FALSE;
+
+    $validation_result = postal_code_validation_validate($postal_code, $country);
+
+    if (!empty($postal_code) && !empty($validation_result['error'])) {
+      form_set_error(implode('][', $form['field_enrd_sfr_pub_contcp_oldadd'][LANGUAGE_NONE][0]['locality_block']['postal_code']['#parents']), $validation_result['error']);
     }
   }
 

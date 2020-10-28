@@ -46,13 +46,30 @@ function enrd_publications_ds_field_settings_info() {
 
   $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
+  $ds_fieldsetting->id = 'node|publication_ehd|full';
+  $ds_fieldsetting->entity_type = 'node';
+  $ds_fieldsetting->bundle = 'publication_ehd';
+  $ds_fieldsetting->view_mode = 'full';
+  $ds_fieldsetting->settings = array(
+    'field_tax_evaluation' => array(
+      'formatter_settings' => array(
+        'ft' => array(
+          'lb' => 'Keywords',
+        ),
+      ),
+    ),
+  );
+  $export['node|publication_ehd|full'] = $ds_fieldsetting;
+
+  $ds_fieldsetting = new stdClass();
+  $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|publication_ehd|search_result';
   $ds_fieldsetting->entity_type = 'node';
   $ds_fieldsetting->bundle = 'publication_ehd';
   $ds_fieldsetting->view_mode = 'search_result';
   $ds_fieldsetting->settings = array(
     'title' => array(
-      'weight' => '0',
+      'weight' => '1',
       'label' => 'hidden',
       'format' => 'default',
       'formatter_settings' => array(
@@ -60,6 +77,13 @@ function enrd_publications_ds_field_settings_info() {
         'wrapper' => 'h2',
         'class' => 'media-heading',
         'ft' => array(),
+      ),
+    ),
+    'field_tax_evaluation' => array(
+      'formatter_settings' => array(
+        'ft' => array(
+          'lb' => 'Keywords',
+        ),
       ),
     ),
   );
@@ -113,6 +137,11 @@ function enrd_publications_ds_field_settings_info() {
         'link' => '1',
         'wrapper' => 'h2',
         'class' => '',
+      ),
+    ),
+    'field_enrd_publication_file' => array(
+      'formatter_settings' => array(
+        'ft' => array(),
       ),
     ),
   );
@@ -199,13 +228,13 @@ function enrd_publications_ds_layout_settings_info() {
       ),
       'meta' => array(
         3 => 'field_enrd_publ_ehd_pages',
-        4 => 'field_enrd_publ_ehd_file',
+        4 => 'field_enrd_publ_ehd_file_upload',
         5 => 'field_enrd_publ_ehd_related_docs',
         6 => 'field_enrd_publ_ehd_author',
         7 => 'field_enrd_publ_ehd_editor',
         8 => 'field_tax_country',
         9 => 'field_enrd_publ_ehd_rdp',
-        10 => 'field_tags',
+        10 => 'field_tax_evaluation',
         11 => 'field_enrd_publ_ehd_content_type',
         12 => 'field_tax_languages',
         13 => 'field_enrd_publ_ehd_progr_period',
@@ -222,13 +251,13 @@ function enrd_publications_ds_layout_settings_info() {
       'field_enrd_publ_ehd_public_date' => 'thumb',
       'field_enrd_publ_ehd_description' => 'abstract',
       'field_enrd_publ_ehd_pages' => 'meta',
-      'field_enrd_publ_ehd_file' => 'meta',
+      'field_enrd_publ_ehd_file_upload' => 'meta',
       'field_enrd_publ_ehd_related_docs' => 'meta',
       'field_enrd_publ_ehd_author' => 'meta',
       'field_enrd_publ_ehd_editor' => 'meta',
       'field_tax_country' => 'meta',
       'field_enrd_publ_ehd_rdp' => 'meta',
-      'field_tags' => 'meta',
+      'field_tax_evaluation' => 'meta',
       'field_enrd_publ_ehd_content_type' => 'meta',
       'field_tax_languages' => 'meta',
       'field_enrd_publ_ehd_progr_period' => 'meta',
@@ -264,28 +293,32 @@ function enrd_publications_ds_layout_settings_info() {
   $ds_layout->layout = 'publication_ehd_page';
   $ds_layout->settings = array(
     'regions' => array(
-      'meta' => array(
-        0 => 'field_enrd_publ_ehd_public_date',
-        3 => 'field_enrd_publ_ehd_eval_type',
-        4 => 'field_enrd_publ_ehd_author',
+      'thumb' => array(
+        0 => 'field_enrd_publ_ehd_title_image',
       ),
       'headline' => array(
         1 => 'title',
       ),
-      'thumb' => array(
-        2 => 'field_enrd_publ_ehd_title_image',
-      ),
       'abstract' => array(
-        5 => 'field_enrd_publ_ehd_abstract',
+        2 => 'field_enrd_publ_ehd_abstract',
+      ),
+      'meta' => array(
+        3 => 'field_enrd_publ_ehd_file_upload',
+        4 => 'field_enrd_publ_ehd_public_date',
+        5 => 'field_enrd_publ_ehd_eval_type',
+        6 => 'field_enrd_publ_ehd_author',
+        7 => 'field_tax_evaluation',
       ),
     ),
     'fields' => array(
-      'field_enrd_publ_ehd_public_date' => 'meta',
-      'title' => 'headline',
       'field_enrd_publ_ehd_title_image' => 'thumb',
+      'title' => 'headline',
+      'field_enrd_publ_ehd_abstract' => 'abstract',
+      'field_enrd_publ_ehd_file_upload' => 'meta',
+      'field_enrd_publ_ehd_public_date' => 'meta',
       'field_enrd_publ_ehd_eval_type' => 'meta',
       'field_enrd_publ_ehd_author' => 'meta',
-      'field_enrd_publ_ehd_abstract' => 'abstract',
+      'field_tax_evaluation' => 'meta',
     ),
     'classes' => array(),
     'wrappers' => array(
@@ -299,6 +332,7 @@ function enrd_publications_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|publication_ehd|search_result'] = $ds_layout;
 
@@ -381,7 +415,7 @@ function enrd_publications_ds_layout_settings_info() {
         8 => 'field_enrd_publication_link_book',
       ),
       'side' => array(
-        10 => 'field_enrd_publication_type',
+        9 => 'field_enrd_publication_type',
       ),
     ),
     'fields' => array(
@@ -409,6 +443,7 @@ function enrd_publications_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|publication|full'] = $ds_layout;
 
@@ -457,6 +492,7 @@ function enrd_publications_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|publication|search_result'] = $ds_layout;
 

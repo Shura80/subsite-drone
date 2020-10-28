@@ -99,7 +99,7 @@ class EnrdMastermindSubContext extends RawDrupalContext implements DrupalSubCont
       throw new ExpectationException(t('Could not find the autocomplete popup box'), $this->getSession());
     }
 
-    $popup_element = $autocomplete->find('xpath', "//div[text() = '{$popup}']");
+    $popup_element = $autocomplete->find('xpath', "//div[contains(string(), '{$popup}')]");
 
     if (empty($popup_element)) {
       throw new ExpectationException(t('Could not find autocomplete popup text @popup', array(

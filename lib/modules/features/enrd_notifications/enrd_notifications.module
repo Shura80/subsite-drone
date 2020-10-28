@@ -189,6 +189,173 @@ function enrd_notifications_form_message_subscribe_admin_settings_alter(&$form, 
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_notifications_form_message_type_form_alter(&$form, &$form_state) {
+
+  // Get the message_type machine name.
+  $current_message_type = $form['name']['#default_value'];
+
+  // Get the list of ENRD Notifications message types.
+  $enrd_notifications_message_types = _enrd_notifications_get_message_types();
+
+  // Load a list of allowed entity types for current message type.
+  if (in_array($current_message_type, $enrd_notifications_message_types)) {
+    $message_type = message_type_load($current_message_type);
+    $options = array();
+    foreach (entity_get_info() as $entity_id => $entity) {
+      $options[$entity_id] = $entity['label'];
+    }
+
+    // Defines which referenced entity types trigger, if deleted, the automatic
+    // deletion of messages that uses them as references.
+    // It has to be done here, specifically for custom message bundles
+    // to avoid using the global variable defined for all message types.
+    $form['data']['enrd_notifications_message_auto_delete'] = [
+      '#title' => t('ENRD Notifications: auto delete messages referencing the following entities'),
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#options' => $options,
+      '#default_value' => $message_type->data['enrd_notifications_message_auto_delete'],
+      '#description' => t('Messages that reference entities of these types will be deleted when the referenced entity gets deleted.'),
+    ];
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * @see: message_entity_delete()
+ */
+function enrd_notifications_entity_delete($entity, $entity_type) {
+  if ($entity_type == 'message') {
+    return;
+  }
+  // Check that field names from interested bundles are returned.
+  if (!$field_names = _enrd_notifications_message_get_referenced_fields($entity_type, $entity)) {
+    return;
+  }
+
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
+
+  // A deleted message with no reference doesn't need to create a queue worker.
+  $delete_referenced_entities = FALSE;
+  foreach ($field_names as $field_name) {
+    $field = field_info_field($field_name);
+    $columns = array_keys($field['columns']);
+    // Fetch messages with fields referencing the deleted entity.
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'message')
+      ->fieldCondition($field['field_name'], $columns[0], $entity_id)
+      ->execute();
+
+    if (!empty($result['message'])) {
+      $delete_referenced_entities = TRUE;
+      break;
+    }
+  }
+
+  if (!$delete_referenced_entities) {
+    return;
+  }
+
+  if (variable_get('message_use_queue')) {
+    $data = array(
+      'range' => 200,
+      'last_mid' => 0,
+      'field_names' => $field_names,
+      'entity_id' => $entity_id,
+    );
+    $queue = DrupalQueue::get('message_entity_delete');
+
+    return $queue->createItem($data);
+  }
+
+  _message_delete_messages($field_names, $entity_id);
+}
+
+/**
+ * Helper function to collect entity referencing fields in custom message types.
+ *
+ * @param string $entity_type
+ *   The string representing the entity type (node, user, etc...).
+ * @param object $entity
+ *   A fully loaded entity object.
+ *
+ * @return mixed
+ *   Returns array of fields referencing an entity or void.
+ *
+ * @see: _message_get_referenced_fields()
+ *
+ * @throws \EntityMalformedException
+ */
+function _enrd_notifications_message_get_referenced_fields($entity_type, $entity) {
+
+  // Get the list of ENRD Notifications message types.
+  $enrd_notifications_message_types = _enrd_notifications_get_message_types();
+
+  $entity_types = [];
+  $message_types = [];
+
+  // Build an array of fully-loaded message type definitions.
+  foreach ($enrd_notifications_message_types as $enrd_notifications_message_type) {
+    $message_types[] = message_type_load($enrd_notifications_message_type);
+  }
+
+  // Build an array of entity types selected in every custom message type form.
+  foreach ($message_types as $message_type_info) {
+    if (!empty($message_type_info->data['enrd_notifications_message_auto_delete'])) {
+      $entity_types[] = $message_type_info->data['enrd_notifications_message_auto_delete'];
+    }
+  }
+
+  // Clean $entity_types array from possible entity types duplicated names.
+  $entity_types = call_user_func_array('array_merge', $entity_types);
+
+  if (!$entity_types || !in_array($entity_type, $entity_types)) {
+    return;
+  }
+
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+
+  $field_names = array();
+
+  // Search for fields in which messages referenced the deleted entity.
+  foreach (field_info_fields() as $field) {
+    if (empty($field['bundles']['message'])) {
+      // This field isn't used in any message.
+      continue;
+    }
+
+    // Only delete messages due to referenced entity or referenced
+    // taxonomy term deletion.
+    if ($field['type'] == 'entityreference') {
+      // Check if the field references entities of the given type.
+      if ($entity_type != $field['settings']['target_type']) {
+        continue;
+      }
+      // Check if the field references specific bundles. If so, check if the
+      // field references the deleted entity's bundle.
+      if ($field['settings']['handler_settings']['target_bundles'] && !in_array($bundle, $field['settings']['handler_settings']['target_bundles'])) {
+        continue;
+      }
+    }
+    elseif ($field['type'] == 'taxonomy_term_reference') {
+      if ($entity_type != 'taxonomy_term') {
+        continue;
+      }
+    }
+    else {
+      continue;
+    }
+
+    $field_names[] = $field['field_name'];
+  }
+
+  return $field_names;
+}
+
+/**
  * Implements hook_views_bulk_operations_form_alter().
  */
 function enrd_notifications_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
@@ -1081,4 +1248,14 @@ function _enrd_notifications_create_notification($node) {
       }
     }
   }
+}
+
+/**
+ * Helper function that returns the ENRD Notifications message types.
+ */
+function _enrd_notifications_get_message_types() {
+  return [
+    ENRD_NOTIFICATIONS_LAG_MESSAGE,
+    ENRD_NOTIFICATIONS_CONTENT_MESSAGE,
+  ];
 }

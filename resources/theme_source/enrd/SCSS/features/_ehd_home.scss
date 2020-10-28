@@ -68,13 +68,42 @@
         }
 
         .media-body {
-            h4 {
-                font-size: 14px !important;
-            }
+            & > div {
+                padding-top: 3px;
 
-            .metadata dl {
-                margin-top: 5px;
-                margin-bottom: 5px;
+                h4.media-heading {
+                    display: inline;
+                    line-height: 1.7em;
+                    margin-right: 5px;
+                    font-size: 14px !important;
+                }
+
+                span.online {
+                    display: inline;
+                    position: relative;
+                    top: -4px;
+                    font-weight: bold;
+                    background: #98C300;
+                    color: #fff;
+                    margin-top: 7px;
+                    padding: 1px 8px 1px 6px;
+                    border-radius: 12px 0px 12px 0px;
+                    font-size: 14px;
+                    font-variant: all-small-caps;
+
+                    &:before {
+                        content: "\e135";
+                        display: inline;
+                        font-family: 'Glyphicons Halflings';
+                        font-size: 11px;
+                        padding: 0 3px 0 0;
+                    }
+                }
+
+                .metadata dl {
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                }
             }
         }
 

@@ -44,14 +44,14 @@ Feature: ENRD NRN Toolkit.
     Given I am an anonymous user
     # Create a node of type Event to include an internal resource.
     And I am viewing an "event" content in "published" status:
-      | title                             | BDD NRN Event                   |
-      | field_enrd_nrn_include_toolkit    | 1                               |
-      | body                              | BDD NRN Event Description       |
-      | field_enrd_nrn_type               | BDD Event                       |
-      | field_tax_networking              | BDD Fostering innovation        |
-      | field_enrd_nrn_date               | 01-05-2018                      |
-      | field_enrd_nrn_title              | BDD NRN Alternative Event Title |
-      | field_enrd_nrn_alter_description  | BDD NRN Alternative Event Desc  |
+      | title                            | BDD NRN Event                   |
+      | field_enrd_nrn_include_toolkit   | 1                               |
+      | body                             | BDD NRN Event Description       |
+      | field_enrd_nrn_type              | BDD Event                       |
+      | field_tax_networking             | BDD Fostering innovation        |
+      | field_enrd_nrn_date              | 01-05-2018                      |
+      | field_enrd_nrn_title             | BDD NRN Alternative Event Title |
+      | field_enrd_nrn_alter_description | BDD NRN Alternative Event Desc  |
     When I am on "nrn-resource/bdd-nrn-event"
     And I should not see the text "Type: BDD Event" in the "content" region
     And I should not see the text "Date: May, 2018" in the "content" region
@@ -72,7 +72,7 @@ Feature: ENRD NRN Toolkit.
       | field_tax_networking           | BDD NRN Operation          |
       | field_enrd_nrn_date            | 01-03-2018                 |
 
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am on "nrn-resource/bdd-nrn-file-resource-test"
     And I click "New draft"
     # National NRN image.
@@ -80,31 +80,31 @@ Feature: ENRD NRN Toolkit.
     And I press "Save"
     Then I should see the link "bdd-file.pdf" in the "content" region
 
-  @javascript @admin @nrn-settings
+  @javascript @webmaster @nrn-settings
   Scenario Outline: Check that a user can set a value to the NRN shared fields.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
 
     When I am viewing a "<bundle>" content in "published" status:
-      | title                             | BDD NRN Toolkit content Title |
-      | language                          | en                            |
-      | field_enrd_nrn_include_toolkit    | 1                             |
-      | field_enrd_nrn_type               | <resource_type>               |
-      | field_tax_networking              | BDD NRN Operation             |
-      | field_enrd_nrn_date               | 01-05-2018                    |
-      | field_enrd_nrn_title              | BDD NRN Alternative Title     |
-      | field_enrd_nrn_alter_description  | BDD NRN Alternative Desc      |
+      | title                            | BDD NRN Toolkit content Title |
+      | language                         | en                            |
+      | field_enrd_nrn_include_toolkit   | 1                             |
+      | field_enrd_nrn_type              | <resource_type>               |
+      | field_tax_networking             | BDD NRN Operation             |
+      | field_enrd_nrn_date              | 01-05-2018                    |
+      | field_enrd_nrn_title             | BDD NRN Alternative Title     |
+      | field_enrd_nrn_alter_description | BDD NRN Alternative Desc      |
 
     When I am at "admin/content"
     Then I should see the text "BDD NRN Toolkit content Title" in the "<name>" row
 
     Examples:
-    | bundle          | resource_type     | name                    |
-    | page            | BDD Web page      | Basic page              |
-    | publication_ehd | BDD Publication   | Evaluation Publication  |
-    | event           | BDD Event         | Event                   |
-    | nrn_profile     | BDD Article       | NRN Profile             |
-    | project         | BDD Good practice | Project                 |
-    | publication     | BDD Publication   | Publication             |
+      | bundle          | resource_type     | name                   |
+      | page            | BDD Web page      | Basic page             |
+      | publication_ehd | BDD Publication   | Evaluation Publication |
+      | event           | BDD Event         | Event                  |
+      | nrn_profile     | BDD Article       | NRN Profile            |
+      | project         | BDD Good practice | Project                |
+      | publication     | BDD Publication   | Publication            |
 
   @filters @solr @clean @javascript
   Scenario: As Anonymous user I can search for NRN content by filtering according to the
@@ -133,33 +133,33 @@ Feature: ENRD NRN Toolkit.
       | field_enrd_nrn_date            | 01-05-2018                                          |
     # Create a node of type Publication to include an internal resource and show the default title + desc.
     And I am viewing a "publication" content in "published" status:
-      | title                             | BDD Solr NRN Publication             |
-      | language                          | en                                   |
-      | field_enrd_publication_desc	      | BDD Solr NRN Publication Description |
-      | field_enrd_nrn_include_toolkit    | 1                                    |
-      | field_enrd_nrn_type               | BDD Publication                      |
-      | field_tax_networking              | BDD Fostering innovation             |
-      | field_enrd_nrn_date               | 01-05-2018                           |
+      | title                          | BDD Solr NRN Publication             |
+      | language                       | en                                   |
+      | field_enrd_publication_desc    | BDD Solr NRN Publication Description |
+      | field_enrd_nrn_include_toolkit | 1                                    |
+      | field_enrd_nrn_type            | BDD Publication                      |
+      | field_tax_networking           | BDD Fostering innovation             |
+      | field_enrd_nrn_date            | 01-05-2018                           |
     # Create a node of type Publication to include an internal resource and show the custom title + desc.
     And I am viewing a "publication" content in "published" status:
-      | title                             | BDD Solr Test Publication             |
-      | language                          | en                                    |
-      | field_enrd_publication_desc	      | BDD Solr Test Publication Description |
-      | field_enrd_nrn_include_toolkit    | 1                                     |
-      | field_enrd_nrn_type               | BDD Publication                       |
-      | field_tax_networking              | BDD NRN Operation                     |
-      | field_enrd_nrn_date               | 01-05-2018                            |
-      | field_enrd_nrn_title              | BDD Test Publ Title                   |
-      | field_enrd_nrn_alter_description  | BDD Test Publ Description             |
+      | title                            | BDD Solr Test Publication             |
+      | language                         | en                                    |
+      | field_enrd_publication_desc      | BDD Solr Test Publication Description |
+      | field_enrd_nrn_include_toolkit   | 1                                     |
+      | field_enrd_nrn_type              | BDD Publication                       |
+      | field_tax_networking             | BDD NRN Operation                     |
+      | field_enrd_nrn_date              | 01-05-2018                            |
+      | field_enrd_nrn_title             | BDD Test Publ Title                   |
+      | field_enrd_nrn_alter_description | BDD Test Publ Description             |
     # Create a node of type NRN Profile as an internal resource.
     And I am viewing an "nrn_profile" content in "published" status:
-      | title                             | BDD Solr Test NRN Profile             |
-      | language                          | en                                    |
-      | field_enrd_nrnp_brief_intro	      | BDD Solr Test NRN Profile Description |
-      | field_enrd_nrn_include_toolkit    | 1                                     |
-      | field_enrd_nrn_type               | BDD Article                           |
-      | field_tax_networking              | BDD Communication                     |
-      | field_enrd_nrn_date               | 01-05-2019                            |
+      | title                          | BDD Solr Test NRN Profile             |
+      | language                       | en                                    |
+      | field_enrd_nrnp_brief_intro    | BDD Solr Test NRN Profile Description |
+      | field_enrd_nrn_include_toolkit | 1                                     |
+      | field_enrd_nrn_type            | BDD Article                           |
+      | field_tax_networking           | BDD Communication                     |
+      | field_enrd_nrn_date            | 01-05-2019                            |
 
     When I send site contents to the Solr search index
     And I go to "networking/nrn-toolkit"
@@ -215,17 +215,17 @@ Feature: ENRD NRN Toolkit.
     And I should see the heading "BDD Solr Second NRN External Resource" in the "content" region
     But I should not see the heading "BDD Solr NRN Publication"
 
-  @authenticated @javascript @contact-us @solr @emails @clean
+  @authenticated @javascript @contact-form @solr @privacy @emails @clean
   Scenario: As Authenticated I want to contact the Networking team by sending a message via the "Contact us" contact form.
     Given I am logged in as a user with the "authenticated" role
     And I am viewing an "event" content in "published" status:
-      | title                             | BDD Test Contact us form       |
-      | language                          | en                             |
-      | field_enrd_nrn_include_toolkit    | 1                              |
-      | field_enrd_nrn_type               | BDD Article                    |
-      | body                              | BDD NRN Contact us Description |
-      | field_tax_networking              | BDD Fostering innovation       |
-      | field_enrd_nrn_date               | 01-03-2018                     |
+      | title                          | BDD Test Contact us form       |
+      | language                       | en                             |
+      | field_enrd_nrn_include_toolkit | 1                              |
+      | field_enrd_nrn_type            | BDD Article                    |
+      | body                           | BDD NRN Contact us Description |
+      | field_tax_networking           | BDD Fostering innovation       |
+      | field_enrd_nrn_date            | 01-03-2018                     |
 
     Then I send site contents to the Solr search index
     When I go to "networking/nrn-toolkit"
@@ -235,11 +235,13 @@ Feature: ENRD NRN Toolkit.
     And I fill in "Your organisation" with "BDD Organisation"
     And I fill in "Email" with "bdd-email@bdd-example.com"
     And I fill in "Message" with "Hello, this is a message from BDD Organisation!"
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And the test email system is enabled
     And I press "Submit" in the "right sidebar" region
     Then the email to "nrn-meeting@enrd.eu" should contain "Hello, this is a message from BDD Organisation!"
     And I should see the following success messages:
-      | success messages                                                   |
+      | success messages                                                                                                                                      |
       | Thank you for your submission. Your email has been sent successfully. You will be contacted shortly by the Networking team of the ENRD Contact Point. |
 
   @editor @workflow @moderate-all
@@ -270,9 +272,9 @@ Feature: ENRD NRN Toolkit.
     When I click "Change to Needs Review"
     Then I should get a 403 HTTP response
 
-  @admin @contact-us
-  Scenario: as admin I should be able to see the list of submissions issued via the contact form.
-    Given I am logged in as a user with the "administrator" role
+  @webmaster
+  Scenario: as webmaster I should be able to see the list of submissions issued via the contact form.
+    Given I am logged in as a user with the "webmaster" role
     When I am at "admin/content/webform"
     Then I click "Contact us"
     And I click "Results"

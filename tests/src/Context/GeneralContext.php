@@ -91,6 +91,15 @@ class GeneralContext extends RawGeneralContext {
   }
 
   /**
+   * Waiting for 1 second.
+   *
+   * @Then /^I wait for "([^"]*)" second(s)$/
+   */
+  public function iWaitFor($seconds) {
+    $this->getSession()->wait(1000 * (int) $seconds);
+  }
+
+  /**
    * Visit a web form page searching by name.
    *
    * @Given I visit the :title web( )form

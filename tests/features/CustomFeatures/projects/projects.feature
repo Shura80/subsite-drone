@@ -14,7 +14,7 @@ Feature: ENRD Projects
       | BDD Italy      | European Union |
       | BDD Spain      | European Union |
 
-  @anonymous @clean
+  @anonymous @solr @clean
   Scenario: As anonymous I can see a subset of project fields in the content page and in the Solr Projects DB list page.
     Given: I am an anonymous user
     # ENRD Rural Development Policy
@@ -74,9 +74,9 @@ Feature: ENRD Projects
     And I should see the text "Keywords: Forestry"
     And I should see the text "Countries: BDD Spain"
 
-  @admin @editor
-  Scenario: As Admin or Editor I can access the DG BUDG projects view and export Projects
-    in CSV and XLSX format from the "ENRD Administration" menu.
+  @webmaster @editor
+  Scenario: As Webmaster or Editor I can access the DG BUDG projects view and export Projects
+  in CSV and XLSX format from the "ENRD Administration" menu.
     Given I am logged in as a user with the "editor" role
     When I am at "admin/enrd/projects"
     Then I should see the heading "DG BUDG projects export"
@@ -131,14 +131,14 @@ Feature: ENRD Projects
       | BDD 4B Water management  |
 
     And I am viewing a "project" content in "published" status:
-      | title                             | BDD Published Project     |
-      | language                          | en                        |
-      | field_enrd_prj_headline           | BDD headlinetext          |
-      | field_enrd_prj_full_proj_summary  | BDD summarytext           |
-      | field_tax_country                 | BDD Italy                 |
-      | field_enrd_prj_keywords           | BDD Biodiversity          |
-      | field_enrd_prj_measure            | BDD M02 Advisory services |
-      | field_enrd_prj_focus_area         | BDD 4B Water management   |
+      | title                            | BDD Published Project     |
+      | language                         | en                        |
+      | field_enrd_prj_headline          | BDD headlinetext          |
+      | field_enrd_prj_full_proj_summary | BDD summarytext           |
+      | field_tax_country                | BDD Italy                 |
+      | field_enrd_prj_keywords          | BDD Biodiversity          |
+      | field_enrd_prj_measure           | BDD M02 Advisory services |
+      | field_enrd_prj_focus_area        | BDD 4B Water management   |
     And I am viewing a "project" content in "published" status:
       | title                     | BDD Yet another project  |
       | language                  | en                       |

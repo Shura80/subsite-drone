@@ -97,14 +97,17 @@ class EmailNotificationsContext extends RawDrupalContext {
         ) {
           return TRUE;
         }
-        // If string is not found in body or subject warn about negative result.
-        else {
-          throw new \Exception('Did not find expected content in message body or subject.');
-        }
       }
     }
-    // If recipient is not found in "to" string warn about negative result.
-    throw new \Exception(sprintf('Did not find expected message to %s', $to));
+
+    if ($this->activeEmail === FALSE) {
+      // If string is not found in body or subject warn about negative result.
+      throw new \Exception('Did not find expected content in message body or subject.');
+    }
+    else {
+      // If recipient is not found in "to" string warn about negative result.
+      throw new \Exception(sprintf('Did not find expected message to %s', $to));
+    }
   }
 
   /**

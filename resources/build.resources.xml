@@ -456,31 +456,4 @@
         <phingcall target="taxocsv-import-enrd-update-status-translations">
         </phingcall>
     </target>
-    <!-- Compile .scss partials into the main minified css file -->
-    <target name="compile-scss"
-            description="Compile .scss files into the main minified css."
-            hidden="true"
-            depends="resources-composer-install">
-        <echo msg="Compiling SCSS resources..."/>
-        <echo msg="Creating minified CSS file..."/>
-        <exec command="${resources.dir.bin}/pscss --style=compressed ${resources.dir}/theme_source/${project.id}/SCSS/style.scss"
-              output="${sass.compiled.dir}/${project.id}.min.css"/>
-        <echo msg="Minified CSS file created."/>
-        <append destFile="${sass.compiled.dir}/${project.id}.min.css"
-                text="/*# sourceMappingURL=${project.id}.min.css.map */"
-                description="Appending source map file to minified css file...">
-        </append>
-        <echo msg="Finished compiling SCSS sources."/>
-    </target>
-    <!-- Install Composer dependencies for resources -->
-    <target name="resources-composer-install" hidden="true">
-        <echo msg="Run 'composer install' in resources folder."/>
-        <composer command="install" composer="${project.bin.composer}">
-            <arg value="--working-dir=${resources.dir}"/>
-            <arg value="--no-interaction"/>
-            <arg value="--no-suggest"/>
-            <arg value="--ansi"/>
-            <arg value="--no-progress"/>
-        </composer>
-    </target>
 </project>

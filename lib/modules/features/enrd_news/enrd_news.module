@@ -306,6 +306,7 @@ function enrd_news_field_group_info_alter(&$groups) {
     $groups['group_event_content|node|event|form']->data['children'][] = 'field_event_location';
     $groups['group_event_content|node|event|form']->data['children'][] = 'field_event_type';
     $groups['group_event_content|node|event|form']->data['children'][] = 'field_stakeholders_events';
+    $groups['group_event_content|node|event|form']->data['children'][] = 'field_enrd_event_online';
   }
 }
 
@@ -550,4 +551,68 @@ function _enrd_news_date_select_add_fake_month($field_name, &$element) {
 
   // Replace the value month with the fake select.
   $element['month'] = $fake_elements['month'];
+
+  // Place "Year" after fake "Month" select.
+  if (isset($element['year'])) {
+    $element['year']['#weight'] = $element['month']['#weight'] + 1;
+  }
+}
+
+/**
+ * Implements template_preprocess_page().
+ */
+function enrd_news_preprocess_page(&$variables) {
+  $nodes = isset($variables['page']['content']['system_main']['nodes']) ? $variables['page']['content']['system_main']['nodes'] : [];
+
+  if (!empty($nodes)) {
+    // Check if Event is on full display.
+    $node = reset($nodes);
+    $is_event = isset($node['#bundle']) && $node['#bundle'] == 'event';
+    $is_display_full = isset($node['#view_mode']) && $node['#view_mode'] == 'full';
+    $is_event_online = isset($variables['node']->field_enrd_event_online[LANGUAGE_NONE][0]['value']) && $variables['node']->field_enrd_event_online[LANGUAGE_NONE][0]['value'] == '1';
+
+    // Append "online" span to Event page title.
+    if ($is_event && $is_display_full && $is_event_online) {
+      $variables['title_suffix'] = _enrd_news_event_online_icon();
+    }
+  }
+}
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function enrd_news_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  // Show online events on "Eventlist" display.
+  if ($context['bundle'] == 'event' && $context['view_mode'] == 'eventlist') {
+    $is_online_event = isset($vars['field_enrd_event_online'][0]['value']) && $vars['field_enrd_event_online'][0]['value'] == '1';
+
+    // Check if it's an online event.
+    if ($is_online_event) {
+      if (!empty($layout_render_array['headline'])) {
+        // Add span "online" element inside title field.
+        foreach (element_children($layout_render_array['headline']) as $key) {
+          if ($layout_render_array['headline'][$key]['#field_name'] == 'title') {
+            $layout_render_array['headline'][$key][0]['#markup'] .= _enrd_news_event_online_icon();
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Custom function to create "Online" icon for events.
+ *
+ * @return string
+ *   The rendered HTML for the icon.
+ */
+function _enrd_news_event_online_icon() {
+  $element = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#attributes' => ['class' => ['online']],
+    '#value' => t('Online'),
+  ];
+
+  return drupal_render($element);
 }

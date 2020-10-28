@@ -2,10 +2,12 @@
 
 namespace Drupal\enrd_sfr\Entity;
 
+use Entity;
+
 /**
  * ENRD Sfr Type class.
  */
-class EnrdSfrType extends \Entity {
+class EnrdSfrType extends Entity {
   public $name;
   public $label;
   public $description;

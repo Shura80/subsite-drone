@@ -16,6 +16,7 @@ function enrd_lag_dashboard_user_default_permissions() {
     'name' => 'access group webform results',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_dashboard',
   );
@@ -25,6 +26,7 @@ function enrd_lag_dashboard_user_default_permissions() {
     'name' => 'access lag dashboards',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_dashboard',
   );
@@ -34,8 +36,39 @@ function enrd_lag_dashboard_user_default_permissions() {
     'name' => 'administer lag dashboard login redirects',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_lag_dashboard',
+  );
+
+  // Exported permission: 'administer nsu users'.
+  $permissions['administer nsu users'] = array(
+    'name' => 'administer nsu users',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'enrd_lag_dashboard',
+  );
+
+  // Exported permission: 'use Rules component rules_enrd_lag_dashboard_add_new_national_manager'.
+  $permissions['use Rules component rules_enrd_lag_dashboard_add_new_national_manager'] = array(
+    'name' => 'use Rules component rules_enrd_lag_dashboard_add_new_national_manager',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'rules',
+  );
+
+  // Exported permission: 'use Rules component rules_enrd_lag_dashboard_send_mail_from_og_membership'.
+  $permissions['use Rules component rules_enrd_lag_dashboard_send_mail_from_og_membership'] = array(
+    'name' => 'use Rules component rules_enrd_lag_dashboard_send_mail_from_og_membership',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
+    ),
+    'module' => 'rules',
   );
 
   // Exported permission: 'use Rules component rules_enrd_moderate_content_to_archived'.

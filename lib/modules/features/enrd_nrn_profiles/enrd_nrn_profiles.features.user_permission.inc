@@ -16,6 +16,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'administer nrn profiles',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_nrn_profiles',
   );
@@ -25,6 +26,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'bypass alter form nrn profiles',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_nrn_profiles',
   );
@@ -34,6 +36,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'create new service',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'socialfield',
   );
@@ -43,6 +46,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'create nrn_profile content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -52,6 +56,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'delete any nrn_profile content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -61,6 +66,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'delete any service',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'socialfield',
   );
@@ -70,6 +76,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'delete own nrn_profile content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -79,6 +86,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'edit any nrn_profile content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -88,6 +96,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'edit any service',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'socialfield',
   );
@@ -97,6 +106,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'edit own nrn_profile content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -106,6 +116,7 @@ function enrd_nrn_profiles_user_default_permissions() {
     'name' => 'view services',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'socialfield',
   );

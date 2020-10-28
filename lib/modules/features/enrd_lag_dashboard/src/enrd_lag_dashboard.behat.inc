@@ -39,21 +39,24 @@ class EnrdLagDashboardSubContext extends RawDrupalContext implements DrupalSubCo
     $query = db_select('webform_submitted_data', 'wsd');
     $query->fields('wsd', array('nid', 'sid'));
     $query->condition('data', 'BDD%', 'LIKE');
+    $query->groupBy('nid');
+    $query->groupBy('sid');
     $result = $query->execute()->fetchAllAssoc('sid');
-
-    module_load_include('inc', 'webform', 'includes/webform.report');
 
     // Loop through resultset tp load every submission object.
     foreach ($result as $data) {
       $nid = $data->nid;
       $sid = $data->sid;
-      $node = entity_load_single('node', $nid);
-      $submission = webform_get_submissions(array(
-        'nid' => $nid,
-        'sid' => $sid,
-      ), NULL);
-      // Then delete submission using webform API.
-      webform_submission_delete($node, reset($submission));
+
+      // Then clean submissions and submitted_data webform tables.
+      db_delete('webform_submitted_data')
+        ->condition('nid', $nid)
+        ->condition('sid', $sid)
+        ->execute();
+      db_delete('webform_submissions')
+        ->condition('nid', $nid)
+        ->condition('sid', $sid)
+        ->execute();
     }
   }
 

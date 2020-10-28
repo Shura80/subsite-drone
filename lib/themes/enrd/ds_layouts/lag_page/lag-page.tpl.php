@@ -88,13 +88,6 @@
         </div>
     </div>
     <?php endif; ?>
-    <?php if ($moderation): ?>
-    <div class="row">
-        <div class="col-md-12">
-           <?php print $moderation; ?>
-        </div>
-    </div>
-    <?php endif; ?>
   </div>
 </div>
 

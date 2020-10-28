@@ -9,12 +9,23 @@ include_once 'enrd_mastermind.features.inc';
 
 define('ENRD_MASTERMIND_RSS_PAGE_PATH', 'rss');
 define('ENRD_MASTERMIND_AGRI_PATH', 'https://ec.europa.eu/eip/agriculture');
-define('ENRD_MASTERMIND_STATIC_ARCHIVED_WEBSITE_URL', 'http://enrd.ec.europa.eu/enrd-static/en/home-page_en.html');
 define('ENRD_MASTERMIND_ADMIN_MENU_LINK', 'admin/enrd');
 define('ENRD_MASTERMIND_ADMIN_MENU_PERMISSION', 'access administration pages');
 define('ENRD_MASTERMIND_EU_LEGAL_NOTICE_URL', 'https://ec.europa.eu/info/legal-notice');
+define('ENRD_MASTERMIND_PRIVACY_POLICY_EMAIL', 'privacy@enrd.eu');
+define('ENRD_MASTERMIND_GLYPHICONS_ICONS', 'Glyphicons');
+define('ENRD_MASTERMIND_ENRD_ICONS', 'ENRD Icons');
+define('ENRD_MASTERMIND_COMPOSER_AUTOLOADER', DRUPAL_ROOT . '/' . conf_path() . '/vendor/autoload.php');
 
 module_load_include('inc', 'enrd_mastermind', 'includes/enrd_mastermind.facetapi_taxonomy_sort');
+
+/**
+ * Implements hook_boot().
+ */
+function enrd_mastermind_boot() {
+  // Include site vendors' autoload.php.
+  _enrd_mastermind_composer_autoloader();
+}
 
 /**
  * Implements hook_block_info().
@@ -25,6 +36,10 @@ function enrd_mastermind_block_info() {
   $blocks['header_enrd_ipg'] = array('info' => t('Header ENRD - IPG'));
   $blocks['agri_block'] = array('info' => t('EIP-AGRI link'));
   $blocks['enrd_rss_button'] = array('info' => t('ENRD RSS Feed button'));
+  $blocks['enrd_easy_breadcrumb'] = array(
+    'info' => t('ENRD Easy Breadcrumb'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
   return $blocks;
 }
 
@@ -79,6 +94,12 @@ function enrd_mastermind_block_view($delta = '') {
         ),
       );
       break;
+
+    case 'enrd_easy_breadcrumb':
+      module_load_include('inc', 'enrd_mastermind', 'includes/enrd_mastermind.easy_breadcrumb.blocks');
+      $block['subject'] = NULL;
+      $block['content'] = _enrd_mastermind_easy_breadcrumb_block();
+      break;
   }
 
   return $block;
@@ -95,6 +116,15 @@ function enrd_mastermind_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'label' => NULL,
         'date' => NULL,
+      ),
+    ),
+    'enrd_token_menu' => array(
+      'template' => 'enrd_token_menu',
+      'path' => $path . '/theme',
+      'variables' => array(
+        'menu_name' => NULL,
+        'menu_tree' => NULL,
+        'menu_class' => NULL,
       ),
     ),
   );
@@ -168,6 +198,23 @@ function enrd_mastermind_library() {
 }
 
 /**
+ * Implements hook_css_alter().
+ */
+function enrd_mastermind_css_alter(&$css) {
+  global $theme;
+
+  // Get defined default and admin themes.
+  $default_theme = variable_get('theme_default', 'enrd');
+  $admin_theme = variable_get('admin_theme', 'seven');
+  $is_admin_theme = $theme <> $default_theme && $theme == $admin_theme;
+
+  // Add admin css if we admin theme is active.
+  if ($is_admin_theme) {
+    $css = drupal_add_css(drupal_get_path('theme', 'enrd') . '/css/admin.min.css');
+  }
+}
+
+/**
  * Implements hook_form_alter().
  *
  * It's only a copy of communities_form_alter() of communities module
@@ -183,7 +230,7 @@ function enrd_mastermind_form_alter(&$form, $form_state, $form_id) {
       break;
 
     case 'subscriptions_page_user_overview':
-      if (!user_access('administer site configuration')) {
+      if (!user_access('administer enrd configuration')) {
         $form['settings']['#access'] = FALSE;
       }
       break;
@@ -356,6 +403,38 @@ function _enrd_mastermind_overrides() {
 
       field_update_instance($instances);
     }
+  }
+
+  // Check enabled custom view modes for given content type.
+  $document_view_mode_settings = field_view_mode_settings('node', 'document');
+
+  // If 'full' view mode is disabled, enable it and apply custom settings.
+  if ($document_view_mode_settings['full']['custom_settings'] == FALSE) {
+    // Enable view mode for "Document" content type.
+    $settings = field_bundle_settings('node', 'document');
+    $settings['view_modes']['full']['custom_settings'] = TRUE;
+    field_bundle_settings('node', 'document', $settings);
+
+    // Copy "Full content" view mode from default.
+    module_load_include('inc', 'ds', 'includes/ds.field_ui');
+    _ds_field_ui_clone_view_mode_settings('node', 'document', 'full', 'default');
+  }
+
+  // Load 'field_document' field settings.
+  $instances = field_read_instance('node', 'field_document', 'document');
+
+  if ($instances) {
+    // Apply the 'enrd_file_formatter' settings to the field display.
+    $instances['display']['full']['module'] = 'enrd_file_formatter';
+    $instances['display']['full']['settings'] = [
+      'custom_file_title' => '',
+      'display_type' => 'full',
+      'force_file_title' => FALSE,
+      'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+    ];
+    $instances['display']['full']['type'] = 'enrd_file_formatter';
+
+    field_update_instance($instances);
   }
 }
 
@@ -656,8 +735,17 @@ function enrd_mastermind_views_default_views_alter(&$views) {
  */
 function enrd_mastermind_permission() {
   return array(
+    'administer enrd configuration' => array(
+      'title' => t('Administer ENRD configuration'),
+      'description' => t('Allows access to ENRD configuration settings.'),
+      'restrict access' => TRUE,
+    ),
     'enrd nexteuropa token ckeditor' => array(
       'title' => t('Insert internal link with CKEditor'),
+    ),
+    'activate enrd users' => array(
+      'title' => t('Allow activating users through a Users management interface.'),
+      'restrict access' => TRUE,
     ),
   );
 }
@@ -697,6 +785,9 @@ function enrd_mastermind_menu_alter(&$items) {
       'weight' => -55,
     ) + $items['sitemap'];
   }
+  // Allow access to reports page and cron running to privileged users.
+  $items['admin/reports/status']['access arguments'] = array('administer enrd configuration');
+  $items['admin/reports/status/run-cron']['access arguments'] = array('administer enrd configuration');
 
 }
 
@@ -870,9 +961,10 @@ function enrd_mastermind_menu() {
     'weight' => 1,
   );
 
-  $items['enrd/user/autocomplete'] = array(
+  $items['enrd/user/autocomplete/%'] = array(
     'title' => 'User autocomplete',
     'page callback' => 'enrd_mastermind_user_autocomplete',
+    'page arguments' => array(3),
     'access callback' => 'user_access',
     'access arguments' => array('access user profiles'),
     'type' => MENU_CALLBACK,
@@ -884,10 +976,32 @@ function enrd_mastermind_menu() {
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('enrd_mastermind_lastupdate_info_paths_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer enrd configuration'),
     'file' => 'includes/enrd_mastermind.admin.inc',
     'file path' => drupal_get_path('module', 'enrd_mastermind'),
     'weight' => 50,
+  );
+
+  $items['admin/config/enrd'] = array(
+    'title' => 'ENRD settings',
+    'description' => 'Generic configurations for the ENRD website.',
+    'position' => 'left',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer enrd configuration'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['admin/config/enrd/privacy-statement'] = array(
+    'title' => 'ENRD Privacy Statement',
+    'description' => 'Configure the privacy statement URL.',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_mastermind_privacy_statement_form'),
+    'access arguments' => array('administer enrd configuration'),
+    'file' => 'includes/enrd_mastermind.admin.inc',
+    'file path' => drupal_get_path('module', 'enrd_mastermind'),
   );
 
   return $items;
@@ -970,7 +1084,10 @@ function enrd_mastermind_menu_link_alter(&$item) {
     $item['link_title'] = 'Discussions';
     $item['weight'] = 2;
   }
-
+  // Update default [site:name] menu_token item.
+  if ($item['link_path'] == 'menutoken/52ebaf910f9d0') {
+    $item['hidden'] = TRUE;
+  }
 }
 
 /**
@@ -1283,6 +1400,8 @@ function _enrd_mastermind_overrides_strongarms() {
 
 /**
  * Global workaround to set all overrided permission.
+ *
+ * @throws \Exception
  */
 function _enrd_mastermind_overrides_permission() {
 
@@ -1328,6 +1447,12 @@ function _enrd_mastermind_overrides_permission() {
       'delete own article content',
       'delete any article content',
       'administer users',
+    ),
+    // Revoke inherited permissions from administrator to webmaster.
+    'webmaster' => array(
+      // NextEuropa User management permissions.
+      'access nexteuropa user management views',
+      'nexteuropa manage users non restricted operations',
     ),
   );
 
@@ -1395,6 +1520,85 @@ function _enrd_mastermind_overrides_permission() {
     }
   }
 
+  // Copy permissions from administrator to webmaster.
+  _enrd_mastermind_copy_role_permissions('administrator', 'webmaster');
+}
+
+/**
+ * Copy the role permissions between 2 existing roles.
+ *
+ * @param string $source_role_name
+ *   The name of the source role.
+ * @param string $destination_role_name
+ *   The name of the destination role.
+ *
+ * @throws \Exception
+ */
+function _enrd_mastermind_copy_role_permissions($source_role_name, $destination_role_name) {
+  $source_role = user_role_load_by_name($source_role_name);
+  $destination_role = user_role_load_by_name($destination_role_name);
+
+  if ($source_role && $destination_role) {
+    // Get all permissions assigned to source role.
+    $roles = array(
+      $source_role->rid => $source_role_name,
+    );
+    $source_role_permissions = user_role_permissions($roles);
+    // Calculate the valid permissions to set to destination role.
+    $forbidden_permissions = _enrd_mastermind_forbidden_permissions();
+    $all_permissions = user_permission_get_modules();
+    $permissions_to_set = array();
+    foreach ($source_role_permissions[$source_role->rid] as $permission_name => $value) {
+      if ($value === TRUE && !in_array($permission_name, $forbidden_permissions)) {
+        $permissions_to_set[] = $permission_name;
+      }
+    }
+    // Set permissions to the destination role.
+    $config_service = multisite_config_service('user');
+    foreach ($permissions_to_set as $permission) {
+      try {
+        if (isset($all_permissions[$permission])) {
+          $config_service->grantPermission($destination_role_name, $permission);
+        }
+        else {
+          watchdog('enrd_mastermind', 'Permission "@perm" is not provided by any module', array('@perm' => $permission), WATCHDOG_NOTICE);
+        }
+      }
+      catch (Exception $exception) {
+        watchdog('enrd_mastermind', 'Error to set permission "@perm"', array('@perm' => $permission), WATCHDOG_NOTICE);
+      }
+    }
+  }
+}
+
+/**
+ * List of permissions not authorized by DIGIT.
+ *
+ * @return array
+ *   The forbidden permissions.
+ */
+function _enrd_mastermind_forbidden_permissions() {
+  return array(
+    'access all views',
+    'administer content types',
+    'administer fields',
+    'administer file types',
+    'administer filters',
+    'administer permissions',
+    'administer site configuration',
+    'administer themes',
+    'administer users',
+    'administer views',
+    'bypass file access',
+    'bypass node access',
+    'bypass rules access',
+    'generate features',
+    'rename features',
+    'administer ecas',
+    // NextEuropa User management permissions.
+    'access nexteuropa user management views',
+    'nexteuropa manage users non restricted operations',
+  );
 }
 
 /**
@@ -1402,23 +1606,8 @@ function _enrd_mastermind_overrides_permission() {
  */
 function _enrd_mastermind_overrides_context() {
 
-  // Site wide.
-  $context = 'site_wide';
-  $block_names = array(
-    'lang_dropdown-language',
-    'locale-language',
-    'form',
-    'footer',
-    'menu-service-tools',
-    'menu-menu-service-tools',
-    'print-print-links',
-    'system-main-menu',
-    'user-menu',
-  );
-
-  foreach ($block_names as $block) {
-    multisite_drupal_toolbox_remove_block_context($context, $block);
-  }
+  // Disable site_wide.
+  multisite_drupal_toolbox_remove_context('site_wide');
 
   // Home Page.
   $context = 'homepage';
@@ -1794,16 +1983,6 @@ function _enrd_mastermind_block_menu_footer() {
     'fragment' => 'top-page',
     'external' => TRUE,
   ));
-
-  // Static ENRD site url.
-  $static_url = variable_get('enrd_mastermind_static_archived_website_url', ENRD_MASTERMIND_STATIC_ARCHIVED_WEBSITE_URL);
-
-  if (!empty($static_url)) {
-    $items[] = l(t('2007-2013 archived ENRD website'), $static_url, array(
-      'external' => TRUE,
-      'attributes' => array('rel' => 'nofollow'),
-    ));
-  }
 
   return array(
     '#theme' => 'item_list',
@@ -2430,6 +2609,19 @@ function enrd_mastermind_token_info() {
     'description' => t('Print to state of the latest active Workbench node revision.'),
   ];
 
+  // Tokens to render mini-portals links in Tools menu.
+  $menus = menu_get_menus();
+  foreach ($menus as $machine_name => $human_name) {
+    $info['tokens']['menu'][$machine_name] = array(
+      'name' => $human_name,
+      'description' => t('Token for the "@human_name" menu.',
+        array(
+          '@human_name' => $human_name,
+        )
+      ),
+    );
+  }
+
   return $info;
 }
 
@@ -2521,9 +2713,143 @@ function enrd_mastermind_tokens($type, $tokens, array $data = [], array $options
         }
       }
       break;
+
+    case 'menu':
+      $menus = menu_get_menus();
+
+      foreach ($menus as $machine_name => $readable_name) {
+        if (array_key_exists($machine_name, $tokens)) {
+          $replacements[$tokens[$machine_name]] = _enrd_mastermind_render_menu($machine_name);
+        }
+      }
+      break;
   }
 
   return $replacements;
+}
+
+/**
+ * Returns rendered menu based on machine_name argument.
+ *
+ * @param string $menu_name
+ *   The machine name of the to-be rendered menu.
+ * @param string $menu_class
+ *   The class name to apply to rendered menu. Defaults to 'default'.
+ *
+ * @return string
+ *   An HTML string representing the themed menu output.
+ */
+function _enrd_mastermind_render_menu($menu_name, $menu_class = 'menu-default') {
+  // Get the current menu item.
+  $menu_item = menu_get_item();
+  // Prefer selected menu if an item is active in more than one menu.
+  $current = menu_link_get_preferred($menu_item['href'], $menu_name);
+  // Set default parameters.
+  $parameters = [
+    'active_trail' => [$current['plid']],
+    'only_active_trail' => FALSE,
+    'min_depth' => $current['depth'],
+    'max_depth' => $current['depth'],
+    'conditions' => ['plid' => $current['mlid']],
+  ];
+
+  // Additional parameters.
+  if ($current['depth'] == 1) {
+    // Add parameters when parent has children menu items.
+    if ($current['has_children'] == 1) {
+      $parameters['min_depth'] += 1;
+      $parameters['max_depth'] += 1;
+      // Load parent item to get attributes info.
+      $parent = menu_link_load($current['mlid']);
+    }
+  }
+  // Add parameters for children menu items level.
+  else {
+    $parameters['conditions'] = ['plid' => $current['plid']];
+    // Load parent item to get attributes info.
+    $parent = menu_link_load($current['plid']);
+  }
+  // Get menu class if defined.
+  $has_class = !empty($parent['options']['attributes']['class']);
+  if ($has_class) {
+    $menu_class = implode(' ', $parent['options']['attributes']['class']);
+  }
+
+  // Builds the menu tree for specified menu.
+  $children = menu_build_tree($current['menu_name'], $parameters);
+
+  // Returns output structure for rendering the menu tree.
+  $menu_tree = menu_tree_output($children);
+
+  // Return the themed output.
+  return theme('enrd_token_menu', array(
+    'menu_name' => $menu_name,
+    'menu_tree' => $menu_tree,
+    'menu_class' => $menu_class,
+  ));
+}
+
+/**
+ * Implements hook_menu_attribute_info_alter().
+ */
+function enrd_mastermind_menu_attribute_info_alter(array &$attributes) {
+  $enrd_icons = [
+    '' => 'None',
+    ENRD_MASTERMIND_ENRD_ICONS => [
+      'icon-acrobat' => 'acrobat',
+      'icon-bioeconomy-portal' => 'bioeconomy-portal',
+      'icon-calendar' => 'calendar',
+      'icon-cap' => 'cap',
+      'icon-circle' => 'circle',
+      'icon-cog' => 'cog',
+      'icon-database' => 'database',
+      'icon-down-open' => 'down-open',
+      'icon-download' => 'download',
+      'icon-evaluation-publications' => 'evaluation-publications',
+      'icon-events' => 'events',
+      'icon-facebook' => 'facebook',
+      'icon-get-inspired' => 'get-inspired',
+      'icon-instagram' => 'instagram',
+      'icon-leader-toolkit' => 'leader-toolkit',
+      'icon-left-open' => 'left-open',
+      'icon-linkedin' => 'linkedin',
+      'icon-lock' => 'lock',
+      'icon-long-term-vision' => 'long-term-vision',
+      'icon-news' => 'news',
+      'icon-newsletter' => 'newsletter',
+      'icon-ok-circled' => 'ok-circled',
+      'icon-on-the-rural-vision' => 'on-the-rural-vision',
+      'icon-partner-search' => 'partner-search',
+      'icon-programme-implementation' => 'programme-implementation',
+      'icon-publications' => 'publications',
+      'icon-resources' => 'resources',
+      'icon-right-big' => 'right-big',
+      'icon-right-open' => 'right-open',
+      'icon-rss' => 'rss',
+      'icon-share' => 'share',
+      'icon-sharestory' => 'sharestory',
+      'icon-smart-villages-portal' => 'smart-villages-portal',
+      'icon-the-process' => 'the-process',
+      'icon-twitter' => 'twitter',
+      'icon-up-open' => 'up-open',
+      'icon-user' => 'user',
+      'icon-youtube-play' => 'youtube-play',
+    ],
+  ];
+
+  $glyphicons = array(
+    ENRD_MASTERMIND_GLYPHICONS_ICONS => $attributes['data-image']['form']['#options'],
+  );
+
+  unset($glyphicons[ENRD_MASTERMIND_GLYPHICONS_ICONS]['']);
+
+  // Add ENRD Icons to default icons.
+  $attributes['data-image']['form']['#options'] = $enrd_icons + $glyphicons;
+  $attributes['data-image']['form']['#description'] = t('Specifies an icon to be displayed before the menu item. You can see the full ist of icons here: <a href="https://getbootstrap.com/docs/3.3/components/#glyphicons">https://getbootstrap.com/docs/3.3/components/#glyphicons</a>');
+  $attributes['data-image']['form']['#attached']['js'][] = array(
+    'data' => drupal_get_path('module', 'enrd_mastermind') . '/scripts/enrd_mastermind.menu_icon_preview.js',
+    'type' => 'file',
+  );
 }
 
 /**
@@ -2545,10 +2871,13 @@ function enrd_mastermind_tmgmt_translator_plugin_info_alter(&$info) {
  * Retrieve a JSON object containing autocomplete suggestions
  * for existing users based on their generated real names, username or mail.
  *
+ * @param string $show_users
+ *   Whether only active or all users should be displayed.
+ *   If this var. equals to "active", shown active users only.
  * @param string $string
  *   String contains portion of email, name or username.
  */
-function enrd_mastermind_user_autocomplete($string = '') {
+function enrd_mastermind_user_autocomplete($show_users, $string = '') {
 
   $matches = array();
 
@@ -2557,7 +2886,9 @@ function enrd_mastermind_user_autocomplete($string = '') {
     $query = db_select('users', 'u');
     $query->leftJoin('realname', 'rn', 'u.uid = rn.uid');
     $query->fields('u', array('uid', 'name'));
-    $query->condition('u.status', 1);
+    if ($show_users == 'active') {
+      $query->condition('u.status', 1);
+    }
     $query->condition(db_or()
       ->condition('rn.realname', '%' . db_like($string) . '%', 'LIKE')
       ->condition('u.name', db_like($string) . '%', 'LIKE')
@@ -2568,27 +2899,18 @@ function enrd_mastermind_user_autocomplete($string = '') {
     $accounts = user_load_multiple($uids);
 
     foreach ($accounts as $account) {
-      $matches[$account->name] = t('!realname (@username)', array('!realname' => format_username($account), '@username' => $account->name));
+      $is_blocked = user_is_blocked($account->name) !== FALSE;
+      $matches[$account->name] = '<span class="user-' . (($is_blocked) ? 'blocked' : 'active') . '">';
+      $matches[$account->name] .= t('!realname (@username)', array('!realname' => format_username($account), '@username' => $account->name));
+      if ($is_blocked) {
+        $matches[$account->name] .= ' (' . t('blocked') . ')';
+      }
       $matches[$account->name] .= '<span class="email">' . check_plain($account->mail) . '</span>';
+      $matches[$account->name] .= '</span>';
     }
   }
 
   drupal_json_output($matches);
-}
-
-/**
- * Implements hook_url_inbound_alter().
- */
-function enrd_mastermind_url_inbound_alter(&$path, $original_path, $path_language) {
-  $language_suffix_delimiter = variable_get('nexteuropa_multilingual_language_suffix_delimiter', '_');
-  if (strpos($path, 'enrd/user/autocomplete' . $language_suffix_delimiter) === 0) {
-    $path_array = explode('/', $path);
-    $path_array[2] = 'autocomplete';
-    if (isset($path_array[3])) {
-      $path_array[3] = rtrim($path_array[3], $language_suffix_delimiter);
-    }
-    $path = implode('/', $path_array);
-  }
 }
 
 /**
@@ -2670,7 +2992,7 @@ function _enrd_mastermind_last_update_node_callback($node) {
  *   Returns a string with label and date or false if permission are not met.
  */
 function _enrd_mastermind_last_access_callback($user) {
-  if (user_access('administer users')) {
+  if (user_access('administer users') || user_access('nexteuropa manage users non restricted operations')) {
     return [
       'label' => t('Last accessed'),
       'date' => $user->access ? format_date($user->access, 'short') : t('never'),
@@ -2744,4 +3066,148 @@ function _enrd_mastermind_last_update_build_ignore_list() {
   }
 
   return $ignore_list;
+}
+
+/**
+ * Implements hook_media_wysiwyg_token_to_markup_alter().
+ */
+function enrd_mastermind_media_wysiwyg_token_to_markup_alter(&$element, $tag_info, $settings) {
+  // Apply .img-responsive class to Media images "Wysiwyg" or "Default" display.
+  $check_is_image = isset($element['content']) && $element['content']['#bundle'] == 'image';
+  $default_view_modes = isset($tag_info['view_mode']) && ($tag_info['view_mode'] == 'wysiwyg' || $tag_info['view_mode'] == 'default');
+  if ($check_is_image && $default_view_modes) {
+    $element['content']['file']['#item']['attributes']['class'][] = 'img-responsive';
+  }
+}
+
+/**
+ * Implements hook_file_default_types_alter().
+ */
+function enrd_mastermind_file_default_types_alter(&$types) {
+  if (isset($types['document'])) {
+
+    // New mime type to add to defaults.
+    $new_mime = 'application/vnd.openxmlformats-officedocument.presentationml.slideshow';
+
+    // Add to 'openxmlformats-officedocument.presentationml' group if it exists.
+    if ($match = key(preg_grep('/openxmlformats-officedocument.presentationml/i', $types['document']->mimetypes))) {
+      array_splice($types['document']->mimetypes, $match + 1, 0, $new_mime);
+    }
+    // Or push it at the end of the existing mime types.
+    else {
+      $types['document']->mimetypes[] = $new_mime;
+    }
+  }
+}
+
+/**
+ * Implements hook_admin_paths_alter().
+ */
+function enrd_mastermind_admin_paths_alter(&$paths) {
+  // Treat user pages as not administrative.
+  $paths['user'] = FALSE;
+  $paths['user/*'] = FALSE;
+}
+
+/**
+ * Implements hook_user_view_alter().
+ */
+function enrd_mastermind_user_view_alter(&$build) {
+  // Do not render realname field (firstname + lastname) when it's not set.
+  if (empty($build['#account']->realname)) {
+    unset($build['realname']);
+  }
+  // Workaround to fix realname module's notices when field is displayed
+  // but some keys are not defined or contain wrong values
+  // inside $build render array.
+  // See: https://www.drupal.org/project/realname/issues/2782711.
+  if (array_key_exists('realname', $build)) {
+    $build['realname']['#entity_type'] = 'user';
+    $build['realname']['#bundle'] = 'user';
+    $build['realname']['#view_mode'] = $build['#view_mode'];
+  }
+}
+
+/**
+ * Implements hook_ecas_sync_user_info().
+ */
+function enrd_mastermind_ecas_sync_user_info($user, array $user_info, array &$edit, array $args) {
+  $destination = drupal_get_destination();
+  $invite_link_regex = '/^invite\/accept\/([A-Za-z0-9]{10})$/';
+
+  if (module_exists('invite')) {
+    // Check if authenticating user has been invited.
+    if (preg_match($invite_link_regex, $destination['destination'], $matches)) {
+      // Check that Invite is valid.
+      if (invite_validate(invite_by_code_load($matches[1])) == INVITE_VALID) {
+        // Activate the user.
+        $edit['status'] = 1;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_mastermind_form__easy_breadcrumb_general_settings_form_alter(&$form, &$form_state, $form_id) {
+
+  // Formats the search menu title excluded paths array as line separated
+  // list of paths before displaying them.
+  $skip_menu_title_search = variable_get('easy_breadcrumb-fixed_title');
+  if ($skip_menu_title_search) {
+    $skip_menu_title_search = implode("\r\n", $skip_menu_title_search);
+  }
+
+  $form['easy_breadcrumb']['easy_breadcrumb-fixed_title'] = [
+    '#type' => 'textarea',
+    '#title' => t("Skip search for shorter menu titles on these paths."),
+    '#description' => t("Enter a line separated list of paths to be excluded when searching for menu title.
+			Paths listed here will always use the page title, even if a shorter menu title is available."),
+    '#default_value' => $skip_menu_title_search,
+  ];
+
+  $form['#submit'][] = '_enrd_mastermind_form__easy_breadcrumb_general_settings_submit';
+
+  return $form;
+}
+
+/**
+ * Submit function for new field in easy_breadcrumb admin form.
+ *
+ * @param array $form
+ *   The $form array.
+ * @param array $form_state
+ *   The $form_state array.
+ */
+function _enrd_mastermind_form__easy_breadcrumb_general_settings_submit($form, &$form_state) {
+
+  $skip_menu_title_search = trim($form_state['values']['easy_breadcrumb-fixed_title']);
+  $skip_menu_title_search_arr = $skip_menu_title_search === '' ? [] : preg_split('/\r*\n+/', $skip_menu_title_search);
+
+  // Updates the $form_state before passing it to the Drupal system.
+  $form_state['values']['easy_breadcrumb-fixed_title'] = $skip_menu_title_search_arr;
+  variable_set('easy_breadcrumb-fixed_title', $skip_menu_title_search_arr);
+}
+
+/**
+ * Returns Composer's class loader.
+ *
+ * @return \Composer\Autoload\ClassLoader|null
+ *   Composer's class loader.
+ */
+function _enrd_mastermind_composer_autoloader() {
+  static $autoloader;
+
+  if ($autoloader === NULL) {
+    $composer_autoloader = ENRD_MASTERMIND_COMPOSER_AUTOLOADER;
+    if (file_exists($composer_autoloader)) {
+      $autoloader = require $composer_autoloader;
+    }
+    else {
+      trigger_error(sprintf('Composer autoloader was not found at "%s".', $composer_autoloader), E_USER_ERROR);
+    }
+  }
+
+  return $autoloader;
 }

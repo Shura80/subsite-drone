@@ -712,7 +712,7 @@ function enrd_lag_dashboard_views_default_views() {
   $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'access lag dashboards';
+  $handler->display->display_options['access']['perm'] = 'administer nsu users';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['distinct'] = TRUE;
@@ -726,10 +726,11 @@ function enrd_lag_dashboard_views_default_views() {
     'name' => 'name',
     'term_node_tid' => 'term_node_tid',
     'field_enrd_lag_country' => 'field_enrd_lag_country',
-    'status' => 'status',
+    'state' => 'state',
     'mail' => 'mail',
+    'created' => 'created',
   );
-  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['default'] = 'created';
   $handler->display->display_options['style_options']['info'] = array(
     'views_bulk_operations' => array(
       'align' => '',
@@ -755,7 +756,7 @@ function enrd_lag_dashboard_views_default_views() {
       'separator' => '',
       'empty_column' => 0,
     ),
-    'status' => array(
+    'state' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
       'align' => '',
@@ -765,6 +766,13 @@ function enrd_lag_dashboard_views_default_views() {
     'mail' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'created' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'desc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
@@ -801,17 +809,11 @@ function enrd_lag_dashboard_views_default_views() {
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['force_single'] = 0;
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['entity_load_capacity'] = '10';
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_operations'] = array(
-    'action::og_set_state_action' => array(
-      'selected' => 1,
-      'postpone_processing' => 0,
-      'skip_confirmation' => 0,
-      'override_label' => 1,
-      'label' => 'Set status',
-    ),
     'action::og_membership_delete_action' => array(
       'selected' => 1,
       'postpone_processing' => 0,
       'skip_confirmation' => 0,
+      'skip_permission_check' => 0,
       'override_label' => 1,
       'label' => 'Remove from NSU',
     ),
@@ -819,6 +821,7 @@ function enrd_lag_dashboard_views_default_views() {
       'selected' => 1,
       'postpone_processing' => 0,
       'skip_confirmation' => 0,
+      'skip_permission_check' => 0,
       'override_label' => 1,
       'label' => 'Send an email',
     ),
@@ -893,6 +896,14 @@ function enrd_lag_dashboard_views_default_views() {
   $handler->display->display_options['fields']['mail']['table'] = 'users';
   $handler->display->display_options['fields']['mail']['field'] = 'mail';
   $handler->display->display_options['fields']['mail']['link_to_user'] = '0';
+  /* Field: OG membership: Created */
+  $handler->display->display_options['fields']['created']['id'] = 'created';
+  $handler->display->display_options['fields']['created']['table'] = 'og_membership';
+  $handler->display->display_options['fields']['created']['field'] = 'created';
+  $handler->display->display_options['fields']['created']['relationship'] = 'og_membership_rel';
+  $handler->display->display_options['fields']['created']['label'] = 'NSU from';
+  $handler->display->display_options['fields']['created']['date_format'] = 'short';
+  $handler->display->display_options['fields']['created']['second_date_format'] = 'enrd_lag_database_d_m_y';
   /* Sort criterion: Field: Country (field_enrd_lag_country) */
   $handler->display->display_options['sorts']['field_enrd_lag_country_tid']['id'] = 'field_enrd_lag_country_tid';
   $handler->display->display_options['sorts']['field_enrd_lag_country_tid']['table'] = 'field_data_field_enrd_lag_country';

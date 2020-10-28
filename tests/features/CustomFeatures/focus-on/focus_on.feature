@@ -9,9 +9,9 @@ Feature: ENRD Focus on.
     Given I am viewing a "project" content in "published" status:
       | title | BDD Published Project |
 
-  @admin @editor @anonymous @javascript @clean
+  @webmaster @editor @anonymous @javascript @clean
   Scenario Outline: As anonymous user, I can see the homepage block with the published focuses on.
-    Both Admin and Editor users are allowed to insert a Focus on in the queue.
+  Both Webmaster and Editor users are allowed to insert a Focus on in the queue.
     Given I am logged in as a user with the "<role>" role
     And I am viewing a "focus_on" content in "published" status:
       | title                           | BDD Published Focus on |
@@ -28,13 +28,13 @@ Feature: ENRD Focus on.
     Then I should see "BDD Desc Focus on"
 
     Examples:
-      | role            |
-      | administrator   |
-      | editor          |
+      | role      |
+      | webmaster |
+      | editor    |
 
   @required
   Scenario: Check for required fields when creating a "Focus on".
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am at "node/add/focus-on"
     And I press the "Save" button
     Then I should see the following error message:
@@ -53,7 +53,7 @@ Feature: ENRD Focus on.
     And I should see "Description: BDD Lorem ipsum"
     And I should see "Highlight: BDD Published Project"
 
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am on "focus-on/bdd-focus-pub"
     And I click "New draft"
     And I attach the file "bdd-image.jpg" to "field-name-field-enrd-focus-on-image"
@@ -66,7 +66,7 @@ Feature: ENRD Focus on.
 
   @permissions
   Scenario: Check for creating a new "Focus on" permissions.
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     When I am on "node/add"
     Then I should see the link "Focus on"
 
@@ -82,10 +82,10 @@ Feature: ENRD Focus on.
     When I am on "node/add"
     Then I should not see the link "Focus on"
 
-  # ADMINISTRATOR
-  @workflow @admin
-  Scenario: Check admins moderation tasks for the Focus on content type.
-    Given I am logged in as a user with the "administrator" role
+  # WEBMASTER
+  @workflow @webmaster
+  Scenario: Check webmasters moderation tasks for the Focus on content type.
+    Given I am logged in as a user with the "webmaster" role
     And I am viewing a "focus_on" content in "draft" status:
       | title | BDD Focus On draft |
 

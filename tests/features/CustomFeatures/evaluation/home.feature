@@ -11,10 +11,10 @@ Feature: ENRD Evaluation home.
       | name                |
       | Evaluation Helpdesk |
     And I am viewing a "page" content in "published" status:
-      | title                                | Evaluation                      |
-      | body                                 | BDD who we are                  |
-      | field_page_info_box                  | BDD info box                    |
-      | field_page_sidebar                   | BDD main sidebar right content  |
+      | title               | Evaluation                     |
+      | body                | BDD who we are                 |
+      | field_page_info_box | BDD info box                   |
+      | field_page_sidebar  | BDD main sidebar right content |
 
   @clean
   Scenario: As Anonymous I can see the basic fields of the Main EHD Landing page.
@@ -35,7 +35,7 @@ Feature: ENRD Evaluation home.
     Then I should not see "Events" in the "right sidebar" region
 
   Scenario: As Anonymous I can see a "Latest publications" dynamic block and an EHD published Publication.
-    I can also click on the "All publications" button so that I can see the list of EHD publications.
+  I can also click on the "All publications" button so that I can see the list of EHD publications.
     Given I am an anonymous user
     And I am viewing a "publication_ehd" content in "published" status:
       | title                        | BDD Evaluation Landing Publ          |
@@ -53,7 +53,7 @@ Feature: ENRD Evaluation home.
 
   @news @taxonomies
   Scenario: As Anonymous I can see an "Evaluation updates" dynamic block and I can see either a Basic page or a News
-    tagged by the technical taxonomy term "Evaluation Helpdesk".
+  tagged by the technical taxonomy term "Evaluation Helpdesk".
     Given I am an anonymous user
     When I am viewing a "page" content in "published" status:
       | title            | BDD Evaluation Landing sample page                 |
@@ -79,7 +79,7 @@ Feature: ENRD Evaluation home.
 
   @events @taxonomies @clean
   Scenario: As Anonymous I can see an "Events" dynamic block and I can see two Events tagged by the
-    technical taxonomy term "Evaluation Helpdesk".
+  technical taxonomy term "Evaluation Helpdesk".
     Given I am an anonymous user
     And I am viewing an "event" content in "published" status:
       | title                         | BDD Evaluation Landing sample Event |
@@ -87,12 +87,13 @@ Feature: ENRD Evaluation home.
       | field_event_location:country  | AT                                  |
       | field_event_location:locality | Vienna                              |
       | field_tax_origin              | Evaluation Helpdesk                 |
+      | field_enrd_event_online       | 1                                   |
     And I am viewing an "event" content in "published" status:
-      | title                          | BDD Evaluation Landing custom Event   |
-      | field_event_date               | 01-01-2018 - 01-01-2018               |
-      | field_event_location:country   | BE                                    |
-      | field_event_location:locality  | Brussels                              |
-      | field_tax_origin               | Evaluation Helpdesk                   |
+      | title                         | BDD Evaluation Landing custom Event |
+      | field_event_date              | 01-01-2018 - 01-01-2018             |
+      | field_event_location:country  | BE                                  |
+      | field_event_location:locality | Brussels                            |
+      | field_tax_origin              | Evaluation Helpdesk                 |
 
     When I go to "evaluation"
     Then I should see "Events" in the "right sidebar" region
@@ -102,3 +103,6 @@ Feature: ENRD Evaluation home.
     And I should see the heading "BDD Evaluation Landing custom Event" in the "right sidebar" region
     And I should see the text "Dates: 01/01/2018" in the "right sidebar" region
     And I should see the text "Location: Brussels, Belgium" in the "right sidebar" region
+
+    # Check "online" Event visibility.
+    And I should see the ".online" element in the "right sidebar" region

@@ -84,12 +84,12 @@ function enrd_news_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => '',
-    'weight' => '3',
+    'weight' => '4',
     'children' => array(
       0 => 'field_event_date',
-      1 => 'field_event_location',
-      2 => 'field_event_type',
-      3 => 'field_tax_origin',
+      1 => 'field_tax_origin',
+      2 => 'field_event_location',
+      3 => 'field_event_type',
     ),
     'format_type' => 'div',
     'format_settings' => array(
@@ -122,9 +122,9 @@ function enrd_news_field_group_info() {
     'weight' => '6',
     'children' => array(
       0 => 'field_event_date',
-      1 => 'field_event_location',
-      2 => 'field_event_type',
-      3 => 'field_tax_origin',
+      1 => 'field_tax_origin',
+      2 => 'field_event_location',
+      3 => 'field_event_type',
     ),
     'format_type' => 'div',
     'format_settings' => array(
@@ -282,12 +282,12 @@ function enrd_news_field_group_info() {
     'label' => 'NRN Toolkit',
     'weight' => '6',
     'children' => array(
-      0 => 'field_enrd_nrn_date',
-      1 => 'field_enrd_nrn_include_toolkit',
-      2 => 'field_enrd_nrn_type',
-      3 => 'field_tax_networking',
-      4 => 'field_enrd_nrn_title',
-      5 => 'field_enrd_nrn_alter_description',
+      0 => 'field_enrd_nrn_alter_description',
+      1 => 'field_enrd_nrn_date',
+      2 => 'field_enrd_nrn_include_toolkit',
+      3 => 'field_enrd_nrn_title',
+      4 => 'field_enrd_nrn_type',
+      5 => 'field_tax_networking',
     ),
     'format_type' => 'tab',
     'format_settings' => array(

@@ -91,6 +91,13 @@ body {
         display: inline-block;
     }
 
+    li {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: calc(100% / 3);
+    }
+
     & > li + li::before {
         content: '>';
         color: #52aca2;
@@ -1338,7 +1345,8 @@ div.view-display-id-news_rolling_block .carousel {
         }
     }
 
-    #block-menu-menu-enrd-tools {
+    /* Menus that use icons */
+    .block-icons-menu {
         ul {
             padding: 0;
             margin: 0;
@@ -1346,22 +1354,44 @@ div.view-display-id-news_rolling_block .carousel {
 
         li {
             list-style-type: none;
-            margin-bottom: 10px;
+            margin: 15px 0 10px 0;
+            padding: 0;
 
             a {
                 color: $lblack;
                 font-size: 16px;
                 font-weight: bold;
-                line-height: 40px;
-                display: block;
+                line-height: 20px;
+                display: flex;
+                align-items: center;
             }
 
             .icon {
                 background: #E7F5F5;
                 color: $lblue;
-                padding: 5px;
+                padding: 7px;
                 font-size: 24px;
                 margin: 0 10px 0 0;
+                max-height: 40px;
+            }
+
+            .glyphicon {
+                background: #E7F5F5;
+                color: $lblue;
+                padding: 7px 12px;
+                font-size: 24px;
+                margin-right: 10px;
+
+                // Remove text decoration.
+                text-decoration: inherit;
+                text-decoration-color: #E7F5F5;
+                &:before {
+                    display: inline-block; // Firefox.
+                }
+            }
+
+            span.list-group-item {
+                display: none;
             }
         }
     }
@@ -1902,6 +1932,7 @@ form select.form-select {
     -webkit-appearance: none;
     -webkit-border-radius: 0;
     -moz-appearance: none;
+    -moz-padding-end: 12px;
     appearance: none;
     background: url("data:image/gif;base64,R0lGODlhKAAoAIAAAP39/QCRkyH5BAAAAAAALAAAAAAoACgAAAIyjI+py+0Po5y02ouz3rz7D4biSJbmiX7AyrYs6MZi/I606aK1nvb+DwwKh8Si8YhMKgsAOw==") no-repeat right center;
 
@@ -2371,6 +2402,43 @@ div.admin.my-workbench .right {
     padding: 0;
     margin: 0;
 }
+
+/* Legal Notice & Privacy Policy checkboxes */
+// Privacy policy icon.
+div.form-item-privacy-policy {
+    span.form-required::after {
+        content: '\a0';
+    }
+
+    span.privacy-policy-icon {
+        font-size: 12px;
+        font-style: normal;
+        margin: 4px 4px 0 0;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        color: #009193;
+    }
+}
+
+.form-item-eu-legal-notice, .form-item-privacy-policy,
+.form-item-field-eu-legal-notice, .form-item-field-privacy-policy {
+    label.option {
+        padding-left: 5px;
+    }
+}
+
+// Workbench Moderation block.
+div.block-workbench form.workbench-moderation-moderate-form {
+    @include enrd-privacy-policy;
+
+    .form-item-eu-legal-notice {
+        margin-top: 0;
+    }
+    .form-item-privacy-policy {
+        margin-top: -10px;
+    }
+}
+
 /*Autocomplete rotating image*/
 html.js input.form-autocomplete {
     background: #fff url("../img/throbber.gif") 100% 9px no-repeat;
@@ -2430,6 +2498,17 @@ h1.title {
 }
 
 .chosen-container {
+    // mark any chosen element with error.
+    &.error.chosen-processed {
+        // remove error crosses around multi chosen choices.
+        background: none;
+        border: 2px solid #FF0000 !important;
+
+        a.chosen-single {
+            height: 36px;
+        }
+    }
+
     &.chosen-container-single {
         .chosen-single {
             height: 39px;
@@ -2545,12 +2624,6 @@ h1.title {
     }
 
     &.chosen-container-multi {
-        &.error.chosen-processed {
-            // remove error crosses around chosen choices.
-            background: none;
-            border: 2px solid #FF0000;
-        }
-
         .chosen-results li.result-selected {
             display: list-item;
             color: #ccc;
@@ -2561,7 +2634,7 @@ h1.title {
         .chosen-choices {
             display: block;
             width: 100%;
-            min-height: 32px;
+            min-height: 24px;
             font-size: 14px;
             line-height: 1;
             color: #555;
@@ -2577,6 +2650,7 @@ h1.title {
             li {
                 &.search-field input[type="text"] {
                     padding: 5px 0;
+                    margin: 0;
                 }
 
                 &.search-choice {
@@ -2881,6 +2955,80 @@ div.view-display-id-upcoming_latest {
     padding-right: 0;
 }
 
+/* Online Events */
+
+// Online event: full display.
+.node-type-event div.main-content {
+    h1.title,
+    span.online {
+        display: inline;
+        line-height: 1.5em;
+    }
+
+    h1.title {
+        margin-right: 2px;
+        margin-bottom: 0;
+    }
+
+    span.online {
+        padding: 1px 8px 2px 6px;
+    }
+}
+
+// Online events: adapt "Event Type" exposed filter.
+.page-news-events-events .view-enrd-events-upcoming-past div.views-exposed-form {
+    div#edit-filter-event-event-type-wrapper {
+        clear: left;
+    }
+}
+
+// Online events: eventlist display.
+.node-event.view-mode-eventlist {
+    div.field-name-title {
+        // Align title and icon.
+        h2.media-heading, span.online {
+            display: inline;
+        }
+
+        div.field-item {
+            padding-top: 2px;
+
+            h2.media-heading {
+                margin-right: 6px;
+                line-height: 1.5em;
+            }
+
+            span.online {
+                padding: 1px 8px 1px 6px;
+            }
+        }
+    }
+}
+
+// Online events icon.
+.node-type-event div.main-content,
+.node-event.view-mode-eventlist {
+    span.online {
+        position: relative;
+        top: -4px;
+        font-weight: bold;
+        background: #98C300;
+        color: #fff;
+        margin-top: 7px;
+        border-radius: 12px 0 12px 0;
+        font-size: 14px;
+        font-variant: all-small-caps;
+
+        &:before {
+            content: "\e135";
+            display: inline;
+            font-family: 'Glyphicons Halflings';
+            font-size: 11px;
+            padding: 0 3px 0 0;
+        }
+    }
+}
+
 // NRN Toolkit nodes display.
 .node-type-nrn-resource .enrd-nrn-toolkit-resource .ds-thumb {
     padding-bottom: 120px;
@@ -2971,6 +3119,7 @@ ul.links.inline {
 /*Search Pages*/
 form#search-form input.form-control {
     border-right: 0;
+    z-index: 0;
 }
 
 .page-leader-clld-lag-database,
@@ -3054,6 +3203,7 @@ ul.facetapi-facetapi-links {
         position: relative;
 
         a {
+            display: inline-block;
             color: $lblack;
             font-weight: normal;
             margin: 0 0 0 10px;
@@ -3242,7 +3392,7 @@ div.field-type-addressfield {
 
 div.chosen-container.chosen-container-multi.form-control.form-select {
     height: auto;
-    margin-bottom: 5px;
+    margin-bottom: 0;
     max-width: 100% !important;
     ul.chosen-choices {
         border-bottom: none;
@@ -3293,6 +3443,9 @@ section#block-enrd-lag-database-contact-this-lag-webform {
     div.form-actions {
         text-align: center;
         margin-top: 10px;
+        .form-item-eu-legal-notice, .form-item-privacy-policy {
+            text-align: left;
+        }
         .webform-submit.button-primary.form-submit {
             padding: 0 25px;
         }
@@ -3515,20 +3668,8 @@ fieldset.filter-wrapper.form-wrapper {
     }
 }
 
-div.chosen-container.chosen-container-multi.form-control.form-select {
-    height: auto;
-    margin-bottom: 5px;
-    max-width: 100% !important;
-    ul.chosen-choices {
-        border-bottom: none;
-        .search-choice {
-            text-align: left;
-        }
-    }
-}
-
 form select[multiple].form-control.form-select.chosen-disable {
-    padding: 0px 0px 0px 0px;
+    padding: 0;
     background: none;
     option[selected] {
         background: #E9F5F5;
@@ -3882,6 +4023,41 @@ form select[multiple].form-control.form-select.chosen-disable {
     border-color: #ccc;
 }
 
+/*
+ * Autocomplete form user field.
+ * See: enrd_mastermind_user_autocomplete().
+ */
+.form-item-username {
+    #autocomplete {
+        li {
+            line-height: 125%;
+
+            > div {
+                display: inline;
+            }
+            .email {
+                display: block;
+                font-size: 0.8em;
+                color: $lblue;
+            }
+            .user-blocked {
+                color: #4c4c4c;
+                font-style: italic;
+                .email {
+                    color: #4c4c4c;
+                }
+            }
+        }
+
+        li.selected {
+            .user-blocked,
+            .email {
+                color: #fff;
+            }
+        }
+    }
+}
+
 .page-node {
     fieldset {
         height: auto !important;
@@ -3950,29 +4126,6 @@ div.field-type-text-long.field-widget-text-textarea, div.field-type-text-with-su
     }
 }
 
-/* Invites */
-#invite-form {
-    .form-item-username {
-        /* Autocomplete form invite */
-        #autocomplete {
-            li {
-                line-height: 1.2;
-                .email {
-                    display: block;
-                    font-size: 0.8em;
-                    color: $lblue;
-                    line-height: 1.8;
-                }
-            }
-            li.selected {
-                .email {
-                    color: #fff;
-                }
-            }
-        }
-    }
-}
-
 /* Standard panel and accordion formatting */
 .panel-group.collapsible {
     .panel-default {
@@ -4036,7 +4189,8 @@ body.cke_editable {
     img.media-element.file-default {
         @include img-responsive;
     }
-
+    // ENRD File Formatter styles.
+    @include enrd-file-formatter;
 }
 
 /* ENRD Panels */
@@ -4394,7 +4548,6 @@ html:not(.js) div.modal-message.modal.fade {
 
 /* Contact us NRN Toolkit webform */
 section#block-enrd-nrn-toolkit-contact-us-nrn-webform {
-
     .captcha {
         legend {
             margin-bottom: 0px;
@@ -4422,7 +4575,194 @@ section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-n
 .page-networking-nrn-toolkit .webform-client-form .form-actions .webform-nrn-toolkit-contact-us-disclaimer {
     font-size: 12px;
 }
+// ENRD File
+.file.enrd_file_formatter {
+    @include enrd-file-formatter;
+}
 
 .enrd-fieldtips-item .glyphicon[data-toggle="tooltip"] {
     color: $lblue;
+}
+
+/* Menu icon preview */
+/* Icon */
+#options-attributes-data-image-preview {
+    display: inline-block;
+
+    &.icon {
+        position: absolute;
+        font-size: 20px;
+        top: 62px;
+        left: 7px;
+    }
+
+    .selector:not(*:root), &.icon {
+        position: absolute;
+        font-size: 20px;
+        top: 110px;
+        left: 7px;
+    }
+
+    &.glyphicon {
+        position: absolute;
+        font-size: 18px;
+        top: 66px;
+        left: 12px;
+    }
+
+    .selector:not(*:root), &.glyphicon {
+        position: absolute;
+        font-size: 18px;
+        top: 114px;
+        left: 12px;
+    }
+}
+
+/* Select option */
+#edit-menu-options-attributes-data-image {
+    display: inline-block;
+    padding: 0 0 0 35px;
+}
+
+/* Internal menus using enrd menu tokens. */
+.enrd-token-menu {
+    ul {
+        display: flex;
+        padding: 0;
+        flex-flow: row wrap;
+        align-content: flex-start;
+        max-width: 100%;
+        border-left: 1px solid;
+
+        li {
+            /* Do not automatically fill empty space */
+            flex: none;
+            margin: 0;
+            padding: 0;
+
+            &:first-child {
+                border-top: 1px solid;
+            }
+
+            @media only screen and (min-width: 481px) {
+                // Tweeners, Tablet & Desktop.
+                max-height: 74px;
+                // Tweeners.
+                &:nth-child(-n+2) {
+                    border-top: 1px solid;
+                }
+            }
+            // Tablet & Desktop.
+            @media only screen and (min-width: 768px) {
+                &:nth-child(-n+3) {
+                    border-top: 1px solid;
+                }
+            }
+
+            &:before {
+                display: none;
+            }
+
+            a {
+                display: flex !important;
+                position: relative;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+                min-height: 60px;
+                font-size: 0.9em;
+                font-weight: bold;
+                padding: 10px 35px 10px 15px;
+                color: #5a5a5a;
+                line-height: 1.5em;
+                border-right: 1px solid;
+                border-bottom: 1px solid;
+
+                &:after {
+                    content: "\e080";
+                    display: inline-block;
+                    width: auto;
+                    float: right;
+                    font-family: 'Glyphicons Halflings';
+                    font-style: normal;
+                    font-size: 1.1em;
+                    position: absolute;
+                    right: 18px;
+                }
+
+                // Tweeners, Tablet & Desktop.
+                @media only screen and (min-width: 481px) {
+                    padding: 26px 35px 26px 15px;
+                }
+
+                span {
+                    font-size: 3.5em;
+                    height: 80%;
+
+                    // Tweeners, Tablet & Desktop.
+                    @media only screen and (min-width: 481px) {
+                        height: 100%;
+                    }
+
+                    &.glyphicon {
+                        margin: 0 16px 0 0;
+                        padding: 0 0 10px 10px;
+
+                        // Remove text decoration.
+                        text-decoration: inherit;
+                        &:before {
+                            display: inline-block; // Firefox.
+                        }
+
+                        // Tweeners, Tablet & Desktop.
+                        @media only screen and (min-width: 481px) {
+                            margin: 0 10px 25px 0;
+                            padding: 0 13px 0 10px;
+                        }
+                    }
+
+                    &.icon {
+                        padding-right: 8px;
+                        padding-bottom: 9px;
+
+                        // Tweeners, Tablet & Desktop.
+                        @media only screen and (min-width: 481px) {
+                            margin: 0 8px 21px 0;
+                            padding-top: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Menu default */
+.enrd-token-menu.menu-default {
+    @include enrd-portal-menu($columns-default, $bg-default, $bg-default-hover-active, $border-default, $icon-default, $icon-default-hover-active, $arrow-default, $arrow-default-hover-active, $text-default, $text-default-hover-active);
+}
+
+/* CAP 2020 */
+.enrd-token-menu.menu-cap-2020 {
+    @include enrd-portal-menu($columns-cap, $bg-cap, $bg-cap-hover-active, $border-cap, $icon-cap, $icon-cap-hover-active, $arrow-cap, $arrow-cap-hover-active, $text-cap-default, $text-cap-hover-active);
+}
+
+/* Leader Toolkit */
+.enrd-token-menu.menu-leader-toolkit {
+    @include enrd-portal-menu($columns-leader, $bg-leader, $bg-leader-hover-active, $border-leader, $icon-leader, $icon-leader-hover-active, $arrow-leader, $arrow-leader-hover-active, $text-leader-default, $text-leader-hover-active);
+}
+
+/* Smart Villages Portal menu */
+.enrd-token-menu.menu-smart-villages {
+    @include enrd-portal-menu($columns-smart, $bg-smart, $bg-smart-hover-active, $border-smart, $icon-smart, $icon-smart-hover-active, $arrow-smart, $arrow-smart-hover-active, $text-smart-default, $text-smart-hover-active);
+}
+
+/* Rural Bioeconomy Portal*/
+.enrd-token-menu.menu-rural-bioeconomy {
+    @include enrd-portal-menu($columns-bioeconomy, $bg-bioeconomy, $bg-bioeconomy-hover-active, $border-bioeconomy, $icon-bioeconomy, $icon-bioeconomy-hover-active, $arrow-bioeconomy, $arrow-bioeconomy-hover-active, $text-bioeconomy-default, $text-bioeconomy-hover-active);
+}
+
+/* Long Term Rural Vision */
+.enrd-token-menu.menu-long-term-rural-vision {
+    @include enrd-portal-menu($columns-rural-vision, $bg-rural-vision, $bg-rural-vision-hover-active, $border-rural-vision, $icon-rural-vision, $icon-rural-vision-hover-active, $arrow-rural-vision, $arrow-rural-vision-hover-active, $text-rural-vision-default, $text-rural-vision-hover-active);
 }

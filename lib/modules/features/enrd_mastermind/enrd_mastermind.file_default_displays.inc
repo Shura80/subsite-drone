@@ -13,6 +13,32 @@ function enrd_mastermind_file_default_displays() {
 
   $file_display = new stdClass();
   $file_display->api_version = 1;
+  $file_display->name = 'document__default__file_field_enrd_file_formatter';
+  $file_display->weight = 0;
+  $file_display->status = TRUE;
+  $file_display->settings = array(
+    'display_type' => 'full',
+    'force_file_title' => FALSE,
+    'custom_file_title' => '',
+    'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+  );
+  $export['document__default__file_field_enrd_file_formatter'] = $file_display;
+
+  $file_display = new stdClass();
+  $file_display->api_version = 1;
+  $file_display->name = 'document__wysiwyg__file_field_enrd_file_formatter';
+  $file_display->weight = 0;
+  $file_display->status = TRUE;
+  $file_display->settings = array(
+    'display_type' => 'full',
+    'force_file_title' => FALSE,
+    'custom_file_title' => '',
+    'token_file_language' => '[file:field-enrd-taxonomies-file-lang:field-enrd-language-iso]',
+  );
+  $export['document__wysiwyg__file_field_enrd_file_formatter'] = $file_display;
+
+  $file_display = new stdClass();
+  $file_display->api_version = 1;
   $file_display->name = 'image__colorbox__file_field_colorbox';
   $file_display->weight = 0;
   $file_display->status = FALSE;

@@ -98,12 +98,32 @@ function enrd_lag_dashboard_default_rules_configuration() {
       ]
     }
   }');
+  $items['rules_enrd_lag_dashboard_add_new_national_manager'] = entity_import('rules_config', '{ "rules_enrd_lag_dashboard_add_new_national_manager" : {
+      "LABEL" : "ENRD LAG Dashboard: send e-mail to newly added National manager",
+      "PLUGIN" : "action set",
+      "OWNER" : "rules",
+      "TAGS" : [ "ENRD LAG DASHBOARD" ],
+      "REQUIRES" : [ "rules" ],
+      "ACCESS_EXPOSED" : "1",
+      "USES VARIABLES" : { "national_manager" : { "label" : "National manager", "type" : "user" } },
+      "ACTION SET" : [
+        { "mail" : {
+            "to" : "[national-manager:mail]",
+            "subject" : "Thank you for joining the ENRD LAG Database!",
+            "message" : "Dear [national-manager:name],\\r\\n\\r\\nThank you for joining the ENRD LAG Database!\\r\\n\\r\\nYou are now the national manager of the following country: [national-manager:field-enrd-lag-country].\\r\\n\\r\\nPlease click this link http:\\/\\/enrd.ec.europa.eu\\/ecas to log in and proceed to manage and monitor the LAGs within your competence.\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "language" : [ "national-manager:language" ]
+          }
+        }
+      ]
+    }
+  }');
   $items['rules_enrd_lag_dashboard_send_mail_from_og_membership'] = entity_import('rules_config', '{ "rules_enrd_lag_dashboard_send_mail_from_og_membership" : {
       "LABEL" : "Send an email to OG Membership from LAG webmaster",
       "PLUGIN" : "rule",
       "OWNER" : "rules",
       "TAGS" : [ "ENRD LAG DASHBOARD" ],
       "REQUIRES" : [ "rules" ],
+      "ACCESS_EXPOSED" : "1",
       "USES VARIABLES" : {
         "og_membership" : { "label" : "LAG membership", "type" : "og_membership" },
         "mail_subject" : { "label" : "Email subject", "type" : "text" },

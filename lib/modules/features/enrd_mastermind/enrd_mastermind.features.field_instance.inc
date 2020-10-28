@@ -2159,7 +2159,6 @@ function enrd_mastermind_field_default_field_instances() {
   t('Block Body');
   t('Body');
   t('Co-chair');
-  t('Date (text)');
   t('Further information');
   t('Futher activities');
   t('Info Box');
@@ -2171,7 +2170,6 @@ function enrd_mastermind_field_default_field_instances() {
   t('Relevant documents');
   t('Sidebar');
   t('Tags');
-  t('Video/Photo');
 
   return $field_instances;
 }

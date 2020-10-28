@@ -28,6 +28,7 @@ define('ENRD_LAG_DATABASE_LAG_OG_GROUP_REF', 'og_lag_group_ref');
 define('ENRD_LAG_DATABASE_USER_EXTERNAL_ROLE', 'LAG User');
 define('ENRD_LAG_DATABASE_USER_CONTACT_ROLE', 'LAG Contact');
 define('ENRD_LAG_DATABASE_USER_MANAGER_ROLE', 'LAG Manager');
+define('ENRD_LAG_DATABASE_NATIONAL_MANAGER_ROLE', 'National manager');
 
 // LAG contact form.
 define('ENRD_LAG_DATABASE_LAG_CONTACT_UUID', '41496fd1-6798-4c7c-8323-77a3ede96e17');
@@ -55,6 +56,11 @@ function enrd_lag_database_permission() {
       'description' => t('Skip the alter moderation form.'),
       'restrict access' => TRUE,
     ),
+    'skip lag access control' => array(
+      'title' => t('Skip LAG access control'),
+      'description' => t('Skip access control on LAG groups and content.'),
+      'restrict access' => TRUE,
+    ),
     'edit user profile LAG fields' => array(
       'title' => t('Edit user profile lag related field'),
       'description' => t('Allow users with this privilege to edit lag related field in user profile.'),
@@ -73,9 +79,33 @@ function enrd_lag_database_menu() {
     'position' => 'left',
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer enrd configuration'),
     'file' => 'system.admin.inc',
     'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['lag'] = array(
+    'title' => 'LAG Database',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array(
+      'leader-clld/lag-database',
+      array(),
+      '301',
+    ),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['lag/%/offer'] = array(
+    'title' => 'Cooperation offers',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array(
+      'leader-clld/clld-partner-search',
+      array(),
+      '301',
+    ),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -173,7 +203,7 @@ function enrd_lag_database_menu_link_alter(&$item) {
               ->condition('link_path', $path)
               ->execute()
               ->fetchField();
-          };
+          }
         }
         break;
     }
@@ -290,6 +320,10 @@ function enrd_lag_database_node_access($node, $op, $account) {
   $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
 
   if ($type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // Grant access to users with high permissions.
+    if (user_access('skip lag access control')) {
+      return NODE_ACCESS_ALLOW;
+    }
 
     $domain = _enrd_lag_database_get_lag_domain($account);
 
@@ -331,6 +365,10 @@ function enrd_lag_database_node_access($node, $op, $account) {
   }
 
   if ($type == ENRD_LAG_DATABASE_COOP_OFFER_NODE) {
+    // Grant access to users with high permissions.
+    if (user_access('skip lag access control')) {
+      return NODE_ACCESS_ALLOW;
+    }
 
     $domain = _enrd_lag_database_get_lag_domain($account);
 
@@ -448,7 +486,7 @@ function enrd_lag_database_form_lag_node_form_alter(&$form, &$form_state, $form_
     $form[$interested][LANGUAGE_NONE]['#title'] = $form[$interested][LANGUAGE_NONE]['#options'][1];
   }
 
-  // Alter node form for users that not not have specific permissions.
+  // Alter node form for users that have no specific permissions.
   if (!user_access('skip alter moderation form')) {
     // Hide "Revision information" tab.
     $form['revision_information']['#access'] = FALSE;
@@ -461,11 +499,12 @@ function enrd_lag_database_form_lag_node_form_alter(&$form, &$form_state, $form_
       '#collapsed' => FALSE,
       '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
     );
-    // EU Legal notice.
-    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
     $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
     // Publish Legal notice.
-    $form['actions']['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_alement($form['#node']);
+    $form['actions']['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_element($form['#node']);
   }
 
   $form['field_enrd_lag_themes_interests']['#states'] = array(
@@ -686,6 +725,15 @@ function enrd_lag_database_form_cooperation_offer_node_form_alter(&$form, &$form
   // Another security check.
   $form['og_lag_group_ref'][LANGUAGE_NONE][0]['#required'] = TRUE;
 
+  // Check if node is being created to eventually copy some field values.
+  if (empty($form['nid']['#value'])) {
+    if (!empty($form[ENRD_LAG_DATABASE_LAG_OG_GROUP_REF][LANGUAGE_NONE][0]['target_id']['#default_value'])) {
+      $lag_id = $form[ENRD_LAG_DATABASE_LAG_OG_GROUP_REF][LANGUAGE_NONE][0]['target_id']['#default_value'];
+      // Copy values from Offering LAG 'Spoken languages' to new field.
+      _enrd_lag_database_set_shs_parent_field_values($form, $form_state, $lag_id, 'field_enrd_lag_spoken_languages', 'field_enrd_coop_spoken_languages');
+    }
+  }
+
   // Alter node form for users that not not have specific permissions.
   if (!user_access('skip alter moderation form')) {
     $form['revision_information']['#access'] = FALSE;
@@ -698,11 +746,12 @@ function enrd_lag_database_form_cooperation_offer_node_form_alter(&$form, &$form
       '#collapsed' => FALSE,
       '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
     );
-    // EU Legal notice.
-    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
     $form['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
     // Publish Legal notice.
-    $form['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_alement($form['#node']);
+    $form['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_element($form['#node']);
 
     $form['#group_children']['legal_notice'] = 'group_enrd_coop_contact_info';
   }
@@ -1610,6 +1659,10 @@ function enrd_lag_database_form_webform_client_form_alter(&$form, &$form_state, 
   // Custom behaviors for the "Contact this LAG" webform.
   if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID) {
 
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+
     // Disclaimer msg below "Submit" button of the "Contact this LAG" Webform.
     if ($form['actions']['submit']['#type'] == 'submit') {
       $form['actions']['submit']['#suffix'] = '<div class="webform-contact-this-lag-disclaimer">' .
@@ -1793,24 +1846,6 @@ function enrd_lag_database_ds_pre_render_alter(&$layout_render_array, $context, 
       }
     }
   }
-}
-
-/**
- * Implements hook_ds_fields_info().
- */
-function enrd_lag_database_ds_fields_info($entity_type) {
-
-  $fields = array();
-
-  $fields['node']['enrd_lag_database_ask_for_publishing'] = array(
-    'title' => t('Ask for publishing'),
-    'field_type' => DS_FIELD_TYPE_FUNCTION,
-    'function' => '_enrd_lag_database_ask_for_publishing',
-     // Limit, for now', custom field to full view mode.
-    'ui_limit' => array('lag|full'),
-  );
-
-  return $fields;
 }
 
 /**
@@ -2147,41 +2182,6 @@ function _enrd_lag_database_get_group_nodes(array $types) {
 }
 
 /**
- * Function used to add custom field "Ask for publishing" to LAG entities.
- *
- * @param array $field
- *   The array that represents the field to add to DS field list.
- *
- * @return string
- *   Returns a rendered HTML string.
- */
-function _enrd_lag_database_ask_for_publishing(array $field) {
-
-  $node = $field['entity'];
-
-  // Get info about country, ESI Fund and LAGs of a LAG logged in user.
-  $domain = _enrd_lag_database_get_lag_domain();
-
-  // If user has access as NSU or LAG Contact/Manager to LAG content,
-  // load workbench moderation form for drafts.
-  $is_auth_nsu = ($domain['nsu'] == TRUE && in_array($node->og_group_ref[LANGUAGE_NONE][0]['target_id'], $domain['esi_funds_og']));
-  $lag_access = $is_auth_nsu || in_array($node->nid, $domain['lags']);
-
-  // Load workbench moderation form only for drafts.
-  if ($lag_access && $node->status == 0) {
-
-    if ($node->workbench_moderation['current']->state == 'draft') {
-
-      $node_current = workbench_moderation_node_current_load($node);
-      $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node_current);
-
-      // Render moderation form (button) in field.
-      return drupal_render($moderate_form);
-    }
-  }
-}
-
-/**
  * Helper function to hide nexteuropa_multilingual warning html message.
  *
  * @param array $form
@@ -2359,15 +2359,143 @@ function _enrd_lag_database_check_permission_user($lag_node) {
  * @return array
  *   A Drupal renderable array element.
  */
-function _enrd_lag_database_get_publish_legal_notice_alement($node) {
+function _enrd_lag_database_get_publish_legal_notice_element($node) {
   $type_name = node_type_get_name($node);
   return array(
     '#type' => 'checkbox',
     '#title' => t('I confirm that the data I have added in my @type_name can be published by the Webmaster.', array(
       '@type_name' => $type_name,
     )),
-    '#description' => t('Please double check the submitted information before proceeding. After checking this box and saving your changes you will not be able to create a new or edit this @type_name until the update has been approved/rejected by the Webmaste. If you want to return and edit this @type_name save your update without checking this box', array(
+    '#description' => t('Please double check the submitted information before proceeding. After checking this box and saving your changes you will not be able to create a new or edit this @type_name until the update has been approved/rejected by the Webmaster. If you want to return and edit this @type_name save your update without checking this box', array(
       '@type_name' => $type_name,
     )),
   );
+}
+
+/**
+ * Implements hook_field_attach_load().
+ */
+function enrd_lag_database_field_attach_load($entity_type, $entities, $age, $options) {
+
+  // Filter only by node entities.
+  if ($entity_type == 'node') {
+    foreach ($entities as $entity) {
+
+      // Check if entity is a Cooperation Offer and it has no spoken languages.
+      $empty_coop_languages = $entity->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE &&
+        empty($entity->field_enrd_coop_spoken_languages);
+
+      if ($empty_coop_languages) {
+        // Get the parent group id (Offering LAG).
+        if (!empty($entity->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF})) {
+          $lag_id = $entity->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}[LANGUAGE_NONE][0]['target_id'];
+          $parent_group = entity_load('node', [$lag_id]);
+          $parent_group = reset($parent_group);
+          // Get the parent spoken languages.
+          $items = field_get_items('node', $parent_group, 'field_enrd_lag_spoken_languages', LANGUAGE_NONE);
+          // If Cooperation Offer has no languages, set the parent ones.
+          if (!empty($items)) {
+            $entity->field_enrd_coop_spoken_languages[LANGUAGE_NONE] = $items;
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Helper function to copy values from parent group shs field.
+ *
+ * @param mixed $form
+ *   The original form where alter is occurring.
+ * @param mixed $form_state
+ *   The original form_state values.
+ * @param int $group_id
+ *   The parent group id (Offering LAG id).
+ * @param string $field_from
+ *   The original field from where values are copied from.
+ * @param string $field_to
+ *   The destination field where values are copied into.
+ *
+ * @return mixed
+ *   Return the altered form field or void if destination field is not empty.
+ */
+function _enrd_lag_database_set_shs_parent_field_values(&$form, &$form_state, $group_id, $field_from, $field_to) {
+
+  // Load parent group object (Offering LAG).
+  $parent_group = entity_load('node', [$group_id]);
+  $parent_group = reset($parent_group);
+
+  // If parent group (LAG) has values to copy for specified field, proceed.
+  if (!empty($parent_group->$field_from)) {
+    $field_values = $parent_group->{$field_from}[LANGUAGE_NONE];
+    $field_count = count($field_values);
+
+    // Default field settings.
+    $default_widget = $form[$field_to][LANGUAGE_NONE][0];
+
+    // Alter field default widgets if items count is not already set.
+    if (empty($form_state['field'][$field_to][LANGUAGE_NONE]['items_count'])) {
+      // Manage multiple saved value field for first for load.
+      if ($field_count > 1) {
+        $form_state['field'][$field_to][LANGUAGE_NONE]['items_count'] = $field_count;
+
+        // Remove first default element to build dynamic array of languages.
+        unset($form[$field_to][LANGUAGE_NONE][0]);
+
+        // Initialize the languages position counter.
+        $i = 0;
+
+        // Add settings for multiple fields (default_value, delta, etc...).
+        foreach ($field_values as $field_value) {
+          // Set default language values and delta.
+          $data = [
+            'tid' => [
+              '#default_value' => $field_value['tid'],
+            ],
+            '_weight' => [
+              '#delta' => $field_count,
+              '#default_value' => $i,
+            ],
+          ];
+
+          // Add language selection widgets for default values.
+          $form[$field_to][LANGUAGE_NONE][$i] = array_replace_recursive($default_widget, $data);
+          $i++;
+        }
+
+        // Get a count of languages (the array numeric keys).
+        $count = count(array_filter(array_keys($form[$field_to][LANGUAGE_NONE]), 'is_int'));
+        // Set the delta for the widgets weight element.
+        $delta = $count < 1 ? 1 : $count;
+
+        // Set data for new empty language selection widget.
+        $new_widget = [
+          '_weight' => [
+            '#delta' => $delta,
+            '#default_value' => $count,
+          ],
+        ];
+
+        // Build the new empty widget at the end of the default values list.
+        $form[$field_to][LANGUAGE_NONE][] = array_replace_recursive($default_widget, $new_widget);
+      }
+      // Manage single value field.
+      else {
+        $form_state['field'][$field_to][LANGUAGE_NONE]['items_count'] = $field_count;
+        // Set the initial widget default value, before any form rebuild.
+        $form[$field_to][LANGUAGE_NONE][0]['tid']['#default_value'] = $field_values[0]['tid'];
+        $form[$field_to][LANGUAGE_NONE][0]['_weight']['#delta'] = $field_count;
+        $form[$field_to][LANGUAGE_NONE][0]['_weight']['#default_value'] = 0;
+        // Build the new empty widget at the end of the default values list.
+        $form[$field_to][LANGUAGE_NONE][1] = $default_widget;
+        $form[$field_to][LANGUAGE_NONE][1]['_weight']['#delta'] = $field_count;
+        $form[$field_to][LANGUAGE_NONE][1]['_weight']['#default_value'] = $field_count;
+      }
+    }
+  }
+  else {
+    // Parent Group has no values set for field.
+    return;
+  }
 }

@@ -10,11 +10,11 @@ Feature: ENRD Cooperation offers Feed.
       | name        |
       | BDD Belgium |
     And I am viewing a "lag" content in "published" status:
-      | title                     | BDD LAG Published                                        |
-      | field_enrd_lag_country    | BDD Belgium                                              |
-      | field_enrd_lag_code       | BDD-BE-LAG-PUB                                           |
-      | og_group_ref              | European Agricultural Fund for Rural Development (EAFRD) |
-      | language                  | und                                                      |
+      | title                  | BDD LAG Published                                        |
+      | field_enrd_lag_country | BDD Belgium                                              |
+      | field_enrd_lag_code    | BDD-BE-LAG-PUB                                           |
+      | og_group_ref           | European Agricultural Fund for Rural Development (EAFRD) |
+      | language               | und                                                      |
     And I am viewing a "cooperation_offer" content in "published" status:
       | title                           | BDD RSS Feed Cooperation offer |
       | field_enrd_coop_partner_country | BDD Belgium                    |

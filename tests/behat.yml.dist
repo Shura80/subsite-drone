@@ -11,6 +11,7 @@ default:
         - Drupal\enrd\Context\TaxonomiesContext
         - Drupal\enrd\Context\CommunityContext
         - Drupal\enrd\Context\SolrContext
+        - Drupal\enrd\Context\EntityContext
         - Drupal\enrd\Context\FieldCollectionContext
         - Drupal\enrd\Context\InviteContext
         - Drupal\enrd\Context\MediaContext

@@ -504,3 +504,15 @@ function enrd_lag_database_update_7207() {
     ),
   ));
 }
+
+/**
+ * ENRDPORTAL-522.
+ */
+function enrd_lag_database_update_7208() {
+  // Revert the new permission 'skip lag access control'.
+  features_revert(array(
+    'enrd_lag_database' => array(
+      'user_permission',
+    ),
+  ));
+}

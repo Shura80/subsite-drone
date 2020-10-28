@@ -19,6 +19,14 @@ function enrd_mastermind_menu_default_menu_custom() {
     'language' => 'und',
     'i18n_mode' => 5,
   );
+  // Exported menu: menu-enrd-portals.
+  $menus['menu-enrd-portals'] = array(
+    'menu_name' => 'menu-enrd-portals',
+    'title' => 'Portals',
+    'description' => 'ENRD Portals menu',
+    'language' => 'und',
+    'i18n_mode' => 5,
+  );
   // Exported menu: menu-enrd-tools.
   $menus['menu-enrd-tools'] = array(
     'menu_name' => 'menu-enrd-tools',

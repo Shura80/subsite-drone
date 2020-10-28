@@ -51,45 +51,6 @@ function enrd_projects_field_widget_form_alter(array &$element, array &$form_sta
 }
 
 /**
- * Implements hook_apachesolr_index_document_build_node().
- */
-function enrd_projects_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
-  // Custom indexing of Project content.
-  if ($entity->type == 'project') {
-    if ($countries = $entity->field_tax_country[LANGUAGE_NONE]) {
-      // Add the values to be indexed.
-      foreach ($countries as $country) {
-        $counid = taxonomy_term_load($country['tid']);
-        $country = $counid->name;
-        // Set Countries values to be indexed.
-        $document->addField('sm_enrd_eu_countries', $country);
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_facetapi_facet_info().
- */
-function enrd_projects_facetapi_facet_info($searcher_info) {
-  $facets = array();
-
-  if (isset($searcher_info['types']['node'])) {
-    // Custom European Union countries facet.
-    $facets['sm_enrd_eu_countries'] = array(
-      'label' => t('Countries'),
-      'description' => t('Custom filter that exposes the European Union Countries.'),
-      'field' => 'sm_enrd_eu_countries',
-    );
-
-    // Create custom facets for the Projects DB search page.
-    $facets = array_merge($facets, apachesolr_entity_field_facets('node'));
-  }
-
-  return $facets;
-}
-
-/**
  * Implements hook_form_FORM_ID_alter().
  */
 function enrd_projects_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id) {

@@ -115,6 +115,10 @@ function enrd_nrnp_invite_menu() {
 function enrd_nrnp_invite_form_invite_form_alter(&$form, &$form_state, $form_id) {
   $invite = $form['#entity'];
 
+  $search_description = t('Search for an existing ENRD website user by full name, email or username.');
+  $admin_msg = $search_description . ' ' . t('Note: adding a blocked user implicates its activation.');
+  $standard_msg = $search_description . ' ' . t('Note: blocked users cannot be added. Please contact the webmaster to request activation.');
+
   if (!empty($invite->type_details()->invite_sending_controller['enrd_nrnp_invite'])) {
 
     $form['use_invite'] = array(
@@ -126,10 +130,11 @@ function enrd_nrnp_invite_form_invite_form_alter(&$form, &$form_state, $form_id)
     $form['username'] = array(
       '#type' => 'textfield',
       '#title' => t('User'),
-      '#description' => t('Search for an existing ENRD website user by full name, email or username.'),
+      '#description' => user_access('activate enrd users') ? $admin_msg : $standard_msg,
       '#maxlength' => 60,
-      '#autocomplete_path' => 'enrd/user/autocomplete',
+      '#autocomplete_path' => 'enrd/user/autocomplete/all',
       '#required' => TRUE,
+      '#element_validate' => array('_enrd_nrnp_invite_user_validate'),
       '#weight' => -98,
     );
 
@@ -288,15 +293,17 @@ function enrd_nrnp_invite_form_invite_add_user_submit($form, &$form_state) {
   $user_invitee = user_load_by_name($form_state['values']['username']);
   $nrn_profile_node = node_load($form_state['values']['field_enrd_nrnp_invite_page'][LANGUAGE_NONE][0]['target_id']);
 
-  enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $user_invitee->mail, $user_invitee->realname);
+  $user_added = enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $user_invitee->mail, $user_invitee->realname);
 
-  drupal_set_message(t('User !name is now an editor of %nrn_profile. A notification email was sent to the user.', array(
-    '!name' => theme('username', array(
-      'account' => $user_invitee,
-      'nolink' => TRUE,
-    )),
-    '%nrn_profile' => $nrn_profile_node->title,
-  )));
+  if ($user_added) {
+    drupal_set_message(t('User !name is now an editor of %nrn_profile. A notification email was sent to the user.', array(
+      '!name' => theme('username', array(
+        'account' => $user_invitee,
+        'nolink' => TRUE,
+      )),
+      '%nrn_profile' => $nrn_profile_node->title,
+    )));
+  }
 
   unset($form_state['redirect']);
 }
@@ -321,21 +328,24 @@ function enrd_nrnp_invite_renew_invite(&$invite) {
  * Invite or register a user as editor of the NRN Profile page.
  *
  * @param mixed $nrn_profile_node
- *   The node of the LAG.
+ *   The node of the NRN Profile.
  * @param string $email
  *   Invitee email.
  * @param string $name
  *   Invitee full name.
+ *
+ * @return bool
+ *   Return TRUE if user has been activated.
  */
 function enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $email, $name) {
 
   // Node validity check.
   if (!isset($nrn_profile_node->nid)) {
-    watchdog('enrd_nrnp_invite', 'Invalid NRN Profile invitation to to "%user" (%mail).', array(
+    watchdog('enrd_nrnp_invite', 'Invalid NRN Profile invitation to "%user" (%mail).', array(
       '%mail' => $email,
       '%user' => $name,
     ), WATCHDOG_NOTICE);
-    return;
+    return FALSE;
   }
 
   // Email validity check.
@@ -344,21 +354,31 @@ function enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $email, $name) {
       '%mail' => $email,
       '%user' => $name,
     ), WATCHDOG_NOTICE);
-    return;
+    return FALSE;
   }
 
   if ($user = user_load_by_mail($email)) {
+    // Check if user is blocked & current user can validate.
+    if (user_is_blocked($user->name) !== FALSE && user_access('activate enrd users')) {
+      // Activate user.
+      user_user_operations_unblock([$user->uid]);
+    }
+
+    // Perform actions on active user.
     if (user_is_blocked($user->name) === FALSE) {
       // Assign "NRN Editor" role.
       $role = user_role_load_by_name(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME);
-      user_multiple_role_edit(array($user->uid), 'add_role', $role->rid);
+      user_save($user, ['roles' => $user->roles + [$role->rid => $role->name]]);
 
-      // Add entity reference to edit a NRN Proile page.
+      // Add entity reference to edit a NRN Profile page.
       $user_wrapper = entity_metadata_wrapper('user', $user);
       $user_wrapper->field_enrd_nrnp_access_node->set(array($nrn_profile_node->nid));
       $user_wrapper->save();
 
+      // Send confirmation e-mail.
       enrd_nrnp_invite_send_confirmation($user, $nrn_profile_node);
+
+      return TRUE;
     }
   }
   else {
@@ -390,6 +410,8 @@ function enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $email, $name) {
     }
 
   }
+
+  return FALSE;
 }
 
 /**
@@ -444,7 +466,7 @@ function enrd_nrnp_invite_send_invitation($invite) {
     'subject' => $subject_template,
     'body' => $body_template,
     'confirm_email' => FALSE,
-  );;
+  );
 
   // Send e-mail.
   $result = drupal_mail('enrd_nrnp_invite', 'invite', $entity->field_enrd_nrnp_invite_email->value(), $language, $params);
@@ -559,5 +581,32 @@ function enrd_nrnp_invite_tokens($type, $tokens, array $data = array(), array $o
 function _enrd_nrnp_invite_redirect($nrn_profile_node) {
   if (!isset($GLOBALS['destination'])) {
     $GLOBALS['destination'] = 'node/' . $nrn_profile_node->nid;
+  }
+}
+
+/**
+ * Validate function for the "User" field.
+ *
+ * @param array $element
+ *   Drupal form element array.
+ * @param array $form_state
+ *   Drupal form_state array.
+ */
+function _enrd_nrnp_invite_user_validate(array $element, array &$form_state) {
+  // Check that field is not empty.
+  if (!empty($form_state['values']['username'])) {
+    $user = user_load_by_name($form_state['values']['username']);
+    $user_is_blocked = !empty($user) && user_is_blocked($user->name) !== FALSE;
+
+    // Check if user is blocked & current user can't activate.
+    if ($user_is_blocked && !user_access('activate enrd users')) {
+      form_error($element, t('User !name (@username) is blocked. Please contact the webmaster to request activation.', [
+        '!name' => theme('username', array(
+          'account' => $user,
+          'nolink' => TRUE,
+        )),
+        '@username' => $user->name,
+      ]));
+    }
   }
 }

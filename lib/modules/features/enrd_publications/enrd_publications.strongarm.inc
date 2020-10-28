@@ -133,6 +133,19 @@ function enrd_publications_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'ds_extras_view_modes_publication_ehd';
+  $strongarm->value = array(
+    0 => 'default',
+    1 => 'full',
+    2 => 'teaser',
+    3 => 'search_index',
+    4 => 'search_result',
+  );
+  $export['ds_extras_view_modes_publication_ehd'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'entity_translation_settings_node__publication';
   $strongarm->value = array(
     'default_language' => 'xx-et-default',
@@ -155,6 +168,19 @@ function enrd_publications_strongarm() {
     'shared_fields_original_only' => 1,
   );
   $export['entity_translation_settings_node__publication_ehd'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_settings_taxonomy_term__enrd_publications';
+  $strongarm->value = array(
+    'default_language' => 'xx-et-default',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 1,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 1,
+  );
+  $export['entity_translation_settings_taxonomy_term__enrd_publications'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -229,7 +255,6 @@ function enrd_publications_strongarm() {
           'weight' => '3',
         ),
       ),
-      'display' => array(),
     ),
   );
   $export['field_bundle_settings_node__publication'] = $strongarm;
@@ -292,7 +317,7 @@ function enrd_publications_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '3',
+          'weight' => '4',
         ),
         'xmlsitemap' => array(
           'weight' => '8',

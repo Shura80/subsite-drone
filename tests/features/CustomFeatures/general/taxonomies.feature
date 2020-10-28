@@ -54,7 +54,7 @@ Feature: ENRD Tagging system
     And I select "BDD Language" from hierarchical select "Language"
     And I select "BDD Topic" from hierarchical select "Transversal topics"
     And I select "BDD RD Policy" from hierarchical select "Rural Development Policy"
-    And I select "BDD Evaluation" from hierarchical select "Evaluation"
+    And I set the chosen element "Evaluation" to "BDD Evaluation"
 
     And I press "Save"
     Then I should see the success message "Basic page BDD Classified basic page has been created."
@@ -81,4 +81,4 @@ Feature: ENRD Tagging system
     And the option "BDD Language" from hierarchical select "Language" is selected
     And the option "BDD Topic" from hierarchical select "Transversal topics" is selected
     And the option "BDD RD Policy" from hierarchical select "Rural Development Policy" is selected
-    And the option "BDD Evaluation" from hierarchical select "Evaluation" is selected
+    And the option "BDD Evaluation" from select "Evaluation" is selected

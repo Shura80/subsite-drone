@@ -2,7 +2,7 @@
 .field-name-field-enrd-publication-file.field-type-file {
     .field-item {
         display: inline-table;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
         margin-right: 5px;
     }
 }
@@ -23,16 +23,22 @@
 }
 
 // Evaluation Publication Full display.
-.field-name-field-enrd-publ-ehd-file div.field-item {
-    display: inline-table;
+.node-publication-ehd.view-mode-full {
+    .field-name-field-enrd-publ-ehd-history .collapse-text-fieldset legend a.fieldset-title {
+        font-size: 15px;
+    }
+
+    .field-name-field-enrd-publ-ehd-public-date {
+        margin-top: 10px;
+    }
 }
 
-.field-name-field-enrd-publ-ehd-history .collapse-text-fieldset legend a.fieldset-title {
-    font-size: 15px;
-}
-
-.field-name-field-enrd-publ-ehd-public-date {
-    margin-top: 10px;
+// EHD Publications Solr search page.
+.page-evaluation-publications .view-mode-search_result .field-name-field-enrd-publ-ehd-file-upload.field-type-file {
+    .field-item {
+        display: inline-table;
+        margin-right: 5px;
+    }
 }
 
 // CP & EHD Publications Solr search pages.

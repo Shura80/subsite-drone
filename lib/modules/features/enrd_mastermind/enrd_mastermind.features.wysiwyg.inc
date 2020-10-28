@@ -215,10 +215,10 @@ function enrd_mastermind_wysiwyg_default_profiles() {
       'pasteFromWordRemoveFontStyles' => 0,
     ),
     'preferences' => array(
+      'add_to_summaries' => FALSE,
       'default' => 1,
-      'user_choose' => 0,
       'show_toggle' => 0,
-      'add_to_summaries' => 0,
+      'user_choose' => 0,
       'version' => '4.9.2.95e5d83',
     ),
     'name' => 'formatfiltered_html',

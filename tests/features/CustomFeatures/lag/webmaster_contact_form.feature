@@ -17,11 +17,11 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
       | og_group_ref           | European Agricultural Fund for Rural Development (EAFRD) |
       | language               | und                                                      |
 
-  @dashboards @emails @lag-managers @lag-contacts
+  @dashboards @emails @lag-managers @lag-contacts @contact-form @privacy
   Scenario Outline: as LAG manager and LAG contact I should be able to access the contact form of my LAG
-    from my dashboard and send a message to the LAG Webmaster.
+  from my dashboard and send a message to the LAG Webmaster.
     Given I am logged in as a user with the "LAG User" role and I have the following fields:
-      | mail               | <mail>         |
+      | mail | <mail> |
     And I have the "<role>" role in the "<group>" group
     When I am at "/my-lags"
     And I click "manage" in the "BDD LAG Austria" row
@@ -29,17 +29,19 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
     And I fill in "Subject" with "<message> - This is the subject of my message"
     And I fill in "Message" with "<message> - This is my message."
     And the test email system is enabled
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And I press the "Submit" button
     Then I should get a "200" HTTP response
     And the email to "<mail>" should contain "<message> - This is the subject of my message"
     And the email to "<mail>" should contain "<message> - This is my message."
 
     Examples:
-      | role           | mail                            | group           | message         |
-      | LAG Manager    | bdd-at-user-manager@example.com | BDD LAG Austria | BDD LAG Manager |
-      | LAG Contact    | bdd-at-user-contact@example.com | BDD LAG Austria | BDD LAG Contact |
+      | role        | mail                            | group           | message         |
+      | LAG Manager | bdd-at-user-manager@example.com | BDD LAG Austria | BDD LAG Manager |
+      | LAG Contact | bdd-at-user-contact@example.com | BDD LAG Austria | BDD LAG Contact |
 
-  @dashboards @emails @nsu
+  @dashboards @emails @nsu @contact-form @privacy
   Scenario: as National manager I should be able to access the contact form of my LAG
   from my dashboard and send a message to the LAG Webmaster.
     Given I am logged in as a user with the "LAG User" role and I have the following fields:
@@ -50,6 +52,8 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
     And I click "Contact the Webmaster"
     And I fill in "Subject" with "BDD NSU - This is the subject of my message"
     And I fill in "Message" with "BDD NSU - This is my message."
+    And I check the box "eu_legal_notice"
+    And I check the box "privacy_policy"
     And the test email system is enabled
     And I press the "Submit" button
     Then I should get a "200" HTTP response
@@ -58,15 +62,15 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
 
   @dashboards @webmasters
   Scenario: as Webmaster I should not be able to access the contact form from my Dashboard.
-    Given I am logged in as a user with the "administrator, LAG User" roles
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     When I go to "lag-dashboard/contact-webmaster"
     Then I should not see the link "Contact the Webmaster"
     And I should get a "403" HTTP response
 
   @dashboards @lags @lag-managers @lag-contacts
   Scenario Outline: as LAG manager and LAG contact I should be able to access the contact form of my LAG while
-    viewing its page.
-    I should also not be able to see the list of contact form submissions.
+  viewing its page.
+  I should also not be able to see the list of contact form submissions.
     Given I am logged in as a "LAG User"
     And I have the "<role>" role in the "<group>" group
     When I go to "/lag/bdd-austria-001"
@@ -75,14 +79,14 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
     Then I should not see the link "Results"
 
     Examples:
-      | role         | group            |
-      | LAG Manager  | BDD LAG Austria  |
-      | LAG Contact  | BDD LAG Austria  |
+      | role        | group           |
+      | LAG Manager | BDD LAG Austria |
+      | LAG Contact | BDD LAG Austria |
 
   @dashboards @lags @webmasters
   Scenario: as Webmaster I should not be able to access the contact form while viewing a LAG.
-    I should also be able to see the list of submissions issued via the contact form.
-    Given I am logged in as a user with the "administrator, LAG User" roles
+  I should also be able to see the list of submissions issued via the contact form.
+    Given I am logged in as a user with the "webmaster, LAG User" roles
     When I go to "/lag/bdd-austria-001"
     Then I should not see the link "Contact the Webmaster"
 

@@ -1715,7 +1715,7 @@ function enrd_country_pages_field_default_field_instances() {
   // Exported field_instance: 'node-rdp_information-field_tax_evaluation'.
   $field_instances['node-rdp_information-field_tax_evaluation'] = array(
     'bundle' => 'rdp_information',
-    'default_value' => NULL,
+    'default_value' => array(),
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -1754,8 +1754,9 @@ function enrd_country_pages_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'shs',
+      'module' => 'options',
       'settings' => array(
+        'apply_chosen' => '',
         'shs' => array(
           'create_new_levels' => 0,
           'create_new_terms' => 0,
@@ -1763,7 +1764,7 @@ function enrd_country_pages_field_default_field_instances() {
           'node_count' => 0,
         ),
       ),
-      'type' => 'taxonomy_shs',
+      'type' => 'options_select',
       'weight' => 9,
     ),
   );

@@ -602,3 +602,200 @@ function _enrd_multilingual_delete_fields_rows($entity_type, $language) {
   return $deleted;
 
 }
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Alter the taxonomy term form so that, if the parent vocabulary is Entity
+ * Translation enabled and there is a common LANGUAGE_NONE alias for the term,
+ * it will be loaded and used as common alias when the term is translated.
+ *
+ * The system is based on the existing entity_translation node path alias sync.
+ *
+ * @see _nexteuropa_multilingual_get_und_entity_alias_info()
+ */
+function enrd_multilingual_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['path'])) {
+    $term = $form_state['term'];
+    // Check that taxonomy term form is in edit mode.
+    if (!empty($term->vid)) {
+      // Get the vocabulary translation mode settings.
+      $vocabulary = taxonomy_vocabulary_load_multiple([$term->vid]);
+      $translation_mechanism = reset($vocabulary)->i18n_mode;
+      // First we need which translation mechanism is used because
+      // the logic to implement is only for entity translation.
+      if ($translation_mechanism == I18N_MODE_ENTITY_TRANSLATION) {
+        if ($term->tid) {
+          $und_alias_info = _nexteuropa_multilingual_get_und_entity_alias_info('taxonomy_term', $term);
+          if ($und_alias_info) {
+            $form['path']['alias']['#default_value'] = $und_alias_info['alias'];
+            if (isset($form['path']['pathauto'])) {
+              $form['path']['pathauto']['#default_value'] = $und_alias_info['pathauto'];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_path_insert().
+ *
+ * Synchronize common term URL ulias when a new term is added.
+ */
+function enrd_multilingual_path_insert($path) {
+  _enrd_multilingual_path_und_sync($path);
+}
+
+/**
+ * Implements hook_path_update().
+ *
+ * Synchronize common term URL ulias when a new term is edited or translated.
+ */
+function enrd_multilingual_path_update($path) {
+  _enrd_multilingual_path_und_sync($path);
+}
+
+/**
+ * Force the path to have a language neutral alias.
+ *
+ * If entity is a taxonomy term using entity translation,
+ * force the path to have a language neutral alias even if it is custom.
+ *
+ * @param array $path
+ *   An associative array containing the following keys:
+ *     - source: The internal system path.
+ *     - alias: The URL alias.
+ *     - pid: Unique path alias identifier.
+ *     - language: The language of the alias.
+ *
+ * @see _nexteuropa_multilingual_path_und_sync()
+ */
+function _enrd_multilingual_path_und_sync($path) {
+  // We must pass through a basic path parsing and a db_select because:
+  // - The menu_get_object function makes a access control and a redirection to
+  // the home page if users do not have access permission.
+  // (see https://webgate.ec.europa.eu/CITnet/jira/browse/NEPT-416)
+  // - Logic is only applied to vocabularies that have "entity translation" as
+  // translation mechanism.
+  $parsed_source = explode('/', $path['source']);
+  if (($parsed_source[0] != 'taxonomy')
+    || !isset($parsed_source[1])
+    || !is_numeric($parsed_source[2])) {
+    return;
+  }
+  $term_id = $parsed_source[2];
+
+  // Check if vocabulary translation mode is set in i18n_mode.
+  $translation_mechanism = _enrd_multilingual_get_vocabulary_translation_mode($term_id);
+
+  // Abort if vocabulary is not set to be translatable with Entity Translation.
+  if (!isset($translation_mechanism) || $translation_mechanism != I18N_MODE_ENTITY_TRANSLATION) {
+    return;
+  }
+
+  // If the path language is already neutral, Then no need to process it
+  // further.
+  if ($path['language'] == LANGUAGE_NONE) {
+    return;
+  }
+
+  module_load_include('inc', 'pathauto');
+  // Configuration path creation.
+  $update_action = variable_get('pathauto_update_action', PATHAUTO_UPDATE_ACTION_DELETE);
+  switch ($update_action) {
+    // Pathauto Update action: Do nothing. Leave the old alias intact.
+    case 0:
+      // Get potential old alias to see if we must delete the newly created
+      // alias.
+      $check_query = db_select('url_alias', 'u')
+        ->fields('u', array('pid'))
+        ->condition('pid', $path['pid'], '<>')
+        ->condition('source', $path['source'], '=');
+      $alias_count = $check_query->countQuery()->execute()->fetchField();
+
+      if ($alias_count >= 1) {
+        db_delete('url_alias')
+          ->condition('pid', $path['pid'], '=')
+          ->execute();
+        // No need to continue the process as the newly created alias has
+        // been deleted.
+        return;
+      }
+
+      // First alias saving, change alias to neutral language.
+      $path['language'] = LANGUAGE_NONE;
+      drupal_write_record('url_alias', $path, array('pid'));
+      break;
+
+    // Pathauto Update action: Create a new alias. Leave the existing alias
+    // functioning.
+    case 1:
+      // Change alias to neutral language.
+      $path['language'] = LANGUAGE_NONE;
+      drupal_write_record('url_alias', $path, array('pid'));
+      // Get duplicates of the new alias to delete them; only keep the
+      // latest alias.
+      $pids = db_select('url_alias', 'u')
+        ->fields('u', array('pid'))
+        ->condition('pid', $path['pid'], '<>')
+        ->condition('source', $path['source'], '=')
+        ->condition('alias', $path['alias'], '=')
+        ->condition('language', LANGUAGE_NONE, '=')
+        ->execute()
+        ->fetchCol();
+
+      if (!empty($pids)) {
+        db_delete('url_alias')
+          ->condition('pid', $pids, 'IN')
+          ->execute();
+      }
+      break;
+
+    // Pathauto Update action: Create a new alias. Delete the old alias.
+    case 2:
+      // Change alias to neutral language.
+      $path['language'] = LANGUAGE_NONE;
+
+      // Maintain original alias if already exists.
+      if (isset($path['original'])) {
+        $path['alias'] = $path['original']['alias'];
+      }
+
+      drupal_write_record('url_alias', $path, ['pid']);
+      // Get all aliases and keep only last alias.
+      $pids = db_select('url_alias', 'u')
+        ->fields('u', ['pid'])
+        ->condition('source', $path['source'], '=')
+        ->condition('pid', $path['pid'], '<>')
+        ->execute()
+        ->fetchCol();
+
+      if (!empty($pids)) {
+        db_delete('url_alias')
+          ->condition('pid', $pids, 'IN')
+          ->execute();
+      }
+      break;
+  }
+}
+
+/**
+ * Helper function to get a taxonomy term's vocabulary 'i18n_mode' from term id.
+ *
+ * @param int $term_id
+ *   The taxonomy term id.
+ *
+ * @return int
+ *   Returns a number that is the current translation mode set for vocabulary.
+ */
+function _enrd_multilingual_get_vocabulary_translation_mode($term_id) {
+  // Get the term object from the id in taxonomy term edit form.
+  $term = entity_load('taxonomy_term', [$term_id]);
+  // Load the parent vocabulary.
+  $vocab = entity_load('taxonomy_vocabulary', [reset($term)->vid]);
+
+  // Return the 'i18n_mode' property set in the vocabulary object.
+  return reset($vocab)->i18n_mode;
+}

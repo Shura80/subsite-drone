@@ -42,29 +42,31 @@ function enrd_taxonomies_field_instances_form() {
 
     $field_group = field_group_info_groups('node', $node_type, 'form');
 
-    foreach ($field_base as $group_name => $group) {
-      foreach ($group as $field_name => $field_label) {
+    foreach ($field_base as $group_name => $widgets) {
+      foreach ($widgets as $fields) {
+        foreach ($fields as $field_name => $field_label) {
 
-        $present = isset($instances[$node_type][$field_name]);
-        $grouped = (isset($field_group[$group_name]) && in_array($field_name, $field_group[$group_name]->children));
+          $present = isset($instances[$node_type][$field_name]);
+          $grouped = (isset($field_group[$group_name]) && in_array($field_name, $field_group[$group_name]->children));
 
-        $options[$node_type][$group_name]['data'][$field_name] = array(
-          '#type' => 'container',
-          'icon' => array(
+          $options[$node_type][$group_name]['data'][$field_name] = [
             '#type' => 'container',
-            '#attributes' => array(
-              'class' => array('ui-icon ' . ($present ? ($grouped ? 'ui-icon-locked' : 'ui-icon-check') : 'ui-icon-minus')),
-              'style' => 'display: inline-block;',
-            ),
-          ),
-          'field-info' => array(
-            '#markup' => ($present) ?
-            l($instances[$node_type][$field_name]['label'],
-              "admin/structure/types/manage/$node_type/fields/$field_name",
-              array('attributes' => array('title' => check_plain($field_label))))
-            : check_plain($field_label),
-          ),
-        );
+            'icon' => [
+              '#type' => 'container',
+              '#attributes' => [
+                'class' => ['ui-icon ' . ($present ? ($grouped ? 'ui-icon-locked' : 'ui-icon-check') : 'ui-icon-minus')],
+                'style' => 'display: inline-block;',
+              ],
+            ],
+            'field-info' => [
+              '#markup' => ($present) ?
+              l($instances[$node_type][$field_name]['label'],
+                "admin/structure/types/manage/$node_type/fields/$field_name",
+                ['attributes' => ['title' => check_plain($field_label)]])
+              : check_plain($field_label),
+            ],
+          ];
+        }
       }
     }
   }

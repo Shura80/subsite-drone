@@ -176,6 +176,7 @@ function enrd_lag_database_field_group_info() {
     'weight' => '3',
     'children' => array(
       0 => 'field_enrd_coop_lag_email',
+      1 => 'field_enrd_coop_spoken_languages',
     ),
     'format_type' => 'multipage',
     'format_settings' => array(
@@ -267,7 +268,7 @@ function enrd_lag_database_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Looking to cooperate with',
-    'weight' => '3',
+    'weight' => '4',
     'children' => array(
       0 => 'field_enrd_coop_assets_area',
       1 => 'field_enrd_coop_partner_country',
@@ -373,7 +374,7 @@ function enrd_lag_database_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Project idea',
-    'weight' => '4',
+    'weight' => '5',
     'children' => array(
       0 => 'field_enrd_coop_addit_keywords',
       1 => 'field_enrd_coop_brief_summary',
@@ -732,7 +733,7 @@ function enrd_lag_database_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Technical taxonomy',
-    'weight' => '2',
+    'weight' => '3',
     'children' => array(
       0 => 'field_tax_origin',
       1 => 'field_tax_translation_status',

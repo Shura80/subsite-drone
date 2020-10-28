@@ -16,6 +16,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_countries',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -25,6 +26,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_evaluation',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -34,6 +36,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_languages',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -43,6 +46,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_origin',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -52,6 +56,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_rural_development_policy',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -61,6 +66,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_translation_status',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -70,6 +76,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_transversal_topics',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -79,6 +86,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'delete terms in enrd_update_status',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -88,6 +96,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_countries',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -97,6 +106,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_evaluation',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -106,6 +116,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_languages',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -115,6 +126,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_origin',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -124,6 +136,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_rural_development_policy',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -133,6 +146,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_translation_status',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -142,6 +156,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_transversal_topics',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -151,6 +166,7 @@ function enrd_taxonomies_user_default_permissions() {
     'name' => 'edit terms in enrd_update_status',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -162,6 +178,7 @@ function enrd_taxonomies_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'enrd_taxonomies',
   );

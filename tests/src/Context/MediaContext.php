@@ -113,14 +113,53 @@ class MediaContext extends RawDrupalContext {
   }
 
   /**
+   * Creates file entity of type document.
+   *
+   * @Given /^a document "([^"]*)"$/
+   */
+  public function iUploadaDocument($filename) {
+
+    $path = $this->getMinkParameter('files_path');
+
+    if (strpos($filename, '.pdf')) {
+      $docs = file_scan_directory($path, '/\.pdf/');
+      if ($docs) {
+        $docs = reset($docs);
+        $test_doc_path = $this->getMinkParameter('files_path') . '/' . $docs->filename;
+        $fileContents = file_get_contents($test_doc_path);
+        // Saves a file to the specified destination and creates a db entry.
+        $file = file_save_data(
+          $fileContents,
+          "public://{$filename}",
+          FILE_EXISTS_REPLACE
+        );
+
+        // Applies Description to the video.
+        if (!empty($file)) {
+          file_save($file);
+          $this->setFiles($file);
+        }
+      }
+      else {
+        throw new Exception(sprintf('There are no .pdf documents in the resources dir: "%s".', $path));
+      }
+    }
+  }
+
+  /**
    * Clean files created during tests once the scenario is finished.
    *
    * @AfterScenario
    */
   public function cleanupFilesTable() {
     if (!empty($this->files)) {
-      // Clean files table from file created during test.
-      entity_delete_multiple('file', array_keys($this->files));
+      foreach ($this->files as $file) {
+        // Ensure that stored fid is still a valid reference to a file object.
+        if ($file = file_load($file->fid)) {
+          // Clean files table from file created during test.
+          entity_delete('file', $file->fid);
+        }
+      }
     }
   }
 

@@ -2,10 +2,12 @@
 
 namespace Drupal\enrd_sfr\Entity;
 
+use Entity;
+
 /**
  * Class EnrdSfr.
  */
-class EnrdSfr extends \Entity {
+class EnrdSfr extends Entity {
 
   protected $isAlmostFinalized = FALSE;
 
@@ -34,8 +36,9 @@ class EnrdSfr extends \Entity {
       $this->finalized = REQUEST_TIME;
       // Change "status" property to 1.
       $this->status = ENRD_SFR_STATUS_FINALIZED;
-      // Show general confirmation message.
-      drupal_set_message(t('Your submission request has been forwarded correctly.'), 'modal');
+
+      // Allow modules to apply customisations.
+      module_invoke_all('enrd_sfr_finalize', $this);
 
       // If requested save ENRD Sfr Entity.
       if ($save_entity) {
@@ -70,7 +73,29 @@ class EnrdSfr extends \Entity {
    * @inheritdoc
    */
   protected function defaultLabel() {
-    return t('Subscription #@number', array('@number' => $this->identifier()));
+    return t('@label: subscription #@number', array('@label' => $this->bundleLabel(), '@number' => $this->identifier()));
+  }
+
+  /**
+   * Override default URI.
+   *
+   * @inheritdoc
+   */
+  protected function defaultUri() {
+    return array(
+      'path' => str_replace(
+        '_',
+        '-',
+        $this->entityType() . '/' . $this->bundle() . '/' . $this->identifier()),
+    );
+  }
+
+  /**
+   * Get entity bundle label.
+   */
+  protected function bundleLabel() {
+    $t = get_t();
+    return $t($this->entityInfo()['bundles'][$this->bundle()]['label']);
   }
 
 }

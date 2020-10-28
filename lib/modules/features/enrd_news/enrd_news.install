@@ -130,3 +130,15 @@ function enrd_news_update_7204() {
 function enrd_news_update_7205() {
   features_revert(array('enrd_news' => array('views_view')));
 }
+
+/**
+ * ENRDPORTAL-512.
+ */
+function enrd_news_update_7206() {
+  features_revert([
+    'enrd_news' => [
+      'field_base',
+      'field_instance',
+    ],
+  ]);
+}

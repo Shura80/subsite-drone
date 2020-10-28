@@ -817,6 +817,10 @@ function enrd_nrn_toolkit_form_webform_client_form_alter(&$form, &$form_state, $
   // Custom behaviors for the "Contact us" webform.
   if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_NRN_TOOLKIT_CONTACT_US_UUID) {
 
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+
     // Disclaimer msg below "Submit" button of the "Contact us" Webform.
     if ($form['actions']['submit']['#type'] == 'submit') {
       $form['actions']['submit']['#suffix'] = '<div class="webform-nrn-toolkit-contact-us-disclaimer">' .
@@ -892,7 +896,7 @@ function enrd_nrn_toolkit_menu_link_alter(&$item) {
             ->condition('link_path', $path)
             ->execute()
             ->fetchField();
-        };
+        }
       }
     }
   }

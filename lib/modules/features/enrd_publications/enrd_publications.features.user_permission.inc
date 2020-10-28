@@ -18,6 +18,7 @@ function enrd_publications_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -28,6 +29,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'evaluation helpdesk' => 'evaluation helpdesk',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -37,6 +39,7 @@ function enrd_publications_user_default_permissions() {
     'name' => 'delete any publication content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -47,6 +50,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'evaluation helpdesk' => 'evaluation helpdesk',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -56,6 +60,7 @@ function enrd_publications_user_default_permissions() {
     'name' => 'delete own publication content',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -66,6 +71,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'evaluation helpdesk' => 'evaluation helpdesk',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -111,6 +117,7 @@ function enrd_publications_user_default_permissions() {
     'name' => 'delete terms in enrd_publications',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -121,6 +128,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -131,6 +139,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'evaluation helpdesk' => 'evaluation helpdesk',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -142,6 +151,7 @@ function enrd_publications_user_default_permissions() {
       'administrator' => 'administrator',
       'contributor' => 'contributor',
       'editor' => 'editor',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -152,6 +162,7 @@ function enrd_publications_user_default_permissions() {
     'roles' => array(
       'administrator' => 'administrator',
       'evaluation helpdesk' => 'evaluation helpdesk',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'node',
   );
@@ -197,6 +208,7 @@ function enrd_publications_user_default_permissions() {
     'name' => 'edit terms in enrd_publications',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'taxonomy',
   );
@@ -206,6 +218,7 @@ function enrd_publications_user_default_permissions() {
     'name' => 'merge enrd_publications terms',
     'roles' => array(
       'administrator' => 'administrator',
+      'webmaster' => 'webmaster',
     ),
     'module' => 'term_merge',
   );

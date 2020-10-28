@@ -491,6 +491,35 @@ function enrd_mastermind_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'easy_breadcrumb-excluded_paths';
+  $strongarm->value = array(
+    'search' => 'search',
+    'search/node' => 'search/node',
+    'lag/[a-z]{2}-[\\d]{3}/offer' => 'lag/[a-z]{2}-[\\d]{3}/offer',
+    'my-lags/[\\d]{1,}/manage' => 'my-lags/[\\d]{1,}/manage',
+    'community+/[a-z-]+/forum' => 'community+/[a-z-]+/forum',
+  );
+  $export['easy_breadcrumb-excluded_paths'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'easy_breadcrumb-fixed_title';
+  $strongarm->value = array(
+    0 => 'publications/search',
+  );
+  $export['easy_breadcrumb-fixed_title'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'easy_breadcrumb-include_title_segment';
+  $strongarm->value = 1;
+  $export['easy_breadcrumb-include_title_segment'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'feed_item_length';
   $strongarm->value = 'teaser';
   $export['feed_item_length'] = $strongarm;
@@ -1006,6 +1035,8 @@ function enrd_mastermind_strongarm() {
   $strongarm->name = 'menu_options_page';
   $strongarm->value = array(
     0 => 'main-menu',
+    1 => 'menu-enrd-tools',
+    2 => 'menu-enrd-portals',
   );
   $export['menu_options_page'] = $strongarm;
 
@@ -1048,7 +1079,7 @@ function enrd_mastermind_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'nexteuropa_webtools_smartloader_prurl';
-  $strongarm->value = '//europa.eu/webtools/load.js';
+  $strongarm->value = '//europa.eu/webtools/load.js?globan=1110';
   $export['nexteuropa_webtools_smartloader_prurl'] = $strongarm;
 
   $strongarm = new stdClass();
@@ -1318,7 +1349,7 @@ function enrd_mastermind_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'user_register';
-  $strongarm->value = '0';
+  $strongarm->value = 0;
   $export['user_register'] = $strongarm;
 
   $strongarm = new stdClass();

@@ -149,7 +149,7 @@ function enrd_nrn_profiles_views_default_views() {
       'selected' => 1,
       'postpone_processing' => 0,
       'skip_confirmation' => 0,
-      'skip_permission_check' => 0,
+      'skip_permission_check' => 1,
       'override_label' => 0,
       'label' => '',
     ),
@@ -269,17 +269,18 @@ function enrd_nrn_profiles_views_default_views() {
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'full';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '20';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
     'views_bulk_operations' => 'views_bulk_operations',
     'title' => 'title',
     'state' => 'state',
     'name' => 'name',
+    'log' => 'log',
     'stamp' => 'stamp',
   );
-  $handler->display->display_options['style_options']['default'] = 'state';
+  $handler->display->display_options['style_options']['default'] = 'stamp';
   $handler->display->display_options['style_options']['info'] = array(
     'views_bulk_operations' => array(
       'align' => '',
@@ -301,15 +302,20 @@ function enrd_nrn_profiles_views_default_views() {
       'empty_column' => 0,
     ),
     'name' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'log' => array(
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'stamp' => array(
       'sortable' => 1,
-      'default_sort_order' => 'asc',
+      'default_sort_order' => 'desc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
@@ -331,6 +337,17 @@ function enrd_nrn_profiles_views_default_views() {
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['force_single'] = 0;
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['entity_load_capacity'] = '10';
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_operations'] = array(
+    'action::nexteuropa_data_export_export_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Export',
+      'settings' => array(
+        'view_display' => 'enrd_nrn_profile_moderation:nrn_profiles_moderate_export',
+      ),
+    ),
     'action::enrd_mastermind_wb_publish_action' => array(
       'selected' => 1,
       'postpone_processing' => 0,
@@ -359,12 +376,17 @@ function enrd_nrn_profiles_views_default_views() {
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['relationship'] = 'uid';
   $handler->display->display_options['fields']['name']['label'] = 'Revised by';
+  /* Field: Content revision: Log message */
+  $handler->display->display_options['fields']['log']['id'] = 'log';
+  $handler->display->display_options['fields']['log']['table'] = 'node_revision';
+  $handler->display->display_options['fields']['log']['field'] = 'log';
+  $handler->display->display_options['fields']['log']['label'] = 'Moderation notes';
   /* Field: Workbench Moderation: Timestamp */
   $handler->display->display_options['fields']['stamp']['id'] = 'stamp';
   $handler->display->display_options['fields']['stamp']['table'] = 'workbench_moderation_node_history';
   $handler->display->display_options['fields']['stamp']['field'] = 'stamp';
   $handler->display->display_options['fields']['stamp']['label'] = 'Last revision';
-  $handler->display->display_options['fields']['stamp']['date_format'] = 'time ago';
+  $handler->display->display_options['fields']['stamp']['date_format'] = 'short';
   $handler->display->display_options['fields']['stamp']['second_date_format'] = 'enrd_lag_database_d_m_y';
   /* Filter criterion: Content: Type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
@@ -412,6 +434,14 @@ function enrd_nrn_profiles_views_default_views() {
 
   /* Display: Moderation page NRN Profile */
   $handler = $view->new_display('page', 'Moderation page NRN Profile', 'page');
+  $handler->display->display_options['defaults']['empty'] = FALSE;
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'No NRN profiles available to moderate.';
+  $handler->display->display_options['empty']['area']['format'] = 'full_html';
   $handler->display->display_options['path'] = 'admin/enrd/nrn-profiles/moderate';
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Moderate NRN Profiles';
@@ -420,6 +450,61 @@ function enrd_nrn_profiles_views_default_views() {
   $handler->display->display_options['menu']['name'] = 'management';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
+
+  /* Display: Data export: moderation page NRN Profiles */
+  $handler = $view->new_display('views_data_export', 'Data export: moderation page NRN Profiles', 'nrn_profiles_moderate_export');
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'views_data_export_xlsx';
+  $handler->display->display_options['style_options']['provide_file'] = 1;
+  $handler->display->display_options['style_options']['filename'] = 'nrn-profiles_%timestamp-full.xlsx';
+  $handler->display->display_options['style_options']['parent_sort'] = 0;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title_field']['id'] = 'title_field';
+  $handler->display->display_options['fields']['title_field']['table'] = 'field_data_title_field';
+  $handler->display->display_options['fields']['title_field']['field'] = 'title_field';
+  $handler->display->display_options['fields']['title_field']['type'] = 'text_plain';
+  $handler->display->display_options['fields']['title_field']['link_to_entity'] = 0;
+  /* Field: Workbench Moderation: State */
+  $handler->display->display_options['fields']['state']['id'] = 'state';
+  $handler->display->display_options['fields']['state']['table'] = 'workbench_moderation_node_history';
+  $handler->display->display_options['fields']['state']['field'] = 'state';
+  $handler->display->display_options['fields']['state']['label'] = 'Moderation state';
+  $handler->display->display_options['fields']['state']['machine_name'] = 0;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid';
+  $handler->display->display_options['fields']['name']['label'] = 'Revised by';
+  $handler->display->display_options['fields']['name']['alter']['strip_tags'] = TRUE;
+  $handler->display->display_options['fields']['name']['link_to_user'] = FALSE;
+  /* Field: Content revision: Log message */
+  $handler->display->display_options['fields']['log']['id'] = 'log';
+  $handler->display->display_options['fields']['log']['table'] = 'node_revision';
+  $handler->display->display_options['fields']['log']['field'] = 'log';
+  $handler->display->display_options['fields']['log']['label'] = 'Moderation notes';
+  $handler->display->display_options['fields']['log']['alter']['strip_tags'] = TRUE;
+  /* Field: Workbench Moderation: Timestamp */
+  $handler->display->display_options['fields']['stamp']['id'] = 'stamp';
+  $handler->display->display_options['fields']['stamp']['table'] = 'workbench_moderation_node_history';
+  $handler->display->display_options['fields']['stamp']['field'] = 'stamp';
+  $handler->display->display_options['fields']['stamp']['label'] = 'Last revision';
+  $handler->display->display_options['fields']['stamp']['date_format'] = 'short';
+  $handler->display->display_options['fields']['stamp']['second_date_format'] = 'enrd_lag_database_d_m_y';
+  $handler->display->display_options['defaults']['sorts'] = FALSE;
+  /* Sort criterion: Workbench Moderation: Timestamp */
+  $handler->display->display_options['sorts']['stamp']['id'] = 'stamp';
+  $handler->display->display_options['sorts']['stamp']['table'] = 'workbench_moderation_node_history';
+  $handler->display->display_options['sorts']['stamp']['field'] = 'stamp';
+  $handler->display->display_options['sorts']['stamp']['order'] = 'DESC';
+  $handler->display->display_options['path'] = 'admin/enrd/nrn-profiles/moderate/nrn-profiles.xlsx';
+  $handler->display->display_options['displays'] = array(
+    'default' => 0,
+    'page' => 0,
+  );
+  $handler->display->display_options['segment_size'] = '500';
   $export['enrd_nrn_profile_moderation'] = $view;
 
   return $export;

@@ -175,8 +175,8 @@ function enrd_nrn_profiles_form_nrn_profile_node_form_alter(&$form, &$form_state
       '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
     );
 
-    // Add EU Legal notice checkbox to the form.
-    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
     $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
 
     // Publish Legal notice.
@@ -283,7 +283,8 @@ function enrd_nrn_profiles_form_workbench_moderation_moderate_form_alter(&$form,
             ),
           ),
         );
-        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.lagal_notice_element');
+        // EU Legal notice & Privacy Policy statements.
+        form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
         $form['eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox($options);
 
         // Substitute select and button with single action button
@@ -367,14 +368,7 @@ function enrd_nrn_profiles_moderate_form_validate(array $form, array &$form_stat
   $state = $form_state['values']['state'];
   $nrn_editor = $form_state['nrn_editor'];
 
-  if ($nrn_editor) {
-    // If the NRN editor asks you to publish the node, the "EU Legal notice"
-    // must be flagged.
-    if ($state == enrd_mastermind_workbench_moderation_state_ready_to_be_published() && empty($form_state['values']['eu_legal_notice'])) {
-      form_set_error('eu_legal_notice', t('You must agree with the EU Legal notice statement to proceed.'));
-    }
-  }
-  else {
+  if (!$nrn_editor) {
     // If the node is rejected, moderation notes cannot be empty.
     if ($state == workbench_moderation_state_none() && empty($form_state['values']['revision_log'])) {
       form_set_error('revision_log', t('Please, enter a message with the change requests that will be sent to the NRN Editor.'));
@@ -482,9 +476,15 @@ function enrd_nrn_profiles_node_view($node, $view_mode, $langcode) {
 
   if ($node->type === ENRD_NRN_PROFILES_NODE_TYPE) {
 
-    // Show moderation state messages if we're on a node page.
-    if ($view_mode == 'full' && _enrd_nrn_profiles_check_user_editor($node)) {
-      _enrd_nrn_profiles_workbench_moderation_messages('view', $node);
+    if ($view_mode == 'full') {
+      // Set default menu active trail on NRN Profile nodes.
+      $active_trail = 'networking/nrn-profiles';
+      menu_tree_set_path('main-menu', drupal_lookup_path('source', $active_trail));
+
+      // Show moderation state messages if we're on a node page.
+      if (_enrd_nrn_profiles_check_user_editor($node)) {
+        _enrd_nrn_profiles_workbench_moderation_messages('view', $node);
+      }
     }
 
     // Extra fields with the internal links to LAG, Project and Country pages.
@@ -731,20 +731,6 @@ function _enrd_nrn_profiles_build_internal_link($link_name, $path = '', array $s
   );
 
   return $page_link;
-}
-
-/**
- * Validate function for EU Legal Notice field.
- *
- * @param array $element
- *   Drupal form array element.
- * @param array $form_state
- *   Drupal form state array.
- */
-function _enrd_nrn_profiles_validate_eu_legal_notice(array $element, array &$form_state) {
-  if (empty($element['#value'])) {
-    form_error($element, t('You must agree with the EU Legal notice statement to proceed.'));
-  }
 }
 
 /**

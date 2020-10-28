@@ -23,6 +23,72 @@ function enrd_js_alter(&$js) {
 }
 
 /**
+ * Implements hook_preprocess_HOOK().
+ */
+function enrd_preprocess_enrd_token_menu(&$variables) {
+
+  $menu_attributes = menu_attributes_get_menu_attribute_info();
+  foreach ($variables['menu_tree'] as $key => $item) {
+    $span_attributes = [];
+    if ((is_int($key))) {
+      // Add active class to current active list item.
+      if (($item['#href'] == $_GET['q'] || ($item['#href'] == '<front>' && drupal_is_front_page())) && (empty($item['#localized_options']['language']))) {
+        $item['#attributes']['class'][] = 'active';
+      }
+      // Get icon or classes for the menu item.
+      $icon = isset($item['#localized_options']['attributes']['data-image']) ? $item['#localized_options']['attributes']['data-image'] : '';
+      $class = isset($item['#localized_options']['attributes']['class']) ? $item['#localized_options']['attributes']['class'] : '';
+
+      if (in_array($icon, array_keys($menu_attributes['data-image']['form']['#options'][ENRD_MASTERMIND_ENRD_ICONS]))) {
+        // Add the enrd icon class name.
+        $span_attributes['class'] = 'icon ' . $icon;
+      }
+      elseif (in_array($icon, $menu_attributes['data-image']['form']['#options'][ENRD_MASTERMIND_GLYPHICONS_ICONS])) {
+        // Add the default glyphicon class name.
+        $span_attributes['class'] = 'glyphicon glyphicon-' . $icon;
+      }
+      else {
+        // Add the css class in span element.
+        if ($class) {
+          // Remove class applied on link, and use only class on span element.
+          unset($item['#localized_options']['attributes']['class']);
+          $span_attributes['class'] = $class;
+        }
+      }
+
+      // Icon html tag to render.
+      $icon_tag = [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#attributes' => $span_attributes,
+        '#value' => '',
+      ];
+
+      // Render icon html tag.
+      $item['#title'] = drupal_render($icon_tag) . $item['#title'];
+
+      $items[] = [
+        'data' => l($item['#title'], $item['#href'], [
+          'html' => TRUE,
+          'attributes' => $item['#localized_options']['attributes'],
+        ]),
+        // Classes for list item.
+        'class' => $item['#attributes']['class'],
+      ];
+    }
+  }
+
+  if (!empty($items)) {
+    $data = [
+      'items' => $items,
+      'type' => 'ul',
+    ];
+
+    $variables['content'] = theme('item_list', $data);
+  }
+}
+
+/**
  * Implements hook_preprocess_block().
  */
 function enrd_preprocess_block(&$variables) {
@@ -225,6 +291,62 @@ function enrd_preprocess_block(&$variables) {
         // Add class to lag contextual links menu items wrapper.
         $variables['classes_array'][] = 'enrd-list';
         break;
+
+      // ENRD menus that use icons system.
+      case 'menu-menu-enrd-tools':
+      case 'menu-menu-enrd-sfr-pub-subscribe':
+      case 'menu-menu-enrd-portals':
+
+        $menu = menu_navigation_links($variables['block']->delta);
+        $menu_attributes = menu_attributes_get_menu_attribute_info();
+
+        foreach ($menu as $item) {
+          // Get icon or classes for the menu item.
+          $icon = (isset($item['attributes']['data-image']) ? $item['attributes']['data-image'] : '');
+          $class = (isset($item['attributes']['class']) ? implode(" ", $item['attributes']['class']) : '');
+
+          if (in_array($icon, array_keys($menu_attributes['data-image']['form']['#options'][ENRD_MASTERMIND_ENRD_ICONS]))) {
+            // Add the enrd icon class name.
+            $item['title'] = '<span class="icon ' . $icon . '"></span>' . $item['title'];
+            unset($item['attributes']['class']);
+          }
+          elseif (in_array($icon, $menu_attributes['data-image']['form']['#options'][ENRD_MASTERMIND_GLYPHICONS_ICONS])) {
+            // Add the default glyphicon class name.
+            $item['title'] = '<span class="glyphicon glyphicon-' . $icon . '"></span>' . $item['title'];
+            unset($item['attributes']['class']);
+          }
+          else {
+            // Add the css class in span element.
+            if ($class) {
+              $item['title'] = '<span class="' . $class . '"></span>' . $item['title'];
+              unset($item['attributes']['class']);
+            }
+          }
+
+          $items[] = [
+            'data' => l($item['title'], $item['href'], [
+              'html' => TRUE,
+              'attributes' => $item['attributes'],
+            ]),
+          ];
+        }
+
+        $data = [
+          'items' => $items,
+          'type' => 'ul',
+        ];
+
+        // Add specific classes to render icons in menu block.
+        $variables['classes_array'][] = 'block-icons-menu';
+
+        $variables['content'] = theme('item_list', $data);
+        break;
+
+      // Create menu_breadcrumb variable to be printed in breadcrumb block.
+      case 'enrd_mastermind-enrd_easy_breadcrumb':
+        $variables['menu_breadcrumb'] = menu_tree('menu-breadcrumb-menu');
+        break;
+
     }
   }
 }
@@ -426,19 +548,15 @@ function enrd_preprocess_easy_breadcrumb(&$variables) {
     $variables['breadcrumb'][1] = $submission;
     $variables['segments_quantity'] = count($variables['breadcrumb']);
   }
-  else {
-    // Remove at least 2 last breadcrumb elements with same name.
-    for ($i = 0; $i < 2; $i++) {
-      if (count($variables['breadcrumb']) > 1) {
-        if (decode_entities($variables['breadcrumb'][count($variables['breadcrumb']) - 1]['content']) ==
-          decode_entities($variables['breadcrumb'][count($variables['breadcrumb']) - 2]['content'])) {
-          $variables['breadcrumb'][count($variables['breadcrumb']) - 2] = $variables['breadcrumb'][count($variables['breadcrumb']) - 1];
-          array_pop($variables['breadcrumb']);
-          $variables['segments_quantity']--;
-        }
-      }
-    }
+
+  // Count and remove the last occurrence if present many time with same name.
+  $content = array_column($variables['breadcrumb'], 'content');
+  $occurrence = array_keys($content, end($content));
+  if (count($occurrence) > 1) {
+    array_pop($variables['breadcrumb']);
+    $variables['segments_quantity']--;
   }
+
 }
 
 /**
@@ -671,11 +789,16 @@ function enrd_easy_breadcrumb($variables) {
       $it = $breadcrumb[$i];
       $content = decode_entities($it['content']);
       if (isset($it['url'])) {
-        $html .= '<li>' . l($content, $it['url'], array('attributes' => array('class' => $it['class']))) . '</li>';
+        $html .= '<li>' . l($content, $it['url'], [
+          'attributes' => [
+            'class' => $it['class'],
+            'title' => $content,
+          ],
+        ]) . '</li>';
       }
       else {
         $class = implode(' ', $it['class']);
-        $html .= '<li class="' . $class . '">' . filter_xss($content) . '</li>';
+        $html .= '<li class="' . $class . '" title="' . filter_xss($content) . '">' . $content . '</li>';
       }
     }
   }

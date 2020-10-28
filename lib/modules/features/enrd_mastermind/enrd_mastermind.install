@@ -53,6 +53,8 @@ function enrd_mastermind_install() {
     'solr_config',
     // Nexteuropa Last Update platform module.
     'nexteuropa_lastupdate',
+    // NextEuropa User Management module.
+    'nexteuropa_user_management',
   ));
 
   module_disable(array(
@@ -139,6 +141,7 @@ function enrd_mastermind_install() {
     'enrd_nrnp_invite',
     'enrd_projects',
     'enrd_publications',
+    'enrd_ruralstory',
     'enrd_sfr_pub',
     'enrd_taxonomies',
   ));
@@ -147,12 +150,20 @@ function enrd_mastermind_install() {
   features_revert(array(
     'enrd_multilingual' => array(
       'variable',
+      'user_permission',
     ),
     'enrd_notifications' => array(
       'variable',
     ),
     'enrd_mastermind' => array(
       'user_permission',
+      'menu_links',
+    ),
+    'enrd_focus_on' => array(
+      'variable',
+    ),
+    'enrd_gallery' => array(
+      'variable',
     ),
   ));
 
@@ -171,6 +182,8 @@ function enrd_mastermind_install() {
   // Reset menu items prepopulated by CCE BASIC.
   _enrd_mastermind_reset_menu_items('user-menu', array('admin/workbench'));
   _enrd_mastermind_reset_menu_items('main-menu', array('<front>'));
+  // Reset [site:name] menu-breadcrumb-menu item (prepopulated by CCE BASIC).
+  _enrd_mastermind_reset_menu_items('menu-breadcrumb-menu', array('menutoken/52ebaf910f9d0'));
 
 }
 
@@ -1053,7 +1066,7 @@ function enrd_mastermind_update_7212() {
   foreach ($menus as $menu_name) {
     if ($menu = menu_load($menu_name)) {
       menu_delete($menu);
-    };
+    }
   }
 
   $contexts = array(
@@ -1349,7 +1362,7 @@ function enrd_mastermind_update_7226(&$sandbox) {
 
     if (drupal_uninstall_modules($modules)) {
       watchdog('enrd_mastermind', 'multisite_mediagallery feature set uninstalled successfully.');
-    };
+    }
 
     $gallerymedia_vars = array(
       'entity_translation_settings_node__gallerymedia',
@@ -1521,7 +1534,7 @@ function enrd_mastermind_update_7227() {
   module_disable($modules);
   if (drupal_uninstall_modules($modules)) {
     watchdog('enrd_mastermind', 'multisite_mediagallery feature set uninstalled successfully.');
-  };
+  }
 
   // Delete disabled 'gallerymedia' bundle.
   db_delete('node_type')
@@ -1576,4 +1589,174 @@ function enrd_mastermind_update_7228() {
 
   // Exclude "Gallery" from Apache Solr.
   _enrd_mastermind_solr_config();
+}
+
+/**
+ * ENRDPORTAL-(463, 482, 488, 489, 500).
+ */
+function enrd_mastermind_update_7229() {
+
+  // Clear field cache.
+  field_cache_clear();
+
+  // Call the batch to replace a specific bundle legacy field.
+  if (title_field_replacement_toggle('taxonomy_term', 'enrd_publications', 'name')) {
+    watchdog('enrd_mastermind', 'Replacing term name with name_field instance...');
+    title_field_replacement_batch_set('taxonomy_term', 'enrd_publications', 'name');
+  }
+
+  // Enable enrd_file_formatter and contrib module 'postal_code_validation'.
+  module_enable([
+    'enrd_file_formatter',
+    'postal_code_validation',
+  ]);
+
+  // Revert all changed features components.
+  features_revert([
+    // ENRDPORTAL-463.
+    'enrd_lag_dashboard' => [
+      'rules_config',
+      'user_permission',
+    ],
+    // ENRDPORTAL-482, ENRDPORTAL-488.
+    'enrd_multilingual' => [
+      'variable',
+      'field_base',
+    ],
+    // Revert manual changes to ds layouts.
+    'enrd_news' => [
+      'ds_layout_settings',
+    ],
+    // ENRDPORTAL-482, ENRDPORTAL-500.
+    'enrd_publications' => [
+      'facetapi',
+      'field_instance',
+    ],
+    // ENRDPORTAL-489.
+    'enrd_taxonomies' => [
+      'field_base',
+      'field_instance',
+    ],
+  ]);
+
+  // Launch _enrd_mastermind_overrides() to update non-exported instances.
+  _enrd_mastermind_overrides();
+}
+
+/**
+ * ENRDPORTAL-517.
+ */
+function enrd_mastermind_update_7230() {
+  // Revert user permissions for Webmaster.
+  features_revert(array(
+    // Set "Webmaster" role.
+    'enrd_mastermind' => array(
+      'user_role',
+    ),
+    'enrd_lag_dashboard' => array(
+      'rules_config',
+      'user_permission',
+    ),
+    'enrd_multilingual' => array(
+      'user_permission',
+    ),
+  ));
+
+  // Set admin permissions to webmaster role.
+  _enrd_mastermind_overrides_all();
+}
+
+/**
+ * ENRDPORTAL-505, ENRDPORTAL-522, ENRDPORTAL-524.
+ */
+function enrd_mastermind_update_7231() {
+  // Enable ENRD Rural Story feature.
+  module_enable(array('enrd_ruralstory'));
+
+  // Revert new permissions.
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'user_permission',
+    ),
+  ));
+
+  // Revoke User management permissions to webmaster.
+  _enrd_mastermind_overrides_permission();
+}
+
+/**
+ * ENRDPORTAL-493.
+ */
+function enrd_mastermind_update_7232() {
+  // Revert basic page enabled menus.
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'variable',
+    ),
+  ));
+}
+
+/**
+ * ENRDPORTAL-534.
+ */
+function enrd_mastermind_update_7233() {
+  // Run override context to disable site_wide.
+  _enrd_mastermind_overrides_context();
+  // Reset [site:name] breadcrumb menu item.
+  _enrd_mastermind_reset_menu_items('menu-breadcrumb-menu', array('menutoken/52ebaf910f9d0'));
+
+  // Revert custom Home menu link.
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'menu_links',
+    ),
+  ));
+}
+
+/**
+ * ENRDPORTAL-535, ENRDPORTAL-543.
+ */
+function enrd_mastermind_update_7234() {
+
+  features_revert(array(
+    'enrd_mastermind' => array(
+      'menu_custom',
+      'context',
+      'variable',
+      'filter',
+    ),
+  ));
+
+  // List of menu links to be moved to Portals menu.
+  $menu_links = [
+    'Long Term Rural Vision Portal',
+    'CAP Post-2020',
+    'Rural Bioeconomy Portal',
+    'Smart Villages Portal',
+  ];
+
+  $weight = -10;
+
+  // Move links from Tools menu to Portals menu.
+  foreach ($menu_links as $menu_link) {
+    db_update('menu_links')
+      ->fields(array('menu_name' => 'menu-enrd-portals', 'weight' => $weight))
+      ->condition('link_title', $menu_link)
+      ->condition('menu_name', 'menu-enrd-tools')
+      ->execute();
+
+    $weight += 5;
+  }
+
+  // Clear menu after links have been moved.
+  menu_cache_clear_all();
+}
+
+/**
+ * Update wrapper module for XLSX export library.
+ */
+function enrd_mastermind_update_7235() {
+  module_disable(['views_data_export_phpexcel']);
+  drupal_uninstall_modules(['views_data_export_phpexcel']);
+  module_enable(['views_data_export_phpspreadsheet']);
 }

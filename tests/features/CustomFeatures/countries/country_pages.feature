@@ -57,7 +57,7 @@ Feature: ENRD Country Pages
     And I am viewing an "rdp_information" content in "published" status:
       | title | BDD Test media RDP information |
 
-    Given I am logged in as a user with the "administrator" role
+    Given I am logged in as a user with the "webmaster" role
     And I am on "country/bdd-test-media-rdp-information"
     And I click "New draft"
     # National NRN image.

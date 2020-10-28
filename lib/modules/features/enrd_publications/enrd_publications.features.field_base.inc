@@ -11,27 +11,6 @@
 function enrd_publications_field_default_field_bases() {
   $field_bases = array();
 
-  // Exported field_base: 'description_field'.
-  $field_bases['description_field'] = array(
-    'active' => 1,
-    'cardinality' => 1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'description_field',
-    'indexes' => array(
-      'format' => array(
-        0 => 'format',
-      ),
-    ),
-    'locked' => 1,
-    'module' => 'text',
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-    ),
-    'translatable' => 1,
-    'type' => 'text_with_summary',
-  );
-
   // Exported field_base: 'field_enrd_publ_ehd_abstract'.
   $field_bases['field_enrd_publ_ehd_abstract'] = array(
     'active' => 1,
@@ -219,68 +198,13 @@ function enrd_publications_field_default_field_bases() {
     'type' => 'taxonomy_term_reference',
   );
 
-  // Exported field_base: 'field_enrd_publ_ehd_file'.
-  $field_bases['field_enrd_publ_ehd_file'] = array(
+  // Exported field_base: 'field_enrd_publ_ehd_file_upload'.
+  $field_bases['field_enrd_publ_ehd_file_upload'] = array(
     'active' => 1,
     'cardinality' => -1,
     'deleted' => 0,
     'entity_types' => array(),
-    'field_name' => 'field_enrd_publ_ehd_file',
-    'indexes' => array(
-      'revision_id' => array(
-        0 => 'revision_id',
-      ),
-      'value' => array(
-        0 => 'value',
-      ),
-    ),
-    'locked' => 1,
-    'module' => 'field_collection',
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'hide_blank_items' => 1,
-      'hide_initial_item' => FALSE,
-      'path' => '',
-    ),
-    'translatable' => 0,
-    'type' => 'field_collection',
-  );
-
-  // Exported field_base: 'field_enrd_publ_ehd_file_lang'.
-  $field_bases['field_enrd_publ_ehd_file_lang'] = array(
-    'active' => 1,
-    'cardinality' => 1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'field_enrd_publ_ehd_file_lang',
-    'indexes' => array(
-      'tid' => array(
-        0 => 'tid',
-      ),
-    ),
-    'locked' => 1,
-    'module' => 'taxonomy',
-    'settings' => array(
-      'allowed_values' => array(
-        0 => array(
-          'vocabulary' => 'enrd_languages',
-          'parent' => 0,
-        ),
-      ),
-      'entity_translation_sync' => FALSE,
-      'options_list_callback' => 'i18n_taxonomy_allowed_values',
-    ),
-    'translatable' => 0,
-    'type' => 'taxonomy_term_reference',
-  );
-
-  // Exported field_base: 'field_enrd_publ_ehd_files'.
-  $field_bases['field_enrd_publ_ehd_files'] = array(
-    'active' => 1,
-    'cardinality' => 1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'field_enrd_publ_ehd_files',
+    'field_name' => 'field_enrd_publ_ehd_file_upload',
     'indexes' => array(
       'fid' => array(
         0 => 'fid',
