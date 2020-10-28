@@ -71,6 +71,21 @@ steps:
       - ./toolkit/phing install-clean
       - ./toolkit/phing drush-solr-enable
 
+  # TEST SECTION #
+  # SELENIUM #
+  - name: selenium
+    image: selenium/standalone-chrome:3.141.59-oxygen
+    environment:
+      HUB_PORT_4444_TCP_ADDR: selenium
+      HUB_PORT_4444_TCP_PORT: "4444"
+    detach: true
+
+  # BEHAT #
+  - name: behat
+    image: fpfis/httpd-php-dev:7.3
+    commands:
+      - ./toolkit/phing test-run-behat
+
   # TELEGRAM NOTIFICATIONS
   - name: notification
     image: appleboy/drone-telegram
