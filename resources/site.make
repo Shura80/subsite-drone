@@ -14,7 +14,7 @@ projects[admin_views][subdir] = "contrib"
 projects[admin_views][version] = "1.7"
 
 projects[date][subdir] = "contrib"
-projects[date][version] = "2.11-beta3"
+projects[date][version] = "2.10"
 ; Issue #2305049: Wrong timezone handling in migrate process.
 ; https://www.drupal.org/node/2305049
 ; https://webgate.ec.europa.eu/CITnet/jira/browse/NEXTEUROPA-3324
