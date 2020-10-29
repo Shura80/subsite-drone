@@ -51,7 +51,7 @@ steps:
     commands:
       - ./toolkit/phing test-run-phpcs-compatibility
 
-  # BUILD PLATFORM AND SUBSITE#
+  # BUILD PLATFORM AND SUBSITE #
   - name: build
     image: fpfis/httpd-php-dev:7.3
     commands:
