@@ -56,7 +56,7 @@ class EnrdLagDatabaseDependencyFacet extends FacetapiDependencyFacet {
    * but the enabled facets are not known yet (afaik, hence the add. property)
    */
   public function getDefaultSettings() {
-    if (!count($this->defaultSettings)) {
+    if (empty($this->defaultSettings)) {
       $this->defaultSettings = array(
         'facets_multiple' => array(),
       );
