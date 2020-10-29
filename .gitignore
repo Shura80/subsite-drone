@@ -33,3 +33,4 @@ toolkit
 lib/themes/enrd/css/enrd.min.css
 lib/themes/enrd/css/enrd.min.css.map
 /resources/vendor/
+/.idea/
