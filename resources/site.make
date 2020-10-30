@@ -13,6 +13,9 @@ projects[admin_views][subdir] = "contrib"
 ; https://www.drupal.org/sa-contrib-2019-076
 projects[admin_views][version] = "1.7"
 
+projects[captcha][subdir] = "contrib"
+projects[captcha][version] = "1.7"
+
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/b5d7Eg
 projects[double_field][subdir] = "contrib"
 projects[double_field][version] = "2.5"
