@@ -18,7 +18,8 @@ project.admin.email = ${project.admin.username}@example.com
 # Platform configuration.
 # -----------------------
 profile = multisite_drupal_communities
-platform.package.version = 2.5
+# platform.package.version = 2.5
+platform.package.version = 2.6
 
 # The location of the .htaccess file in the Drupal root folder.
 build.platform.htaccess.path = ${build.platform.dir}/.htaccess
