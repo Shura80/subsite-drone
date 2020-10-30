@@ -41,11 +41,12 @@ steps:
       - ./toolkit/phing project-properties-validate
 
 # PHPCS CHECKS
+  # Standards
   - name: phpcs
     image: fpfis/httpd-php-dev:7.3
     commands:
       - ./toolkit/phing test-run-phpcs
-
+  # PHP 7 Compatibility
   - name: phpcs 7
     image: fpfis/httpd-php-dev:7.3
     commands:
