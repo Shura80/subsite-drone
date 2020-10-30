@@ -26,7 +26,7 @@ projects[entityqueue][subdir] = "contrib"
 projects[entityqueue][version] = "1.5"
 
 projects[entityreference_view_widget][subdir] = "contrib"
-projects[entityreference_view_widget][version] = "2.0-rc6"
+projects[entityreference_view_widget][version] = "2.1"
 
 projects[expanding_formatter][subdir] = "contrib"
 projects[expanding_formatter][version] = "1.0"
@@ -58,6 +58,7 @@ projects[invisimail][version] = "1.2"
 
 projects[invite][subdir] = "contrib"
 projects[invite][version] = "4.1-rc1"
+projects[invite][patch][] = https://www.drupal.org/files/issues/2018-03-21/invite-type-hidden.patch
 
 projects[message_digest][subdir] = "contrib"
 projects[message_digest][version] = "1.0"

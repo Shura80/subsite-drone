@@ -9,10 +9,10 @@ projects[devel][subdir] = "development"
 projects[devel][version] = "1.7"
 
 projects[maillog][subdir] = "development"
-projects[maillog][version] = "1.0-alpha1"
+projects[maillog][version] = "1.0-rc1"
 
 projects[memcache][subdir] = "development"
-projects[memcache][version] = "1.6"
+projects[memcache][version] = "1.8"
 
 projects[module_filter][subdir] = "development"
 projects[module_filter][version] = "2.2"
