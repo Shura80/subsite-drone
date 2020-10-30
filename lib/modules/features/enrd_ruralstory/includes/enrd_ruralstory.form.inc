@@ -147,7 +147,7 @@ function _enrd_ruralstory_prefill(&$form, $field_name, $param) {
 
     foreach ($params[$param] as $option) {
       // Build an array with options tids if term exists.
-      if ($option = array_search(strtolower($option), $options)) {
+      if ($option = array_search(drupal_strtolower($option), $options)) {
         $defaults[] = $option;
       }
     }
