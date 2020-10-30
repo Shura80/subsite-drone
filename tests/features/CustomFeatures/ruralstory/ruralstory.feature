@@ -68,9 +68,8 @@ Feature: ENRD Rural Story Form
     And "enrd_ruralstory_topics" terms:
       | name                  |
       | BDD Rural story Topic |
-    And I am at "enrd-sfr/add/enrd-ruralstory"
+    And I am at "enrd-sfr/add/enrd-ruralstory?topic=bdd rural story topic"
     And I fill in "Subject" with "BDD Rural Story"
-    And I select "BDD Rural story Topic" from "Theme / topic"
     And I select "BDD Belgium" from "Country"
     And I fill in "Region" with "Flanders"
     And I fill in "Organisation" with "BDD Rural Story Org"

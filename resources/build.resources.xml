@@ -148,7 +148,7 @@
                 pipe="yes"
                 verbose="${drush.verbose}"
                 root="${build.platform.dir}">
-            <param>${resources.dir}/taxonomy_csv/trees/transversal_topics.csv</param>
+            <param>${resources.dir}/taxonomy_csv/trees/transversal_topic.csv</param>
             <param>tree</param>
             <param>--check_line</param>
             <param>--check_utf8</param>
@@ -289,24 +289,6 @@
             <param>--vocabulary_id=enrd_languages</param>
         </drush>
     </target>
-    <!-- ENRD Networking translations -->
-    <target name="taxocsv-import-enrd-networking-translations">
-        <echo message="Running taxocsv import for ENRD Networking translations."/>
-        <drush
-                command="taxocsv-import"
-                bin="${toolkit.dir.bin.drush}"
-                pipe="yes"
-                verbose="${drush.verbose}"
-                root="${build.platform.dir}">
-            <param>${resources.dir}/taxonomy_csv/translations/networking__translation.csv</param>
-            <param>translate</param>
-            <param>--translate_languages=und,fr,de,it,es,pl</param>
-            <param>--check_utf8</param>
-            <param>--keep_order</param>
-            <param>--vocabulary_target=existing</param>
-            <param>--vocabulary_id=enrd_networking</param>
-        </drush>
-    </target>
     <!-- ENRD Origin translations -->
     <target name="taxocsv-import-enrd-origin-translations">
         <echo message="Running taxocsv import for ENRD Origin translations."/>
@@ -442,8 +424,6 @@
         <phingcall target="taxocsv-import-enrd-evaluation-translations">
         </phingcall>
         <phingcall target="taxocsv-import-enrd-languages-translations">
-        </phingcall>
-        <phingcall target="taxocsv-import-enrd-networking-translations">
         </phingcall>
         <phingcall target="taxocsv-import-enrd-origin-translations">
         </phingcall>

@@ -1753,10 +1753,16 @@ function enrd_mastermind_update_7234() {
 }
 
 /**
- * Update wrapper module for XLSX export library.
+ * Update wrapper module for XLSX export library and disable old module.
  */
 function enrd_mastermind_update_7235() {
-  module_disable(['views_data_export_phpexcel']);
-  drupal_uninstall_modules(['views_data_export_phpexcel']);
+  module_disable([
+    'special_menu_items',
+    'views_data_export_phpexcel',
+  ]);
+  drupal_uninstall_modules([
+    'special_menu_items',
+    'views_data_export_phpexcel',
+  ]);
   module_enable(['views_data_export_phpspreadsheet']);
 }

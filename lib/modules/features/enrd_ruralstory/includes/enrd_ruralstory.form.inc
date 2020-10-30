@@ -39,6 +39,9 @@ function _enrd_ruralstory_form_customizations(&$form, &$form_state) {
     $form['field_enrd_ruralstory_links'][LANGUAGE_NONE]['add_more']['#submit'][] = '_ruralstory_links_field_add_more_validate';
   }
 
+  // Manage pre-fill of topic field.
+  _enrd_ruralstory_prefill($form, 'field_enrd_ruralstory_topic', 'topic');
+
   // Override "Submit" message.
   $form['actions']['submit']['#value'] = t('Send your story');
 
@@ -115,5 +118,43 @@ function _enrd_ruralstory_authorize_notice_checkbox() {
 function _enrd_ruralstory_authorize_notice(array $element, array &$form_state) {
   if (empty($element['#value'])) {
     form_error($element, t('You must agree with the ENRD CP Authorization Statement to proceed.'));
+  }
+}
+
+/**
+ * Helper function to prefill form's topic field.
+ *
+ * @param array $form
+ *   The $form array with field to pre-fill.
+ * @param string $field_name
+ *   The name of field to pre-fill.
+ * @param string $param
+ *   The input querystring param.
+ */
+function _enrd_ruralstory_prefill(&$form, $field_name, $param) {
+
+  // Get parameters from querystring.
+  $params = drupal_get_query_parameters();
+
+  // Check that a querystring exists with topic parameter.
+  if (!empty($params[$param])) {
+    // Manage single topic.
+    if (!is_array($params[$param])) {
+      $params[$param] = [($params[$param])];
+    }
+
+    $options = array_map('strtolower', $form[$field_name][LANGUAGE_NONE]['#options']);
+
+    foreach ($params[$param] as $option) {
+      // Build an array with options tids if term exists.
+      if ($option = array_search(strtolower($option), $options)) {
+        $defaults[] = $option;
+      }
+    }
+
+    // Pre-fill values if any default exists.
+    if (!empty($defaults)) {
+      $form[$field_name][LANGUAGE_NONE]['#default_value'] = $defaults;
+    }
   }
 }

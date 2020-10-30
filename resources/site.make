@@ -13,13 +13,6 @@ projects[admin_views][subdir] = "contrib"
 ; https://www.drupal.org/sa-contrib-2019-076
 projects[admin_views][version] = "1.7"
 
-projects[date][subdir] = "contrib"
-projects[date][version] = "2.11-rc1"
-; Issue #2305049: Wrong timezone handling in migrate process.
-; https://www.drupal.org/node/2305049
-; https://webgate.ec.europa.eu/CITnet/jira/browse/NEXTEUROPA-3324
-; https://webgate.ec.europa.eu/CITnet/jira/browse/NEXTEUROPA-4710
-
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/b5d7Eg
 projects[double_field][subdir] = "contrib"
 projects[double_field][version] = "2.5"
@@ -43,8 +36,7 @@ projects[feeds_tamper_string2id][subdir] = "contrib"
 projects[feeds_tamper_string2id][version] = "1.1"
 
 projects[facetapi_bonus][subdir] = "contrib"
-projects[facetapi_bonus][version] = "1.2"
-projects[facetapi_bonus][patch][] = https://www.drupal.org/files/issues/2018-09-04/non-countable-2938545-5.patch
+projects[facetapi_bonus][version] = "1.3"
 
 projects[field_collection][subdir] = "contrib"
 projects[field_collection][version] = "1.0-beta12"
