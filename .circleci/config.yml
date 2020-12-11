@@ -31,31 +31,24 @@ jobs: # a collection of steps
       - checkout # special step to check out source code to working directory
       - run:
           name: toolkit
-#          image: fpfis/httpd-php-dev:7.3
-#          working_directory: /test/toolkit
           command: |
               composer install
               rm -rf ./.tmp/ ./build
               ./toolkit/phing project-properties-validate
       - run:
           name: phpcs
-#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-phpcs
       - run:
           name: phpcs 7
-#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-phpcs-compatibility
       - run:
           name: build
-#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing build-platform build-subsite-dev
       - run:
           name: install-clean
-#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing install-clean
       - run:
           name: behat
-#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-behat
 
 workflows:
