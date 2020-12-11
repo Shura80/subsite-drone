@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ENRD" default="help">
+    <property name="resources.dir" value="${project.basedir}/resources" />
+    <import file="${resources.dir}/build.resources.xml" />
+
+    <!-- Subtarget: execute makefiles with the no-core option. -->
+    <target name="drush-make-no-core" description="Make a file without core." hidden="true">
+        <if>
+            <available file="${make-file}" type="file" />
+            <then>
+                <loadfile property="make-string" file="${make-file}" />
+                <propertyregex
+                        property="not.empty"
+                        subject="${make-string}"
+                        pattern="([^#; ])(libraries\[|projects\[|includes\[)"
+                        match="$1"
+                        casesensitive="false"
+                        defaultvalue="empty" />
+                <if>
+                    <equals arg1="${not.empty}" arg2="empty" />
+                    <then>
+                        <echo msg="Empty make file found. Skipping... ${not.empty}" />
+                    </then>
+                    <else>
+                        <echo message="Running make file ${make-file} into folder ${make-folder}." />
+                        <mkdir dir="${project.tmp.dir}/make" />
+                        <drush command="make" assume="yes" bin="${toolkit.dir.bin.drush}" pipe="yes" verbose="${drush.verbose}" color="${drush.color}">
+                            <param>${make-file}</param>
+                            <param>${make-folder}</param>
+                            <option name="contrib-destination">${make-destination}</option>
+                            <option name="concurrency">10</option>
+                            <option name="no-patch-txt"></option>
+                            <option name="no-core"></option>
+                        </drush>
+                    </else>
+                </if>
+            </then>
+        </if>
+        <phingcall target="clean-libraries-folders">
+        </phingcall>
+    </target>
+
+    <!-- Append text to .htaccess file -->
+    <target name="project-platform-set-htaccess" hidden="true" description="Append htaccess config to root .htaccess.">
+        <!-- Call target to patch .htaccess file -->
+        <phingcall target="patch-htaccess">
+        </phingcall>
+        <if>
+            <istrue value="${build.platform.htaccess.append.text}"/>
+            <then>
+                <if>
+                    <available file="${build.platform.htaccess.append.text}"/>
+                    <then>
+                        <append file="${build.platform.htaccess.append.text}"
+                                destFile="${build.platform.dir}/.htaccess"/>
+                    </then>
+                    <else>
+                        <append text="${build.platform.htaccess.append.text}"
+                                destFile="${build.platform.dir}/.htaccess"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <echo msg="Appended no text to htaccess."/>
+            </else>
+        </if>
+        <!-- Call target to append text to robots.txt file -->
+        <phingcall target="append-robots">
+        </phingcall>
+    </target>
+    <!-- Clean libraries folder -->
+    <target name="clean-libraries-folders">
+        <echo msg="Cleaning Jquery Mask Plugin folder ${build.${build-type}.dir}/libraries/jquery.mask."/>
+        <if>
+            <available file="${build.${build-type}.dir}/libraries/jquery.mask/dist" type="dir"/>
+            <then>
+                <move file="${build.${build-type}.dir}/libraries/jquery.mask/dist"
+                      tofile="${build.${build-type}.dir}/libraries/dist"/>
+                <delete dir="${build.${build-type}.dir}/libraries/jquery.mask" includeemptydirs="true"
+                        verbose="true"
+                        failonerror="true"/>
+                <move file="${build.${build-type}.dir}/libraries/dist" tofile="${build.${build-type}.dir}/libraries/jquery.mask" includeemptydirs="true" />
+            </then>
+        </if>
+    </target>
+    <!-- Patch .htaccess file -->
+    <target name="patch-htaccess" hidden="true" description="Patch root .htaccess before appending any text to it">
+        <if>
+            <available file="${build.platform.htaccess.patch}" type="file"/>
+            <then>
+                <echo message="Patching the Drupal .htaccess"/>
+                <patch patchfile="${build.platform.htaccess.patch}"
+                       originalfile="${build.platform.dir}/.htaccess"/>
+            </then>
+        </if>
+    </target>
+    <!-- Add custom lines to robots.txt file -->
+    <target name="append-robots" hidden="true" description="Append text to root robots.txt.">
+        <if>
+            <istrue value="${build.platform.robots.append.text}"/>
+            <then>
+                <echo message="Modifying robots.txt"/>
+                <append text="${build.platform.robots.append.text}"
+                        destFile="${build.platform.dir}/robots.txt"/>
+            </then>
+            <else>
+                <echo msg="Appended no text to robots.txt"/>
+            </else>
+        </if>
+    </target>
+</project>

@@ -1,0 +1,36 @@
+# Subsite configuration.
+# ----------------------
+project.id = enrd
+project.name = The European Network for Rural Development (ENRD)
+project.install.modules = enrd_mastermind
+project.url.production = https://enrd.ec.europa.eu
+project.url.playground = https://webgate.ec.europa.eu/playground-multisite/enrd
+
+# Solr configuration.
+# -------------------
+project.solr.type = d7_apachesolr
+solr.type = d7_apachesolr
+
+# Admin configuration.
+# --------------------
+project.admin.email = ${project.admin.username}@example.com
+
+# Platform configuration.
+# -----------------------
+profile = multisite_drupal_communities
+platform.package.version = 2.6
+
+# The location of the .htaccess file in the Drupal root folder.
+build.platform.htaccess.path = ${build.platform.dir}/.htaccess
+
+# Configuration to append to the .htaccess file in the Drupal root folder.
+build.platform.htaccess.append.text =  ${line.separator}# Legacy prefix substitution.${line.separator}<IfModule mod_rewrite.c>${line.separator}  RewriteEngine on${line.separator}  RewriteRule ^(en|fr|de|it|es|pl)/(.*)$ http%{ENV:protossl}://%{HTTP_HOST}/$2_$1 [L,R=301]${line.separator}</IfModule>${line.separator}
+
+# Configuration to append to the robots.txt
+build.platform.robots.append.text = ${line.separator}# ENRD Specific directives${line.separator}User-agent: *${line.separator}Disallow: /enrd-static/${line.separator}
+
+behat.formatter.name = progress
+
+# SCSS compiled directory
+resources.dir.bin = ${resources.dir}/vendor/bin
+sass.compiled.dir = ${lib.dir.themes}/${project.id}/css
