@@ -26,36 +26,36 @@ jobs: # a collection of steps
           HUB_PORT_4444_TCP_PORT: "4444"
         detach: true
 
-    working_directory: /test/toolkit/build # directory where steps will run
+    working_directory: /test/toolkit # directory where steps will run
     steps: # a set of executable commands
       - checkout # special step to check out source code to working directory
       - run:
           name: toolkit
-          image: fpfis/httpd-php-dev:7.3
-          working_directory: /test/toolkit
+#          image: fpfis/httpd-php-dev:7.3
+#          working_directory: /test/toolkit
           command: |
               composer install
               rm -rf ./.tmp/ ./build
               ./toolkit/phing project-properties-validate
       - run:
           name: phpcs
-          image: fpfis/httpd-php-dev:7.3
+#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-phpcs
       - run:
           name: phpcs 7
-          image: fpfis/httpd-php-dev:7.3
+#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-phpcs-compatibility
       - run:
           name: build
-          image: fpfis/httpd-php-dev:7.3
+#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing build-platform build-subsite-dev
       - run:
           name: install-clean
-          image: fpfis/httpd-php-dev:7.3
+#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing install-clean
       - run:
           name: behat
-          image: fpfis/httpd-php-dev:7.3
+#          image: fpfis/httpd-php-dev:7.3
           command: ./toolkit/phing test-run-behat
 
 workflows:
