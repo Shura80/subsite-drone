@@ -33,9 +33,9 @@ jobs: # a collection of steps
           name: toolkit
           image: fpfis/httpd-php-dev:7.3
           command: |
-              - composer install
-              - rm -rf ./.tmp/ ./build
-              - ./toolkit/phing project-properties-validate
+              composer install
+              rm -rf ./.tmp/ ./build
+              ./toolkit/phing project-properties-validate
       - run:
           name: phpcs
           image: fpfis/httpd-php-dev:7.3
