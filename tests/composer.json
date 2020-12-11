@@ -1,0 +1,21 @@
+{
+  "require-dev": {
+    "behat/behat": "~3.3.1",
+    "behat/mink-extension": "2.2.*",
+    "drupal/drupal-extension": "~3.4.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Drupal\\nexteuropa\\": "src",
+      "Drupal\\enrd\\": "src",
+      "Drupal\\Driver\\": "src/Driver"      
+    }
+  },
+  "prefer-stable": true,
+  "config": {
+    "bin-dir": "bin",
+    "platform": {
+      "php": "5.6"
+    }
+  }
+}

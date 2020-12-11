@@ -1,0 +1,57 @@
+@import "_icons";
+
+/* Menu icon preview */
+#options-attributes-data-image-preview {
+    font-size: 20px;
+    position: absolute;
+    margin-right: 5px;
+
+    &.icon {
+        font-size: 20px;
+        top: 64px;
+        left: 15px;
+    }
+
+    .selector:not(*:root), &.icon {
+        font-size: 20px;
+        top: 66px;
+        left: 15px;
+    }
+
+    &.glyphicon {
+        font-size: 18px;
+        top: 65px;
+        left: 20px;
+    }
+
+    .selector:not(*:root), &.glyphicon {
+        font-size: 18px;
+        top: 68px;
+        left: 20px;
+    }
+}
+
+/* Select option */
+#edit-options-attributes-data-image {
+    padding: 4px 0 4px 24px;
+}
+
+/* Hide icons in menu overview form */
+#menu-overview a.icon:before {
+    display: none;
+}
+
+/* Apply flex layout to Views exposed widgets. */
+.views-exposed-form .views-exposed-widgets {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    /* Advanced options */
+    div#edit-secondary-wrapper {
+        flex: 0 0 100%;
+    }
+}
+
+div.view-filters form.ctools-auto-submit-full-form .views-submit-button {
+    padding: .5em 0 0 0;
+}

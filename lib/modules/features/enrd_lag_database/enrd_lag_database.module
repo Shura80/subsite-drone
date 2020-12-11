@@ -1,0 +1,2494 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD LAG Database feature.
+ */
+
+include_once 'enrd_lag_database.features.inc';
+
+// Separate some functionalities into include files to clean module.
+module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.forms');
+module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.og');
+module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.permission');
+module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database_widget_links');
+module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database_dependency_facet');
+
+// LAG Taxonomies.
+define('ENRD_LAG_DATABASE_COUNTRY_TAXONOMY', 'enrd_countries');
+define('ENRD_LAG_DATABASE_ESIF_TAXONOMY', 'enrd_esif_programme');
+
+// OG content types constants.
+define('ENRD_LAG_DATABASE_LAG_GROUP_NODE', 'lag');
+define('ENRD_LAG_DATABASE_COOP_OFFER_NODE', 'cooperation_offer');
+define('ENRD_LAG_DATABASE_ESI_FUND_GROUP_NODE', 'esi_funds_og');
+define('ENRD_LAG_DATABASE_LAG_OG_GROUP_REF', 'og_lag_group_ref');
+
+// LAG external default roles.
+define('ENRD_LAG_DATABASE_USER_EXTERNAL_ROLE', 'LAG User');
+define('ENRD_LAG_DATABASE_USER_CONTACT_ROLE', 'LAG Contact');
+define('ENRD_LAG_DATABASE_USER_MANAGER_ROLE', 'LAG Manager');
+define('ENRD_LAG_DATABASE_NATIONAL_MANAGER_ROLE', 'National manager');
+
+// LAG contact form.
+define('ENRD_LAG_DATABASE_LAG_CONTACT_UUID', '41496fd1-6798-4c7c-8323-77a3ede96e17');
+
+// Pnone number validation REGEX.
+define('ENRD_LAG_DATABASE_PHONE_NUMBER_VALIDATION', '^(?=(?:\+|0{2})?(?:(?:[\(\-\)\.\/ \t\f]*\d){7,10})?(?:[\-\.\/ \t\f]?\d{2,3})(?:[\-\s]?[ext]{1,3}[\-\.\/ \t\f]?\d{1,4})?$)((?:\+|0{2})\d{0,3})?(?:[\-\.\/ \t\f]?)(\(0\d[ ]?\d{0,4}\)|\(\d{0,4}\)|\d{0,4})(?:[\-\.\/ \t\f]{0,2}\d){3,8}(?:[\-\s]?(?:x|ext)[\-\t\f ]?(\d{1,4}))?$^');
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_lag_database_permission() {
+  return array(
+    'skip lag country restriction' => array(
+      'title' => t('Skip LAG Country restriction'),
+      'description' => t('Avoid user related country field restrictions on LAG node forms.'),
+      'restrict access' => TRUE,
+    ),
+    'skip field access control' => array(
+      'title' => t('Skip Group Field Access Control'),
+      'description' => t('Skip the field access restrictions on lag fields.'),
+      'restrict access' => TRUE,
+    ),
+    'skip alter moderation form' => array(
+      'title' => t('Skip alter moderation form'),
+      'description' => t('Skip the alter moderation form.'),
+      'restrict access' => TRUE,
+    ),
+    'skip lag access control' => array(
+      'title' => t('Skip LAG access control'),
+      'description' => t('Skip access control on LAG groups and content.'),
+      'restrict access' => TRUE,
+    ),
+    'edit user profile LAG fields' => array(
+      'title' => t('Edit user profile lag related field'),
+      'description' => t('Allow users with this privilege to edit lag related field in user profile.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_lag_database_menu() {
+  $items['admin/config/lag-database'] = array(
+    'title' => 'LAG Database',
+    'description' => 'LAG Database settings',
+    'position' => 'left',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer enrd configuration'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['lag'] = array(
+    'title' => 'LAG Database',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array(
+      'leader-clld/lag-database',
+      array(),
+      '301',
+    ),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['lag/%/offer'] = array(
+    'title' => 'Cooperation offers',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array(
+      'leader-clld/clld-partner-search',
+      array(),
+      '301',
+    ),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_lag_database_menu_alter(&$items) {
+  // Set menu items for the LAG Database Search page.
+  if (isset($items['leader-clld/lag-database'])) {
+    $items['leader-clld/lag-database']['type'] = MENU_NORMAL_ITEM;
+    $items['leader-clld/lag-database']['menu_name'] = 'main-menu';
+    $items['leader-clld/lag-database/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
+  }
+
+  // Set menu items for the CLLD Partner Search pages.
+  if (isset($items['leader-clld/clld-partner-search/active'])) {
+    // Create the parent menu item.
+    $items['leader-clld/clld-partner-search'] = array(
+      'title' => t('CLLD Partner Search'),
+      'type' => MENU_NORMAL_ITEM,
+      'menu_name' => 'main-menu',
+      'weight' => 10,
+    ) + $items['leader-clld/clld-partner-search/active'];
+
+    // Set "Active offers" search page as default tab.
+    $items['leader-clld/clld-partner-search/active']['title'] = t('Active offers');
+    $items['leader-clld/clld-partner-search/active']['type'] = MENU_DEFAULT_LOCAL_TASK;
+    $items['leader-clld/clld-partner-search/active/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
+  }
+
+  if (isset($items['leader-clld/clld-partner-search/expired'])) {
+    // Set "Expired offers" search page as additional tab.
+    $items['leader-clld/clld-partner-search/expired']['title'] = t('Expired offers');
+    $items['leader-clld/clld-partner-search/expired']['type'] = MENU_LOCAL_TASK;
+    $items['leader-clld/clld-partner-search/expired/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
+  }
+
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function enrd_lag_database_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+
+  switch ($root_path) {
+    case 'leader-clld/clld-partner-search/active/%':
+    case 'leader-clld/clld-partner-search/expired/%':
+
+      // Add manually parents local actions for the SolR search page
+      // with some parameter.
+      $custom_local_tasks = array(
+        'leader-clld/clld-partner-search/active',
+        'leader-clld/clld-partner-search/expired',
+      );
+
+      foreach ($custom_local_tasks as $path) {
+        $menu_item = menu_get_item($path);
+        $is_active = ($router_item['path'] == $path . '/%');
+
+        // Maintain SolR search criteria.
+        if (!$is_active) {
+          $menu_item['href'] .= '/' . $router_item['page_arguments'][1];
+          $menu_item['localized_options']['query'] = drupal_get_query_parameters();
+        }
+
+        $data['tabs'][0]['output'][] = array(
+          '#theme' => 'menu_local_task',
+          '#link' => $menu_item,
+          '#active' => $is_active,
+        );
+      }
+
+      // Reset counter.
+      $data['tabs'][0]['count'] = count($data['tabs'][0]['output']);
+      break;
+  }
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_lag_database_menu_link_alter(&$item) {
+  if (isset($item['menu_name']) && $item['menu_name'] == 'main-menu') {
+    switch ($item['link_path']) {
+      case 'leader-clld/lag-database':
+      case 'leader-clld/clld-partner-search':
+        // Right position of Lag Database and CLLD Partner Search pages.
+        if (!isset($item['customized'])) {
+          if ($path = drupal_lookup_path('source', 'leader-clld')) {
+            $item['plid'] = (int) db_select('menu_links')
+              ->fields('menu_links', array('mlid'))
+              ->condition('menu_name', 'main-menu')
+              ->condition('link_path', $path)
+              ->execute()
+              ->fetchField();
+          }
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function enrd_lag_database_node_view_alter(&$build) {
+  // Adds JS LAG Database behavior on LAG Full view mode.
+  if ($build['#node']->type == 'lag' && $build['#view_mode'] == 'full') {
+
+    // Get phone number value or set it NULL.
+    $phone = isset($build['field_enrd_lag_phone'][0]['#markup']) ? ltrim($build['field_enrd_lag_phone'][0]['#markup'], '+, 0') : NULL;
+    $valid = FALSE;
+
+    if (!empty($phone)) {
+      // Validate phone number.
+      $valid = preg_match(ENRD_LAG_DATABASE_PHONE_NUMBER_VALIDATION, $phone);
+
+      // Attach jQuery Mask Plugin.
+      $build['#attached']['library'][] = array(
+        'enrd_lag_database',
+        'jquery.mask',
+      );
+    }
+
+    $build['#attached']['js'] = array(
+      drupal_get_path('module', 'enrd_lag_database') . '/enrd_lag_database.js' => array(
+        'type' => 'file',
+      ),
+    );
+
+    $settings = array(
+      'enrd_lag_database' => array(
+        'phone' => $phone,
+        'valid' => $valid,
+      ),
+    );
+
+    // Pass phone number and validation results to JS.
+    $build['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
+  }
+}
+
+/**
+ * Implements hook_workbench_moderation_access_alter().
+ */
+function enrd_lag_database_workbench_moderation_access_alter(&$access, $op, $node) {
+  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+
+  if ($type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // LAG managers/contacts should see the LAG node revisions
+    // ("LAG profile" area).
+    if ($op == 'view revisions' || $op == 'view history') {
+      $domain = _enrd_lag_database_get_lag_domain();
+
+      if ($domain['nsu']) {
+        // NSU case.
+        $lag = entity_metadata_wrapper('node', $node);
+
+        // NSU can edit LAGs of his country and main ESI Fund.
+        $main_esi_fund_ok = in_array($lag->{OG_AUDIENCE_FIELD}->value()[0]->nid, $domain['esi_funds_og']);
+        $country_ok = $lag->field_enrd_lag_country->value()->tid === $domain['country'];
+
+        $access = $main_esi_fund_ok && $country_ok;
+      }
+      else {
+        if (in_array($node->nid, $domain['lags'])) {
+          // It's my LAG.
+          $access = TRUE;
+        }
+      }
+    }
+  }
+
+  if ($type == ENRD_LAG_DATABASE_COOP_OFFER_NODE) {
+    if ($op == 'view revisions' || $op == 'view history' || $op == 'moderate') {
+      $domain = _enrd_lag_database_get_lag_domain();
+      $entity = entity_metadata_wrapper('node', $node);
+      if ($domain['nsu']) {
+        $lag = entity_metadata_wrapper('node', $entity->og_lag_group_ref->value());
+
+        // NSU can view LAGs of his country and main ESI Fund.
+        $main_esi_fund_ok = in_array($lag->{OG_AUDIENCE_FIELD}->value()[0]->nid, $domain['esi_funds_og']);
+        $country_ok = $lag->field_enrd_lag_country->value()->tid === $domain['country'];
+
+        $access = $main_esi_fund_ok && $country_ok;
+      }
+      else {
+        // LAG managers/contacts should see the LAG node revisions
+        // ("LAG profile" area).
+        if (in_array($entity->og_lag_group_ref->value()->nid, $domain['lags'])) {
+          // It's my LAG.
+          $access = TRUE;
+        }
+      }
+
+      // Manage moderation for archive also.
+      if ($access == TRUE && $op == 'moderate') {
+        $next_states = workbench_moderation_states_next($node->workbench_moderation['current']->state, NULL, $node);
+        $access = !empty($next_states);
+      }
+    }
+  }
+
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function enrd_lag_database_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+
+  if ($type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // Grant access to users with high permissions.
+    if (user_access('skip lag access control')) {
+      return NODE_ACCESS_ALLOW;
+    }
+
+    $domain = _enrd_lag_database_get_lag_domain($account);
+
+    if ($op == 'update') {
+      $next_states = workbench_moderation_states_next($node->workbench_moderation['current']->state, $account, $node);
+      $access = !empty($next_states) || $node->workbench_moderation['current']->published;
+      $allow_editable = $access ? NODE_ACCESS_ALLOW : NODE_ACCESS_DENY;
+    }
+
+    // NSU case.
+    if ($domain['nsu']) {
+      if ($op == 'create') {
+        return NODE_ACCESS_ALLOW;
+      }
+      if ($op == 'update') {
+        $lag = entity_metadata_wrapper('node', $node);
+
+        // NSU can edit LAGs of his country and Main ESI Fund.
+        $main_esi_fund_ok = in_array($lag->{OG_AUDIENCE_FIELD}->value()[0]->nid, $domain['esi_funds_og']);
+        $country_ok = $lag->field_enrd_lag_country->value()->tid === $domain['country'];
+
+        return $main_esi_fund_ok && $country_ok ? $allow_editable : NODE_ACCESS_DENY;
+      }
+      if ($op == 'delete') {
+        if (isset($node->revision) && $node->revision == TRUE) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+    else {
+      if ($op == 'update') {
+        // It's my LAG.
+        if (in_array($node->nid, $domain['lags'])) {
+          // As LAG Contact/Manager I can edit LAG in draft.
+          return $allow_editable;
+        }
+      }
+    }
+  }
+
+  if ($type == ENRD_LAG_DATABASE_COOP_OFFER_NODE) {
+    // Grant access to users with high permissions.
+    if (user_access('skip lag access control')) {
+      return NODE_ACCESS_ALLOW;
+    }
+
+    $domain = _enrd_lag_database_get_lag_domain($account);
+
+    if ($op == 'update') {
+      $access = $node->workbench_moderation['current']->state == 'draft' || $node->workbench_moderation['current']->published;
+      $allow_editable = $access ? NODE_ACCESS_ALLOW : NODE_ACCESS_DENY;
+    }
+
+    // NSU case.
+    if ($domain['nsu']) {
+      if ($op == 'create') {
+        return NODE_ACCESS_ALLOW;
+      }
+      if ($op == 'update') {
+        // National managers can edit their Cooperation offers.
+        return ($account->uid == $node->uid) ? $allow_editable : NODE_ACCESS_DENY;
+      }
+      if ($op == 'delete') {
+        if (isset($node->revision) && $node->revision == TRUE) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+    else {
+      if ($op == 'update') {
+        $coop_offer = entity_metadata_wrapper('node', $node);
+        // It's my LAG.
+        if (in_array($coop_offer->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}->value()->nid, $domain['lags'])) {
+          // As LAG Contact/Manager I can edit Coop Offer in draft.
+          return $allow_editable;
+        }
+      }
+      if ($op == 'delete') {
+        $coop_offer = entity_metadata_wrapper('node', $node);
+        // It's my LAG.
+        if (in_array($coop_offer->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}->value()->nid, $domain['lags'])) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_og_user_access_alter().
+ */
+function enrd_lag_database_og_user_access_alter(&$perm, $context) {
+
+  // NSUs can edit theirs coop offers.
+  if ($context['string'] == 'update own cooperation_offer content') {
+    if ($context['group']->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+      $domain = _enrd_lag_database_get_lag_domain($context['account']);
+      if (in_array($context['group']->og_group_ref[LANGUAGE_NONE][0]['target_id'], $domain['esi_funds_og'])) {
+        $perm['update own cooperation_offer content'] = TRUE;
+      }
+    }
+  }
+
+  // NSUs can manage members inside a LAG.
+  if ($context['string'] == 'manage members') {
+    if ($context['group']->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+      $domain = _enrd_lag_database_get_lag_domain($context['account']);
+      if (in_array($context['group']->og_group_ref[LANGUAGE_NONE][0]['target_id'], $domain['esi_funds_og'])) {
+        $perm['manage members'] = TRUE;
+      }
+    }
+  }
+
+}
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function enrd_lag_database_override_multisite_components() {
+  module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.permissions');
+  module_load_include('inc', 'enrd_lag_database', 'includes/enrd_lag_database.og');
+
+  // Override Multisite permissions.
+  _enrd_lag_database_overrides_permission();
+  _enrd_lag_database_overrides_og_permission();
+
+  watchdog('enrd_lag_database', 'Override multisite components');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_database_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  // Only administrators can edit the country field profile for NSU.
+  if (isset($form['field_enrd_lag_country'])) {
+    $form['field_enrd_lag_country']['#access'] = user_access('edit user profile LAG fields');
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_database_form_lag_node_form_alter(&$form, &$form_state, $form_id) {
+  // Add submit handler to default one.
+  if ($form['#node_edit_form']) {
+    $form['actions']['submit']['#submit'][] = 'enrd_lag_database_form_submit';
+  }
+
+  // Force checkbox value to "Yes" while viewing the LAG add/edit form.
+  if (isset($form['field_enrd_lag_interested_in'][LANGUAGE_NONE]['#options'][1])
+    && !empty($form['field_enrd_lag_interested_in'][LANGUAGE_NONE]['#options'][1])) {
+    $form['field_enrd_lag_interested_in'][LANGUAGE_NONE]['#options'][1] = 'Yes';
+  }
+
+  // Force default "Interested in partnership" label to be show above the
+  // Yes value if the "Use field label instead of On value as label" is active.
+  $interested = 'field_enrd_lag_interested_in';
+  if ($form_state['field'][$interested][LANGUAGE_NONE]['instance']['widget']['settings']['display_label'] == 1) {
+    $form[$interested][LANGUAGE_NONE]['#prefix'] = '<label>' . $form[$interested][LANGUAGE_NONE]['#title'] . '</label>';
+    $form[$interested][LANGUAGE_NONE]['#title'] = $form[$interested][LANGUAGE_NONE]['#options'][1];
+  }
+
+  // Alter node form for users that have no specific permissions.
+  if (!user_access('skip alter moderation form')) {
+    // Hide "Revision information" tab.
+    $form['revision_information']['#access'] = FALSE;
+
+    // Create EU Legal notice / Publish Legal notice checkboxes.
+    $form['actions']['legal_notice'] = array(
+      '#type' => 'fieldset',
+      '#weight' => -50,
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
+    );
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+    // Publish Legal notice.
+    $form['actions']['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_element($form['#node']);
+  }
+
+  $form['field_enrd_lag_themes_interests']['#states'] = array(
+    'visible' => array(
+      array(
+        ':input[name="field_enrd_lag_interested_in[und]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
+  $esi_funds_og_nodes = _enrd_lag_database_get_main_esi_fund_og_list();
+
+  module_load_include('php', 'enrd_lag_database', 'data/enrd_lag_database_taxonomies');
+  $esi_funds_long_names = _enrd_lag_database_get_enrd_esi_funds_long_name();
+
+  // Clean Fund Contribution field value if it is not among
+  // the "Additional ESI Funds" values and regardless of the "Main ESI Fund".
+  $contribution_fields = array(
+    'EAFRD' => 'field_enrd_lag_eafrd_contrib',
+    'ESF' => 'field_enrd_lag_esf_contrib',
+    'ERDF' => 'field_enrd_lag_erdf_contrib',
+    'EMFF' => 'field_enrd_lag_emff_contrib',
+  );
+
+  if (!empty($esi_funds_long_names)) {
+
+    foreach ($esi_funds_long_names as $acronym => $long_name) {
+
+      foreach ($contribution_fields as $acr => $field) {
+
+        if ($acr == $acronym) {
+          // Financial contribution field visible according to "Main ESI Fund".
+          $esi_funds_og_nid = array_search($long_name, $esi_funds_og_nodes);
+
+          // Contribution fields visible if "Additional ESI Funds" are checked.
+          $esi_fund_tid = array_search($acronym, $form['field_enrd_additional_esi_funds'][LANGUAGE_NONE]['#options']);
+
+          if (isset($esi_fund_tid) || !empty($esi_funds_og_nid)) {
+
+            $form[$field]['#states'] = array(
+              'visible' => array(
+                array(
+                  ':input[name="field_enrd_additional_esi_funds[und][' . $esi_fund_tid . ']"]' => array('checked' => TRUE),
+                ),
+                array(
+                  ':input[name="og_group_ref[und][0][default]"]' => array('value' => $esi_funds_og_nid),
+                ),
+                array(
+                  ':input[name="og_group_ref[und][0][admin]"]' => array('value' => $esi_funds_og_nid),
+                ),
+                array(
+                  ':input[name="field_enrd_main_esi_fund_disabled"]' => array('value' => $long_name),
+                ),
+              ),
+            );
+
+          }
+        }
+
+      }
+
+    }
+
+  }
+
+  global $user;
+
+  if ($form[OG_AUDIENCE_FIELD]['#access'] === FALSE) {
+    // Show "Main ESI Fund" disabled field to LAG Users.
+    $esi_fund = taxonomy_term_load($form['field_enrd_main_esi_fund'][LANGUAGE_NONE]['#entity']->field_enrd_main_esi_fund[LANGUAGE_NONE][0]['tid']);
+    $fund_name = $esi_fund->field_enrd_esi_funds_long_name[LANGUAGE_NONE][0]['value'];
+
+    $form['field_enrd_main_esi_fund_disabled'] = array(
+      '#title' => $form['field_enrd_main_esi_fund'][LANGUAGE_NONE]['#title'],
+      '#type' => 'textfield',
+      '#field_name' => 'field_enrd_main_esi_fund_disabled',
+      '#default_value' => $fund_name,
+      '#weight' => $form['field_enrd_additional_esi_funds']['#weight'] - 1,
+      '#disabled' => TRUE,
+      '#attributes' => array(
+        'name' => 'field_enrd_main_esi_fund_disabled',
+      ),
+    );
+
+    $form['#group_children']['field_enrd_main_esi_fund_disabled'] = 'group_enrd_lag_budgets';
+
+  }
+  elseif (!user_access('skip lag country restriction')) {
+
+    $user_fields = user_load($user->uid);
+    $user_groups = og_get_groups_by_user($user, 'node');
+
+    // Filter "Countries" only with the user Country in the user profile field.
+    $user_country_terms = array();
+    if (isset($user_fields->field_enrd_lag_country[LANGUAGE_NONE])) {
+      foreach ($user_fields->field_enrd_lag_country[LANGUAGE_NONE] as $terms) {
+        $user_country_terms[$terms['tid']] = $terms['tid'];
+      }
+    }
+
+    $form['field_enrd_lag_country'][LANGUAGE_NONE]['#options']
+      // Select a value.
+        = array_intersect_key($form['field_enrd_lag_country'][LANGUAGE_NONE]['#options'], array('_none' => '_none')) +
+      // Clean from dash Country names.
+      array_intersect_key(array_map(function ($text) {
+        return ltrim($text, '-');
+      }, $form['field_enrd_lag_country'][LANGUAGE_NONE]['#options']), $user_country_terms);
+
+    // Filter "ESIF Programme" to user selectable values.
+    $form['field_enrd_esif_programme'][LANGUAGE_NONE]['#options'] = array_intersect_key($form['field_enrd_esif_programme'][LANGUAGE_NONE]['#options'], array('_none' => '_none'));
+    foreach ($user_groups as $gid) {
+      $fund_terms = _enrd_lag_database_get_esif_programme_root($gid);
+
+      foreach ($fund_terms as $fund_term) {
+        foreach (taxonomy_get_children($fund_term->tid) as $country_term) {
+          if (in_array($country_term->name, $form['field_enrd_lag_country'][LANGUAGE_NONE]['#options'])) {
+            $esif_programs = taxonomy_get_children($country_term->tid);
+            if (empty($esif_programs)) {
+              // Create "None" option if there aren't ESIF Programme
+              // for the specific fund.
+              $form['field_enrd_esif_programme'][LANGUAGE_NONE]['#options'][$fund_term->name]['_none'] = t('None');
+            }
+            else {
+              foreach ($esif_programs as $esif_program) {
+                $form['field_enrd_esif_programme'][LANGUAGE_NONE]['#options'][$fund_term->name][$esif_program->tid] = $esif_program->name;
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+  // Get phone number value or set it NULL.
+  $phone = isset($form['field_enrd_lag_phone'][LANGUAGE_NONE][0]['value']['#default_value']) ? ltrim($form['field_enrd_lag_phone'][LANGUAGE_NONE][0]['value']['#default_value'], '+, 0') : NULL;
+  $valid = FALSE;
+
+  if (!empty($phone)) {
+    // Validate phone number.
+    $valid = preg_match(ENRD_LAG_DATABASE_PHONE_NUMBER_VALIDATION, $phone);
+  }
+
+  // Attach jQuery Mask Plugin.
+  $form['#attached']['library'][] = array(
+    'enrd_lag_database',
+    'jquery.mask',
+  );
+
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'enrd_lag_database') . '/enrd_lag_database.js' => array(
+      'type' => 'file',
+    ),
+  );
+
+  $settings = array(
+    'enrd_lag_database' => array(
+      'phone' => $phone,
+      'valid' => $valid,
+    ),
+  );
+
+  // Pass phone number and validation results to JS.
+  $form['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
+
+  $form['#attached']['css'] = array(
+    drupal_get_path('module', 'enrd_lag_database') . '/enrd_lag_database.css' => array(
+      'type' => 'file',
+    ),
+  );
+
+  // Force "Main ESI Fund" to be single value and required.
+  $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['default']['#multiple'] = FALSE;
+  $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['admin']['#multiple'] = FALSE;
+
+  // Force only ESI Funds OG nodes in OG group field.
+  if (isset($form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['default']['#options']['ESI Funds OG'])) {
+    $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['default']['#options'] = $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['default']['#options']['ESI Funds OG'];
+  }
+  if (isset($form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['admin']['#options']['ESI Funds OG'])) {
+    $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['admin']['#options'] = array_intersect_key($form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['admin']['#options'], array('_none' => '_none')) + $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE][0]['admin']['#options']['ESI Funds OG'];
+  }
+
+  // Custom validation for ESIF programme based on ESIF Fund and Country.
+  $form['field_enrd_esif_programme']['#element_validate'][] = '_enrd_lag_database_esif_programme_validate';
+
+  // Hide Main ESI Fund field and fill it with term reference tid from
+  // ESI Funds OG field value in enrd_lag_database_node_presave().
+  $form['field_enrd_main_esi_fund']['#access'] = FALSE;
+
+  // Replace the Fund acronym with the full name + the acronym combo.
+  if (isset($form['field_enrd_additional_esi_funds'][LANGUAGE_NONE]['#options'])) {
+
+    $main_funds_tids = array_keys($form['field_enrd_additional_esi_funds'][LANGUAGE_NONE]['#options']);
+
+    foreach ($main_funds_tids as $main_fund_tid) {
+      $main_fund = taxonomy_term_load($main_fund_tid);
+      $long_name = $main_fund->field_enrd_esi_funds_long_name[LANGUAGE_NONE][0]['value'];
+
+      if (!empty($long_name)) {
+        $form['field_enrd_additional_esi_funds'][LANGUAGE_NONE]['#options'][$main_fund_tid] = $long_name;
+      }
+    }
+
+  }
+
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_database_form_cooperation_offer_node_form_alter(&$form, &$form_state, $form_id) {
+  // Add submit handler to default one.
+  if ($form['#node_edit_form']) {
+    $form['actions']['submit']['#submit'][] = 'enrd_lag_database_form_submit';
+    $form['#validate'][] = 'enrd_lag_database_cooperation_offer_node_form_validate';
+  }
+
+  // Another security check.
+  $form['og_lag_group_ref'][LANGUAGE_NONE][0]['#required'] = TRUE;
+
+  // Check if node is being created to eventually copy some field values.
+  if (empty($form['nid']['#value'])) {
+    if (!empty($form[ENRD_LAG_DATABASE_LAG_OG_GROUP_REF][LANGUAGE_NONE][0]['target_id']['#default_value'])) {
+      $lag_id = $form[ENRD_LAG_DATABASE_LAG_OG_GROUP_REF][LANGUAGE_NONE][0]['target_id']['#default_value'];
+      // Copy values from Offering LAG 'Spoken languages' to new field.
+      _enrd_lag_database_set_shs_parent_field_values($form, $form_state, $lag_id, 'field_enrd_lag_spoken_languages', 'field_enrd_coop_spoken_languages');
+    }
+  }
+
+  // Alter node form for users that not not have specific permissions.
+  if (!user_access('skip alter moderation form')) {
+    $form['revision_information']['#access'] = FALSE;
+
+    // Create EU Legal notice / Publish Legal notice checkboxes.
+    $form['legal_notice'] = array(
+      '#type' => 'fieldset',
+      '#weight' => 50,
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#attributes' => array('class' => array('form-legal-notice-disclaimer')),
+    );
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+    // Publish Legal notice.
+    $form['legal_notice']['field_publish_legal_notice'] = _enrd_lag_database_get_publish_legal_notice_element($form['#node']);
+
+    $form['#group_children']['legal_notice'] = 'group_enrd_coop_contact_info';
+  }
+
+  // Hide third level terms options in Country(ies) term reference field.
+  foreach ($form['field_enrd_coop_partner_country'][LANGUAGE_NONE]['#options'] as $tid => $term) {
+    if (strstr($term, '---')) {
+      unset($form['field_enrd_coop_partner_country'][LANGUAGE_NONE]['#options'][$tid]);
+    }
+  }
+
+}
+
+/**
+ * Validate function for target id during coop offers validation.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ */
+function enrd_lag_database_cooperation_offer_node_form_validate($form, &$form_state) {
+  if (empty($form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id'])) {
+    // Safety check for LAG reference in Cooperation offer creation/edit.
+    form_set_error(implode('][', $form['og_lag_group_ref']['#array_parents']), t('Offering LAG field is required.'));
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function enrd_lag_database_node_presave($node) {
+
+  if ($node->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE) {
+    // Get the nid from "LAG profile" of the Cooperation offer node.
+    if (isset($node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id']) &&
+      !empty($node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'])
+    ) {
+      $ref_lag_id = $node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'];
+      $lags = entity_load('node', array($ref_lag_id));
+
+      if (!empty($lags)) {
+        $lag = reset($lags);
+        $node->field_tax_country = $lag->field_enrd_lag_country;
+      }
+    }
+  }
+  // LAGs.
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // Get the OG group audience id to assign to the node Main ESI Fund field
+    // value the OG term reference field value.
+    if (isset($node->og_group_ref[LANGUAGE_NONE][0]['target_id']) && !empty($node->og_group_ref[LANGUAGE_NONE][0]['target_id'])) {
+      $nid = $node->og_group_ref[LANGUAGE_NONE][0]['target_id'];
+      $esi_fund = entity_load('node', array($nid));
+      $esi_fund = reset($esi_fund);
+      $node->field_enrd_main_esi_fund[LANGUAGE_NONE][0]['tid'] = $esi_fund->field_enrd_main_esi_fund[LANGUAGE_NONE][0]['tid'];
+    }
+
+    // Clean Fund Contribution field value if it is not among
+    // the "Additional ESI Funds" values and regardless of the "Main ESI Fund".
+    $contribution_fields = array(
+      'EAFRD' => 'field_enrd_lag_eafrd_contrib',
+      'ESF' => 'field_enrd_lag_esf_contrib',
+      'ERDF' => 'field_enrd_lag_erdf_contrib',
+      'EMFF' => 'field_enrd_lag_emff_contrib',
+    );
+
+    if (isset($node->field_enrd_main_esi_fund) && isset($node->field_enrd_additional_esi_funds)) {
+
+      foreach ($contribution_fields as $fund => $contrib) {
+        if (isset($node->{$contrib}[LANGUAGE_NONE][0]['value'])) {
+
+          $esi_fund_name = taxonomy_get_term_by_name($fund, 'enrd_esi_funds');
+
+          if (!empty($esi_fund_name)) {
+
+            $contrib_fund_tid = reset($esi_fund_name)->tid;
+
+            if (!empty($contrib_fund_tid) && ($contrib_fund_tid !== $node->field_enrd_main_esi_fund[LANGUAGE_NONE][0]['tid'])) {
+
+              if (!empty($node->field_enrd_additional_esi_funds[LANGUAGE_NONE])) {
+                $additional_fund_tids = array_column($node->field_enrd_additional_esi_funds[LANGUAGE_NONE], 'tid');
+
+                if (!in_array($contrib_fund_tid, $additional_fund_tids)) {
+                  unset($node->{$contrib});
+                }
+              }
+              else {
+                unset($node->{$contrib});
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if ($node->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE || $node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    if (isset($node->field_publish_legal_notice) && $node->field_publish_legal_notice) {
+      // Force moderation state to "ready_to_be_published".
+      $node->workbench_moderation_state_new = enrd_mastermind_workbench_moderation_state_ready_to_be_published();
+    }
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ *
+ * Delete user membership for deleted nodes.
+ */
+function enrd_lag_database_node_delete($node) {
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // Do an additional check to see if node is a group.
+    if (og_is_group('node', $node)) {
+
+      // Get list of members of node in delete process.
+      $users = _enrd_lag_database_get_users_in_group($node->nid);
+      if ($users) {
+        // Loop through users' uid and pass them to og_ungroup() function.
+        foreach ($users as $user_id) {
+          // Delete user's group memberships.
+          og_ungroup('node', $node->nid, 'user', $user_id);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function enrd_lag_database_theme() {
+  return array(
+    'enrd_lag_database_search_results_table' => array(
+      'render element' => 'element',
+    ),
+    'enrd_lag_database_webform_submission_page' => array(
+      'variables' => array(
+        'node' => NULL,
+        'submission' => NULL,
+        'submission_content' => NULL,
+        'submission_navigation' => NULL,
+        'submission_information' => NULL,
+        'submission_actions' => NULL,
+        'mode' => NULL,
+      ),
+    ),
+    'enrd_lag_database_webform_submission_information' => array(
+      'variables' => array(
+        'node' => NULL,
+        'submission' => NULL,
+        'mode' => 'display',
+      ),
+    ),
+    'enrd_lag_database_checkbox_button' => array(
+      'variables' => array(
+        'links' => NULL,
+        'label' => NULL,
+        'attributes' => array(
+          'class' => array('links'),
+        ),
+        'heading' => array(),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_context_load_alter().
+ */
+function enrd_lag_database_context_load_alter(&$context) {
+  switch ($context->name) {
+    case 'site_wide':
+      // Remove 'create-content-button' block if node is of type LAG.
+      $node = menu_get_object();
+      if (isset($node->nid)) {
+        if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+          unset($context->reactions['block']['blocks']['create-content-button']);
+        }
+      }
+
+      // Remove multisite_create_button block on taxonomy term pages.
+      $taxo = menu_get_object('taxonomy_term', 2);
+      if (isset($taxo->tid)) {
+        unset($context->reactions['block']['blocks']['create-content-button']);
+      }
+      break;
+
+    case 'communities':
+      // Remove 'create-content-button' block if node is of type LAG.
+      $node = menu_get_object();
+      if (isset($node->nid)) {
+        if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+          unset($context->reactions['block']['blocks']['menu-menu-communities-menu']);
+          unset($context->reactions['block']['blocks']['multisite_og_button-og-contextual-links']);
+          unset($context->reactions['block']['blocks']['views-2d4875e6d03384eb9958118db936eec9']);
+        }
+      }
+  }
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function enrd_lag_database_field_widget_form_alter(array &$element, array &$form_state, array $context) {
+  if (isset($element['#bundle']) && ($element['#bundle'] == ENRD_LAG_DATABASE_LAG_GROUP_NODE || $element['#bundle'] == 'user')) {
+    // Limit field "Country" to show only "European Union" countries.
+    if (isset($element['#field_name']) && $element['#field_name'] == 'field_enrd_lag_country') {
+      $element['#options'] = array_intersect_key($element['#options'], array('_none' => '')) + _enrd_lag_database_get_eu_countries_options();
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ */
+function enrd_lag_database_field_widget_media_generic_form_alter(&$element, &$form_state, $context) {
+  if (isset($context['form']['type']) && $context['form']['type']['#value'] == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    if ($context['instance']['field_name'] == 'field_enrd_lag_documentation') {
+      // Change media_generic widget title for LAGs.
+      $element['#file_upload_title'] = t('Upload document');
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_database_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['#search_page']['page_id'] == 'lag_database') {
+    $form['#after_build'][] = '_enrd_lag_database_change_apachesolr_freetext_placeholder';
+  }
+  elseif ($form['#search_page']['page_id'] == 'partner_search' || $form['#search_page']['page_id'] == 'partner_search_expired') {
+    $form['#after_build'][] = '_enrd_lag_database_change_apachesolr_freetext_placeholder';
+  }
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_node().
+ */
+function enrd_lag_database_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
+  // Custom indexing of LAG content.
+  if ($entity->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    // Only need the first value.
+    if ($countries = $document->getField('sm_vid_ENRD_Countries')) {
+      // Add the value to be indexed.
+      $document->setField('ss_enrd_lag_country', $countries['value'][0]);
+    }
+
+    if ($main_fund = $document->getField('im_field_enrd_main_esi_fund')) {
+      $fund_term = taxonomy_term_load($main_fund['value'][0]);
+      $fund_term_full_name = $fund_term->field_enrd_esi_funds_long_name[LANGUAGE_NONE][0]['value'];
+
+      // Add the Main ESI Fund term long name to be indexed.
+      $document->setField('ss_enrd_lag_full_main_fund', $fund_term_full_name);
+    }
+  }
+
+  // Custom indexing of Cooperation offer content.
+  if ($entity->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE) {
+    if (!empty($entity->og_lag_group_ref)) {
+      $coop_referenced_lag = node_load($entity->og_lag_group_ref[LANGUAGE_NONE][0]['target_id']);
+      // Add the LAG-related title to be indexed.
+      $document->setField('ss_og_lag_group_ref_title', $coop_referenced_lag->title);
+
+      $fund_tid = $coop_referenced_lag->field_enrd_main_esi_fund[LANGUAGE_NONE][0]['tid'];
+      $main_esi_fund = taxonomy_term_load($fund_tid);
+      if (!empty($coop_referenced_lag->field_enrd_additional_esi_funds)) {
+        if ($add_funds_tids = $coop_referenced_lag->field_enrd_additional_esi_funds[LANGUAGE_NONE]) {
+          $tids = array_column($add_funds_tids, 'tid');
+          $add_funds = taxonomy_term_load_multiple($tids);
+          // Merge Main and Additional ESI Funds.
+          array_push($add_funds, $main_esi_fund);
+          foreach ($add_funds as $add_fund) {
+            // Set merged related-LAG ESI Funds values to be indexed.
+            $document->addField('sm_enrd_coop_lag_funds', $add_fund->field_enrd_esi_funds_long_name[LANGUAGE_NONE][0]['value']);
+          }
+        }
+      }
+      else {
+        // Add only the LAG Main ESI Fund value to be indexed.
+        $document->setField('sm_enrd_coop_lag_funds', $main_esi_fund->field_enrd_esi_funds_long_name[LANGUAGE_NONE][0]['value']);
+      }
+
+      $country_tid = $coop_referenced_lag->field_enrd_lag_country[LANGUAGE_NONE][0]['tid'];
+      $country = taxonomy_term_load($country_tid);
+      // Add the LAG Country value to be indexed.
+      $document->setField('ss_enrd_coop_lag_country', $country->name);
+    }
+
+    if (!empty($entity->field_enrd_coop_type)) {
+      unset($document->im_field_enrd_coop_type);
+
+      // Make sure first value is not null to avoid errors.
+      $first_type_parent = array_keys(taxonomy_get_parents($entity->field_enrd_coop_type[LANGUAGE_NONE][0]['tid']));
+      if (!empty($first_type_parent)) {
+        // Set "Project Type" solr indexed field to parent in case of child.
+        $document->addField('im_field_enrd_coop_type', (string) $first_type_parent[0]);
+      }
+      else {
+        // Set "Project Type" solr indexed field to the term itself otherwise.
+        $document->addField('im_field_enrd_coop_type', $entity->field_enrd_coop_type[LANGUAGE_NONE][0]['tid']);
+      }
+
+      foreach ($entity->field_enrd_coop_type[LANGUAGE_NONE] as $project_type) {
+        // Then apply the same check to the other values.
+        $project_type_parent = array_keys(taxonomy_get_parents($project_type['tid']));
+        $coop_type_value = $document->getField('im_field_enrd_coop_type');
+
+        if (!empty($project_type_parent)) {
+          if (!in_array($project_type_parent[0], $coop_type_value['value'])) {
+            // Set "Project Type" solr indexed field to parent in case of child.
+            $document->addField('im_field_enrd_coop_type', (string) $project_type_parent[0]);
+          }
+        }
+        else {
+          if (!in_array($project_type['tid'], $coop_type_value['value'])) {
+            // Set "Project Type" solr indexed field to term itself otherwise.
+            $document->addField('im_field_enrd_coop_type', $project_type['tid']);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_facetapi_facet_info().
+ */
+function enrd_lag_database_facetapi_facet_info($searcher_info) {
+  $facets = array();
+
+  if (isset($searcher_info['types']['node'])) {
+    // Custom LAG "ESI Fund" facet.
+    $facets['ss_enrd_lag_full_main_fund'] = array(
+      'label' => t('ESI Fund'),
+      'description' => t('Custom filter that exposes the Main ESI Fund full name.'),
+      'field' => 'ss_enrd_lag_full_main_fund',
+    );
+    // Custom facet for offer-related LAG "Country".
+    $facets['ss_enrd_coop_lag_country'] = array(
+      'label' => t('Country'),
+      'description' => t('Custom filter that exposes related LAG Country.'),
+      'field' => 'ss_enrd_coop_lag_country',
+    );
+    // Custom facet for offer-related LAG "Main ESI Fund".
+    $facets['sm_enrd_coop_lag_funds'] = array(
+      'label' => t('LAG funded under'),
+      'description' => t('Custom filter that exposes related LAG ESI Funds.'),
+      'field' => 'sm_enrd_coop_lag_funds',
+    );
+
+    // Create custom facets for both LAG and Cooperation offer search pages.
+    $facets = array_merge($facets, apachesolr_entity_field_facets('node'));
+  }
+
+  return $facets;
+}
+
+/**
+ * Implements hook_apachesolr_query_prepare().
+ */
+function enrd_lag_database_apachesolr_query_prepare(DrupalSolrQueryInterface $query) {
+
+  $context = $query->getContext();
+
+  // LAG Search page.
+  $is_lag_search_page = $context['page_id'] == 'lag_database';
+
+  // CLLD Search pages (active and expired).
+  $partner_search_pages = [
+    'partner_search' => 'asc',
+    'partner_search_expired' => 'desc',
+  ];
+  $is_partner_search_page = isset($partner_search_pages[$context['page_id']]);
+
+  if ($is_lag_search_page) {
+    // If no manual sort is set, set default sort to LAG "Country" asc.
+    if (!isset($_GET['solrsort']) || empty($_GET['solrsort'])) {
+      $query->setSolrSort('ss_enrd_lag_country', 'asc');
+    }
+  }
+
+  if ($is_partner_search_page) {
+
+    // Expiry sort criteria.
+    $sort = $partner_search_pages[$context['page_id']];
+
+    // Add available "Expiry date" sort sort filter.
+    $query->setAvailableSort('ds_field_enrd_coop_expiry_date', array(
+      'title' => t('Expiry date'),
+      'default' => $sort,
+    ));
+
+    // With no manual sort, set default sort to "Expiry date" based on page.
+    if (!isset($_GET['solrsort']) || empty($_GET['solrsort'])) {
+      $query->setSolrSort('ds_field_enrd_coop_expiry_date', $sort);
+    }
+
+    // Add custom Country, Offer name and Offering LAG sort criteria.
+    $query->setAvailableSort('ss_enrd_coop_lag_country', array(
+      'title' => t('Country'),
+      'default' => 'asc',
+    ));
+    $query->setAvailableSort('ss_title_field', array(
+      'title' => t('Offer name'),
+      'default' => 'asc',
+    ));
+    $query->setAvailableSort('ss_og_lag_group_ref_title', array(
+      'title' => t('Offering LAG'),
+      'default' => 'asc',
+    ));
+  }
+
+  if ($is_lag_search_page || $is_partner_search_page) {
+    // Remove core sort options.
+    $query->removeAvailableSort('bundle');
+    $query->removeAvailableSort('sort_name');
+    $query->removeAvailableSort('sort_label');
+    $query->removeAvailableSort('ds_created');
+    $query->removeAvailableSort('score');
+  }
+}
+
+/**
+ * Implements hook_apachesolr_field_mappings_alter().
+ */
+function enrd_lag_database_apachesolr_field_mappings_alter(&$mappings, $entity_type) {
+  // Add per field mapping so we can sort on a single value field.
+  // Solr cannot sort on multivalued fields.
+  $mappings['per-field']['title_field'] = $mappings['list_text'];
+  $mappings['per-field']['field_enrd_coop_expiry_date'] = $mappings['datestamp'];
+  // Set multiple explicitly as FALSE.
+  $mappings['per-field']['title_field']['multiple'] = FALSE;
+  $mappings['per-field']['field_enrd_coop_expiry_date']['multiple'] = FALSE;
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function enrd_lag_database_page_alter(&$page) {
+  $is_lag_webform = isset($page['content']['system_main']['#node']->uuid) && ($page['content']['system_main']['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID);
+  $is_display_mode = isset($page['content']['system_main']['#mode']) && ($page['content']['system_main']['#mode'] == 'display');
+
+  // Set custom theme to the "Contact this LAG" Webform Submission page.
+  if ($is_lag_webform && $is_display_mode) {
+    $page['content']['system_main']['#theme'] = 'enrd_lag_database_webform_submission_page';
+  }
+}
+
+/**
+ * Implements hook_process_hook().
+ */
+function enrd_lag_database_process_enrd_lag_database_webform_submission_page(&$variables) {
+  if (isset($variables['node']->uuid) && $variables['node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID) {
+    // Set the Cooperation offer title to be displayed on the submission page.
+    $coop_offer = node_load($variables['submission']->data[6][0]);
+    $variables['coop_offer_title'] = $coop_offer->title;
+  }
+}
+
+/**
+ * Format a "Contact this LAG" Webform Submission page.
+ *
+ * @param mixed $variables
+ *   An associative array containing:
+ *     $node: The node object for this webform.
+ *     $mode: Either "form" or "display". May be other modes provided by other
+ *       modules, such as "print" or "pdf".
+ *     $submission: The Webform submission array.
+ *     $submission_content: The contents of the webform submission.
+ *     $submission_navigation: The previous submission ID.
+ *     $submission_information: The next submission ID.
+ *     $coop_offer_title: The Cooperation offer title.
+ *
+ * @ingroup themeable
+ *
+ * @return array
+ *   The HTML output for this theme implementation.
+ */
+function theme_enrd_lag_database_webform_submission_page($variables) {
+  if ($variables['mode'] == 'display' || $variables['mode'] == 'form') {
+    $output = '';
+    $output .= '<div class="panel panel-default">';
+    $output .= '<div class="panel-heading">';
+    $output .= '<h2 class="panel-title">' . t('Cooperation offer: @title', array('@title' => $variables['coop_offer_title'])) . '</h2>';
+    $output .= '</div>';
+    $output .= '<div class="panel-body">';
+    $output .= theme('enrd_lag_database_webform_submission_information', array('submission' => $variables['submission']));
+    $output .= '<div class="webform-submission">' . $variables['submission_content'] . '</div>';
+    $output .= '</div>';
+    $output .= '</div>';
+  }
+
+  return $output;
+}
+
+/**
+ * Format a "Contact this LAG" Weform Submission page information.
+ *
+ * @param mixed $variables
+ *   An associative array containing:
+ *     $submission: The contents of the webform submission.
+ *
+ * @ingroup themeable
+ *
+ * @return array
+ *   The HTML output for this theme implementation.
+ */
+function theme_enrd_lag_database_webform_submission_information($variables) {
+  $output = '';
+  $output .= '<fieldset class="webform-submission-information clearfix">';
+  $output .= '<div class="webform-submission-info-text">';
+  $output .= '<label>' . t('Received:') . '</label>' . ' ' . format_date($variables['submission']->submitted, webform_variable_get('webform_date_type'));
+  $output .= '</div>';
+  $output .= '</fieldset>';
+
+  return $output;
+}
+
+/**
+ * Implements hook_apachesolr_search_page_alter().
+ */
+function enrd_lag_database_apachesolr_search_page_alter(&$build, $search_page) {
+
+  if ($search_page['page_id'] == 'lag_database') {
+    $build['search_results']['search_results']['#header'] = array(
+      t('Country'),
+      t('LAG name'),
+      t('Main ESI Fund'),
+      t('ESIF Programme'),
+    );
+    $build['search_results']['search_results']['#theme_wrappers'] = array('enrd_lag_database_search_results_table');
+    $build['search_results']['search_results']['#attributes'] = array(
+      'class' => array(
+        'table',
+        'table-enrd',
+      ),
+    );
+  }
+
+  if ($search_page['page_id'] == 'partner_search' || $search_page['page_id'] == 'partner_search_expired') {
+    $build['search_results']['search_results']['#header'] = array(
+      t('Country'),
+      t('Offer name'),
+      t('Offering LAG'),
+      t('Project type'),
+      t('Expiry date'),
+    );
+    $build['search_results']['search_results']['#theme_wrappers'] = array('enrd_lag_database_search_results_table');
+    $build['search_results']['search_results']['#attributes'] = array(
+      'class' => array(
+        'table',
+        'table-enrd',
+      ),
+    );
+  }
+
+}
+
+/**
+ * Format a search results as table.
+ *
+ * @param mixed $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element.
+ *     Properties used: #id, #attributes, #children, #header.
+ *
+ * @ingroup themeable
+ *
+ * @return array
+ *   The HTML output for this theme implementation.
+ */
+function theme_enrd_lag_database_search_results_table($variables) {
+
+  $element = $variables['element'];
+  // Ensure #attributes and #header are set.
+  $element += array('#attributes' => array());
+  $element += array('#header' => array());
+
+  $output = '';
+  $output .= '<table' . drupal_attributes($element['#attributes']) . ">\n";
+
+  // Format the table header:
+  if (count($element['#header'])) {
+    $output .= '<thead><tr> ';
+    foreach ($element['#header'] as $cell) {
+      $output .= _theme_table_cell($cell, TRUE);
+    }
+    $output .= " </tr></thead>\n";
+  }
+
+  $output .= $element['#children'] . "</table>\n";
+
+  return $output;
+}
+
+/**
+ * After build function to change Apache Solr free-text placeholder.
+ *
+ * @param mixed $form
+ *   The form which contains the search form attributes.
+ * @param mixed $form_state
+ *   Values added in form array.
+ *
+ * @return array
+ *   Returns the modified $form array.
+ */
+function _enrd_lag_database_change_apachesolr_freetext_placeholder($form, &$form_state) {
+  if ($form['#search_page']['page_id'] == 'lag_database') {
+    $form['basic']['keys']['#attributes']['placeholder'] = t("Free-text search in the LAG Database");
+  }
+  elseif ($form['#search_page']['page_id'] == 'partner_search' || $form['#search_page']['page_id'] == 'partner_search_expired') {
+    $form['basic']['keys']['#attributes']['placeholder'] = t("Free-text search in the CLLD Partner Search Tool");
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_feeds_before_import().
+ */
+function enrd_lag_database_feeds_before_import(FeedsSource $source) {
+  if ($source->id == 'enrd_lag_database') {
+    // Temporarily alter pathauto ignore words to allow use of iso-codes for:
+    // - Austria (AT);
+    // - Iceland (IS).
+    $exclude_patterns = variable_get('pathauto_ignore_words', PATHAUTO_IGNORE_WORDS);
+    $exclude_patterns = str_replace(array(
+      ' at,',
+      ' is,',
+    ), "", $exclude_patterns);
+    variable_set('pathauto_ignore_words', $exclude_patterns);
+  }
+}
+
+/**
+ * Implements hook_feeds_after_import().
+ */
+function enrd_lag_database_feeds_after_import(FeedsSource $source) {
+  if ($source->id == 'enrd_lag_database') {
+    // Set the original Pathauto ignore words values.
+    variable_set('pathauto_ignore_words', PATHAUTO_IGNORE_WORDS);
+  }
+}
+
+/**
+ * Implements hook_feeds_presave().
+ */
+function enrd_lag_database_feeds_presave(FeedsSource $source, $entity, $item, $entity_id) {
+  if ($source->id == 'enrd_lag_database') {
+    // Unlike workbench_moderation_moderate, skips draft and set
+    // published state directly.
+    $entity->workbench_moderation_state_new = workbench_moderation_state_published();
+  }
+}
+
+/**
+ * Helper function to import terms into ENRD LAG Database vocabularies.
+ *
+ * @param mixed $vocabularies
+ *   An optional array of taxonomies machine names.
+ */
+function _enrd_lag_database_import_taxonomies($vocabularies = NULL) {
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_lag_database', 'data/enrd_lag_database_taxonomies');
+
+  if (is_null($vocabularies) || !is_array($vocabularies)) {
+    $vocabularies = array(
+      'enrd_assets',
+      'enrd_esi_funds',
+      'enrd_esif_programme',
+      'enrd_key_themes_of_strategy',
+      'enrd_physical_demographic_characteristics_of_lag_area',
+      'enrd_project_types',
+    );
+  }
+
+  foreach ($vocabularies as $machine_name) {
+    // Import data.
+    _enrd_taxonomies_save_taxo(_enrd_lag_database_taxonomies($machine_name),
+      taxonomy_vocabulary_machine_name_load($machine_name));
+  }
+
+  drupal_set_message(t('ENRD LAG Database @machine_name vocabulary and terms created.',
+      array('@machine_name' => $machine_name))
+  );
+}
+
+/**
+ * Helper function to set the respective ESI Fund term long name.
+ */
+function _enrd_lag_database_save_fund_long_name() {
+
+  module_load_include('php', 'enrd_lag_database', 'data/enrd_lag_database_taxonomies');
+
+  $long_names = _enrd_lag_database_get_enrd_esi_funds_long_name();
+
+  foreach ($long_names as $fund => $long_name) {
+    $terms = taxonomy_get_term_by_name($fund, 'enrd_esi_funds');
+    foreach ($terms as $term) {
+      $term_wrapper = entity_metadata_wrapper('taxonomy_term', $term);
+      $term_wrapper->field_enrd_esi_funds_long_name->set($long_name);
+      $term_wrapper->save();
+    }
+  }
+
+  $t = get_t();
+  drupal_set_message($t('Updated ESI Funds Taxonomy terms to set the related long names.'));
+}
+
+/**
+ * Implements hook_field_access().
+ */
+function enrd_lag_database_field_access($op, $field, $entity_type, $entity, $account) {
+  if (empty($entity)) {
+    // $entity might be NULL, so return early.
+    // @see field_access().
+    return;
+  }
+
+  if (user_access('skip field access control')) {
+    return;
+  }
+
+  if ($entity && $entity_type == 'node') {
+
+    if ($op == 'view') {
+      return;
+    }
+
+    $perm = 'update ' . $field['field_name'] . ' field';
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    $enrd_bundle = ENRD_LAG_DATABASE_LAG_GROUP_NODE;
+    if ($bundle != $enrd_bundle) {
+      return TRUE;
+    }
+
+    if ($op == 'edit' && (og_is_group($entity_type, $entity) || og_is_group_content_type($entity_type, $bundle))) {
+      foreach (og_get_entity_groups() as $group_type => $gids) {
+        foreach ($gids as $gid) {
+          return og_user_access($group_type, $gid, $perm);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_og_permission().
+ *
+ * Add view/ edit permissions to all existing fields.
+ */
+function enrd_lag_database_og_permission() {
+  $perms = array();
+  $node_data = array();
+  $node_data['lag'] = field_info_instances('node', ENRD_LAG_DATABASE_LAG_GROUP_NODE);
+
+  foreach ($node_data as $bundle => $bundle_value) {
+    if (empty($bundle_value)) {
+      continue;
+    }
+
+    if (!og_is_group_type('node', $bundle) && !og_is_group_content_type('node', $bundle)) {
+      continue;
+    }
+
+    foreach ($bundle_value as $field_name => $value) {
+      $label = $value['label'];
+      $perm = 'update ' . $field_name . ' field';
+      $perms[$perm] = array(
+        'title' => t('Edit @label field', array('@label' => $label)),
+        'description' => t('Edit the %fieldname field for existing groups.', array('%fieldname' => $field_name)),
+        'roles' => array(OG_ANONYMOUS_ROLE, OG_AUTHENTICATED_ROLE),
+        'default role' => array(),
+        'module' => 'enrd_lag_database',
+      );
+    }
+  }
+
+  return $perms;
+}
+
+/**
+ * Implements hook_og_membership_insert().
+ */
+function enrd_lag_database_og_membership_insert(OgMembership $og_membership) {
+  _enrd_lag_database_sync_external_role($og_membership);
+}
+
+/**
+ * Implements hook_og_membership_delete().
+ */
+function enrd_lag_database_og_membership_delete(OgMembership $og_membership) {
+  _enrd_lag_database_sync_external_role($og_membership);
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function enrd_lag_database_field_widget_info() {
+  return array(
+    'field_lag_select' => array(
+      'label' => t('LAG selection'),
+      'field types' => array('entityreference'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function enrd_lag_database_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+
+  if ($instance['widget']['type'] == 'field_lag_select' && $form_state['build_info']['form_id'] != 'field_ui_field_edit_form') {
+    $og_context = og_context('node');
+
+    if (isset($form_state['values'][$instance['field_name']][$langcode][$delta])) {
+      // Use value from form_state.
+      list($selected_country, $element_value) = array_values($form_state['values'][$instance['field_name']][$langcode][$delta]);
+    }
+    else {
+      $field_column = key($field['columns']);
+
+      if (!empty($items[$delta][$field_column])) {
+        // Use saved value from database or cache.
+        $element_value = $items[$delta][$field_column];
+      }
+      else {
+        if (isset($og_context['gid'])) {
+          $element_value = $og_context['gid'];
+        }
+        else {
+          $element_value = NULL;
+        }
+      }
+
+      $selected_country = NULL;
+      if ($element_value && $lag = entity_load_single('node', $element_value)) {
+        $selected_country = $lag->field_enrd_lag_country[$langcode][$delta]['tid'];
+      }
+
+    }
+
+    $element['#delta'] = $delta;
+
+    $ajax_callback = array(
+      'callback' => '_enrd_lag_database_lag_og_group_ref_ajax',
+      'wrapper' => drupal_html_id($element['#field_name'] . '-main-wrapper-' . $delta),
+    );
+
+    $element['#prefix'] = "<div id=\"{$ajax_callback['wrapper']}\">";
+    $element['#suffix'] = '</div>';
+
+    $countries = _enrd_lag_database_get_eu_countries_options();
+    if (!user_access('skip lag country restriction')) {
+      $domain = _enrd_lag_database_get_lag_domain();
+      if ($domain['nsu']) {
+        $countries = array_intersect_key($countries, array($domain['country'] => ''));
+      }
+      else {
+        $countries = array_intersect_key($countries, drupal_map_assoc($domain['countries']));
+      }
+    }
+
+    $element['country'] = array(
+      '#title' => t('Country'),
+      '#description' => t('Select a Country to retrieve all related LAGs.'),
+      '#type' => 'select',
+      '#options' => $countries,
+      '#default_value' => isset($countries[$selected_country]) ? $selected_country : NULL,
+      '#required' => TRUE,
+      '#ajax' => $ajax_callback,
+    );
+
+    $lag_list = _enrd_lag_database_get_lag_list_options_by_country($element['country']['#default_value']);
+
+    $element['target_id'] = array(
+      '#title' => $instance['label'],
+      '#description' => t('Type the name of a LAG to display all available options.'),
+      '#type' => 'select',
+      '#options' => $lag_list,
+      '#default_value' => isset($lag_list[$element_value]) ? $element_value : NULL,
+      '#disabled' => is_null($element['country']['#default_value']),
+      '#required' => TRUE,
+      '#chosen' => TRUE,
+    );
+
+    if (!user_access('skip lag country restriction') && isset($og_context['gid'])  && $element_value == $og_context['gid']) {
+      $element['country']['#value'] = $element['country']['#default_value'];
+      $element['country']['#disabled'] = TRUE;
+      $element['target_id']['#value'] = $element['target_id']['#default_value'];
+      $element['target_id']['#disabled'] = TRUE;
+    }
+
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function enrd_lag_database_form_webform_client_form_alter(&$form, &$form_state, $form_id) {
+  // Custom behaviors for the "Contact this LAG" webform.
+  if (!empty($form['#node']->uuid) && $form['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID) {
+
+    form_load_include($form_state, 'inc', 'enrd_mastermind', 'includes/enrd_mastermind.form.legal_notice_element');
+    // EU Legal notice & Privacy Policy statements.
+    $form['actions']['legal_notice']['field_eu_legal_notice'] = _enrd_mastermind_eu_legal_notice_checkbox();
+
+    // Disclaimer msg below "Submit" button of the "Contact this LAG" Webform.
+    if ($form['actions']['submit']['#type'] == 'submit') {
+      $form['actions']['submit']['#suffix'] = '<div class="webform-contact-this-lag-disclaimer">' .
+        t('* The information you provide will be directly forwarded to the LAG contact person.') . '</div>';
+    }
+
+    // Populate LAG email contact form with the LAG email of the node.
+    $current_coop_offer = menu_get_object();
+    if (isset($current_coop_offer) && $current_coop_offer->type == 'cooperation_offer') {
+      if (!empty($current_coop_offer->field_enrd_coop_lag_email)) {
+        $form['submitted']['enrd_lag_database_contact_this_lag_email']['#value'] = $current_coop_offer->field_enrd_coop_lag_email[LANGUAGE_NONE][0]['email'];
+      }
+
+      if (!empty($current_coop_offer->nid)) {
+        $form['submitted']['enrd_lag_database_contact_this_lag_coop_offer']['#default_value'] = $current_coop_offer->nid;
+      }
+
+      if (!empty($current_coop_offer->nid)) {
+        $form['submitted']['enrd_lag_database_contact_this_lag_lag']['#default_value'] = $current_coop_offer->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'];
+      }
+
+      $form['#validate'][] = '_enrd_lag_database_form_webform_client_form_validate';
+    }
+
+    hide($form['submitted']['enrd_lag_database_contact_this_lag_coop_offer']);
+    hide($form['submitted']['enrd_lag_database_contact_this_lag_lag']);
+  }
+}
+
+/**
+ * Custom validate function to check lenght of message area field.
+ *
+ * @param mixed $form_state
+ *   The array containing the form values.
+ */
+function _enrd_lag_database_form_webform_client_form_validate(&$form, &$form_state) {
+  // Give an error message if message is longer than 800 characters.
+  if (drupal_strlen($form_state['values']['submitted']['enrd_lag_database_contact_this_lag_message']) > 800) {
+    form_set_error('submitted][enrd_lag_database_contact_this_lag_message',
+      t('The message cannot be longer than 800 (eight hundreds) characters.'));
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function enrd_lag_database_block_info() {
+  $blocks['contact_this_lag_webform'] = array(
+    'info' => t('ENRD LAG DATABASE: Contact this LAG'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function enrd_lag_database_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'contact_this_lag_webform':
+      $block['subject'] = t('Contact this LAG *');
+      $node_obj = entity_uuid_load('node', array(ENRD_LAG_DATABASE_LAG_CONTACT_UUID));
+      if (!empty($node_obj)) {
+        $node_obj = reset($node_obj);
+        $node_obj->title = '';
+        $node = node_view($node_obj, 'default');
+        $block['content'] = $node;
+      }
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_lag_database_module_implements_alter(&$module_list, $context) {
+  // Make sure enrd_mastermind's hook implementations
+  // are called after all other modules.
+  switch ($context) {
+    case 'workbench_moderation_states_next_alter':
+      $temp = $module_list['enrd_lag_database'];
+      unset($module_list['enrd_lag_database']);
+      $module_list['enrd_lag_database'] = $temp;
+      break;
+  }
+}
+
+/**
+ * Implements hook_workbench_moderation_states_next_alter().
+ */
+function enrd_lag_database_workbench_moderation_states_next_alter(&$states, $current_state, $context) {
+
+  // Enable only determinate moderation states for specific bundles.
+  $lag_bundles = enrd_lag_database_enrd_workbench_get_bundles_custom_state();
+  if (in_array($context['node']->type, $lag_bundles)) {
+    // Remove not proper state.
+    if ($states) {
+      $states = array_intersect_key($states, drupal_map_assoc(array(
+        'draft',
+        'ready_to_be_published',
+        'published',
+        'archived',
+      )));
+    }
+
+    $all_states = workbench_moderation_state_labels();
+
+    // Force some basic transitions.
+    if ($current_state == workbench_moderation_state_none()) {
+      $states['ready_to_be_published'] = $all_states['ready_to_be_published'];
+    }
+    if ($current_state == 'archived') {
+      $states[workbench_moderation_state_none()] = $all_states[workbench_moderation_state_none()];
+    }
+  }
+
+}
+
+/**
+ * Implements hook_enrd_workbench_get_bundles_custom_state().
+ */
+function enrd_lag_database_enrd_workbench_get_bundles_custom_state() {
+
+  $lag_bundles = array(
+    ENRD_LAG_DATABASE_COOP_OFFER_NODE => ENRD_LAG_DATABASE_COOP_OFFER_NODE,
+    ENRD_LAG_DATABASE_LAG_GROUP_NODE => ENRD_LAG_DATABASE_LAG_GROUP_NODE,
+  );
+
+  return $lag_bundles;
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function enrd_lag_database_date_formats() {
+  return array(
+    // Creates a new custom format type.
+    array(
+      'type' => 'enrd_lag_database_d_m_y',
+      'format' => 'd/m/Y',
+      'locales' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function enrd_lag_database_date_format_types() {
+  return array(
+    'enrd_lag_database_d_m_y' => t('ENRD LAG Database'),
+  );
+}
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function enrd_lag_database_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  if ((isset($context['bundle']) && $context['bundle'] == 'lag')) {
+    if (isset($context['view_mode']) && $context['view_mode'] == 'full') {
+      if (isset($layout_render_array['contact']) && !empty($layout_render_array['contact'])) {
+        $vars['contact_label'] = t('Contact information');
+      }
+
+      if (isset($layout_render_array['additional']) && !empty($layout_render_array['additional'])) {
+        $vars['additional_label'] = t('Additional information');
+      }
+
+      if (isset($layout_render_array['funding']) && !empty($layout_render_array['funding'])) {
+        $vars['funding_label'] = t('LAG Funding');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_TYPE_alter().
+ */
+function enrd_lag_database_ds_taxonomy_term_separators_alter(&$separators) {
+  // Add a semicolon character to availbale term separators of ds.
+  $separators['; '] = t('semicolon');
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function enrd_lag_database_block_view_alter(&$data, $block) {
+  switch ($block->delta) {
+    case 'enrd_lag_cooperation_details':
+      // Manages visibility of "Cooperation details" block subject and hides it
+      // if there are no other fields when field_enrd_lag_interested_in is "No".
+      if (isset($data['content']['field_enrd_lag_interested_in']['#items'][0]['value'])) {
+        if ($data['content']['field_enrd_lag_interested_in']['#items'][0]['value'] == '0') {
+          $data['content']['#access'] = count(element_children($data['content'])) > 1;
+        }
+        else {
+          $data['content']['field_enrd_lag_interested_in'][0]['#markup'] = 'Yes';
+        }
+      }
+      break;
+
+    case 'enrd_lag_extended_profile':
+    case 'enrd_lag_logo':
+    case '9QA6DJwELFF3wMoSCm3Q01ZHHpPohCbm':
+      // Removed "Extended profile" block subject to show only the field link.
+      // Removed "Is your lag interested in..." from CLLD Cooperation facet.
+      $data['subject'] = '';
+      break;
+
+  }
+}
+
+/**
+ * Implements hook_pre_features_revert().
+ */
+function enrd_lag_database_pre_features_revert($component) {
+  if ($component == 'workbench_moderation_transitions') {
+    if (function_exists('enrd_lag_database_workbench_moderation_export_transitions')) {
+      $lag_db_transitions = enrd_lag_database_workbench_moderation_export_transitions();
+
+      foreach ($lag_db_transitions as $transition) {
+        $transition = (object) $transition;
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'workbench_moderation_transition')
+          ->propertyCondition('from_name', $transition->from_name)
+          ->propertyCondition('to_name', $transition->to_name)
+          ->propertyCondition('name', $transition->name, '<>');
+        $result = $query->execute();
+
+        // Delete duplicated transitions.
+        if (isset($result['workbench_moderation_transition']) && count($result['workbench_moderation_transition']) > 0) {
+          workbench_moderation_transition_delete($transition);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Helper function to get Country and ESI Fund og and terms for a NSU user.
+ *
+ * @param mixed $account
+ *   (optional) The user object to fetch info. Defaults to the acting user.
+ * @param bool $reset
+ *   (optional) Check again the domain and update cache.
+ *
+ * @return array
+ *   An array with esi_funds and country key valued with tids/tid/nid.
+ */
+function _enrd_lag_database_get_lag_domain($account = NULL, $reset = FALSE) {
+
+  global $user;
+  if (empty($account)) {
+    $account = clone $user;
+  }
+  $domains = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($domains[$account->uid]) || $reset) {
+    // Retrieve all esi_funds_og memberships.
+    if ($og_groups = og_get_groups_by_user($account, 'node')) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', ENRD_LAG_DATABASE_ESI_FUND_GROUP_NODE)
+        ->propertyCondition('nid', (array) $og_groups, 'IN');
+      $result_esi_funds = $query->execute();
+
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', ENRD_LAG_DATABASE_LAG_GROUP_NODE)
+        ->propertyCondition('nid', (array) $og_groups, 'IN');
+      $result_lags = $query->execute();
+    }
+
+    $esi_funds_gids = $term_esi_funds = array();
+    if (isset($result_esi_funds['node'])) {
+      $esi_funds_ogs = entity_load('node', array_keys($result_esi_funds['node']));
+      foreach ($esi_funds_ogs as $nid => $node) {
+        // Verify role for National managers.
+        if (in_array('National manager', og_get_user_roles('node', $nid), $account->uid)) {
+          $esi_funds_gids[] = $nid;
+          $esi_funds_og = entity_metadata_wrapper('node', $node);
+          $term_esi_funds[] = $esi_funds_og->field_enrd_main_esi_fund->value()->tid;
+        }
+      }
+    }
+
+    $lag_gids = $lag_countries = array();
+    if (isset($result_lags['node'])) {
+      $esi_funds_ogs = entity_load('node', array_keys($result_lags['node']));
+      foreach ($esi_funds_ogs as $nid => $node) {
+        // Verify role for National managers.
+        $lag_gids[] = $nid;
+        $lag = entity_metadata_wrapper('node', $node);
+        $lag_countries[] = $lag->field_enrd_lag_country->value()->tid;
+      }
+    }
+
+    $user_wrapper = entity_metadata_wrapper('user', user_load($account->uid));
+
+    $domains[$account->uid] = array(
+      'esi_funds_og' => $esi_funds_gids,
+      'esi_funds' => $term_esi_funds,
+      'country' => $user_wrapper->field_enrd_lag_country->value() ? $user_wrapper->field_enrd_lag_country->value()->tid : NULL,
+      'nsu' => $user_wrapper->field_enrd_lag_country->value() && !empty($esi_funds_gids),
+      'lags' => $lag_gids,
+      'countries' => $lag_countries,
+    );
+  }
+
+  return $domains[$account->uid];
+}
+
+/**
+ * Implements hook_webform_submission_render_alter().
+ */
+function enrd_lag_database_webform_submission_render_alter(&$renderable) {
+  // Override "Contact this LAG" form components.
+  if ($renderable['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID) {
+    $renderable['enrd_lag_database_contact_this_lag_coop_offer']['#weight'] = -1;
+    $renderable['enrd_lag_database_contact_this_lag_coop_offer']['#title'] = 'Reply to Cooperation offer:';
+    $renderable['enrd_lag_database_contact_this_lag_your_email']['#weight'] = 0;
+    $renderable['enrd_lag_database_contact_this_lag_your_email']['#title'] = 'From:';
+    $renderable['enrd_lag_database_contact_this_lag_your_organisation']['#weight'] = 1;
+    $renderable['enrd_lag_database_contact_this_lag_your_organisation']['#title'] = 'Organisation:';
+    $renderable['enrd_lag_database_contact_this_lag_subject']['#title'] .= ':';
+    $renderable['enrd_lag_database_contact_this_lag_message']['#title'] .= ':';
+    $renderable['enrd_lag_database_contact_this_lag_email']['#title'] .= ':';
+    $renderable['enrd_lag_database_contact_this_lag_lag']['#title'] .= ':';
+
+    // Force access hidden components since "access all webform results" is off.
+    // Let LAG manager/contact users see hidden components.
+    $renderable['enrd_lag_database_contact_this_lag_subject']['#access'] = TRUE;
+    $renderable['enrd_lag_database_contact_this_lag_email']['#access'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_facet_items_alter().
+ */
+function enrd_lag_database_facet_items_alter(&$build, &$settings) {
+  if ($settings->facet == 'bm_field_enrd_lag_interested_in') {
+    foreach ($build as $key => $item) {
+      $build[$key]["#markup"] = t('LAGs interested in CLLD Cooperation');
+    }
+  }
+}
+
+/**
+ * Implements hook_facetapi_widgets().
+ */
+function enrd_lag_database_facetapi_widgets() {
+  return array(
+    'enrd_facetapi_checkbox_links' => array(
+      'handler' => array(
+        'label' => t('ENRD Links with checkboxes'),
+        'class' => 'EnrdLagDatabaseFacetapiWidgetCheckboxLinks',
+        'query types' => array('term', 'date'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_view_mode_alter().
+ */
+function enrd_lag_database_entity_view_mode_alter(&$view_mode, $context) {
+  if ($view_mode == 'search_result' && $context['entity']->type == 'cooperation_offer') {
+    if (isset($context['entity']->field_enrd_coop_type) && !empty($context['entity']->field_enrd_coop_type)) {
+
+      foreach ($context['entity']->field_enrd_coop_type[LANGUAGE_NONE] as $key => $project_type) {
+        $project_type_parent = array_keys(taxonomy_get_parents($project_type['tid']));
+
+        if (!empty($project_type_parent)) {
+          // Substitute child with parent of "Project type" on
+          // Search result view mode.
+          $context['entity']->field_enrd_coop_type[LANGUAGE_NONE][$key]['tid'] = (string) $project_type_parent[0];
+        }
+      }
+
+      foreach ($context['entity']->field_enrd_coop_type[LANGUAGE_NONE] as $k => $type) {
+        // Remove duplicates from "Project Type" Partner Search page column.
+        $coop_type_tids = array_column($context['entity']->field_enrd_coop_type[LANGUAGE_NONE], 'tid');
+
+        $coop_type_frequency = array_count_values($coop_type_tids);
+        if (isset($coop_type_frequency[$type['tid']]) && ($coop_type_frequency[$type['tid']] > 1)) {
+          unset($context['entity']->field_enrd_coop_type[LANGUAGE_NONE][$k]);
+        }
+      }
+
+      $context['entity']->field_enrd_coop_type[LANGUAGE_NONE] = array_values($context['entity']->field_enrd_coop_type[LANGUAGE_NONE]);
+    }
+  }
+}
+
+/**
+ * Form submission handler for LAG and Cooperation offer node_form().
+ *
+ * @see node_form()
+ * @see node_form_validate()
+ */
+function enrd_lag_database_form_submit($form, &$form_state) {
+  $node = node_form_submit_build_node($form, $form_state);
+
+  // Hide overridden message to admin users.
+  if ((($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) || ($node->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE))) {
+    if (!user_access('skip field access control')) {
+      $t_args = ['@type' => node_type_get_name($node), '%title' => $node->title];
+      $type = 'status';
+
+      $messages = drupal_get_messages('status', FALSE);
+
+      if (($key = array_search(t('@type %title has been created.', $t_args), $messages['status'])) !== FALSE) {
+        $_SESSION['messages'][$type][$key] = t("Your @type %title has been created.", $t_args);
+      }
+
+      if (($key = array_search(t('@type %title has been updated.', $t_args), $messages['status'])) !== FALSE) {
+        $_SESSION['messages'][$type][$key] = t("Your changes for @type %title have been saved.", $t_args);
+      }
+    }
+
+    if (!user_access('skip alter moderation form')) {
+      if (empty($form_state['values']['field_publish_legal_notice'])) {
+        drupal_set_message(t('Press ‘ask for publishing’ to request from the webmaster to put it online.'), 'status');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_view_alter().
+ */
+function enrd_lag_database_user_view_alter(&$build) {
+  if (isset($build['og_user_node'])) {
+    // Hide the OG Membership list from users page.
+    $build['og_user_node']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function enrd_lag_database_mail_alter(&$message) {
+  // Don't send workbench moderation transition emails to the LAG world.
+  if ($message['id'] == 'workbench_email_we_transition') {
+    switch ($message['params']['node']->type) {
+      case ENRD_LAG_DATABASE_COOP_OFFER_NODE:
+      case ENRD_LAG_DATABASE_LAG_GROUP_NODE:
+      case ENRD_LAG_DATABASE_ESI_FUND_GROUP_NODE:
+        $message['send'] = NULL;
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_facetapi_facet_info_alter().
+ */
+function enrd_lag_database_facetapi_facet_info_alter(&$facet_info, $searcher_info) {
+  foreach ($facet_info as &$facet) {
+    // Add "ENRD LAG Database: require all dependencies" plugin.
+    $facet['dependency plugins'][] = 'enrd_lag_database_require_all';
+  }
+}
+
+/**
+ * Implements hook_facetapi_dependencies().
+ */
+function enrd_lag_database_facetapi_dependencies() {
+  return array(
+    'enrd_lag_database_require_all' => array(
+      'handler' => array(
+        'label' => t('Require multiple facets'),
+        'class' => 'EnrdLagDatabaseDependencyFacet',
+      ),
+    ),
+  );
+}
+
+/**
+ * Helper function that returns LAG nids and total count.
+ *
+ * @param array $types
+ *   The node type machine names.
+ *
+ * @return array
+ *   Returns an array with keys:
+ *   - results (array of nids);
+ *   - total (count).
+ */
+function _enrd_lag_database_get_group_nodes(array $types) {
+
+  // Get LAGs ids.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', $types, 'IN')
+    ->execute();
+
+  $result = $query->execute();
+  $total = $query->count()->execute();
+
+  $data = [
+    'result' => $result,
+    'total' => $total,
+  ];
+
+  return $data;
+}
+
+/**
+ * Helper function to hide nexteuropa_multilingual warning html message.
+ *
+ * @param array $form
+ *   The $form array.
+ */
+function _enrd_lag_database_hide_multilingual_warning_message(array &$form) {
+
+  // Define node types to check for nexteuropa_multilingual warning message.
+  $types = [
+    ENRD_LAG_DATABASE_LAG_GROUP_NODE,
+    ENRD_LAG_DATABASE_COOP_OFFER_NODE,
+    ENRD_LAG_DATABASE_ESI_FUND_GROUP_NODE,
+  ];
+
+  $node_type_forms = [];
+
+  foreach ($types as $type) {
+    $node_type_forms[] = $type . "_node_form";
+  }
+
+  if (in_array($form['#form_id'], $node_type_forms)) {
+    hide($form['warning_languages_message']);
+  }
+
+  // Other forms where Nexteuropa Multilingual adds the warning message.
+  $multilingual_warning_forms = [
+    'workbench_moderation_moderate_form',
+    'workbench_moderation_node_unpublish_form',
+  ];
+
+  if (in_array($form['#form_id'], $multilingual_warning_forms) && isset($form['node'])
+  && in_array($form['node']['#value']->type, $types)) {
+    hide($form['warning_languages_message']);
+  }
+
+}
+
+/**
+ * Implements hook_library().
+ */
+function enrd_lag_database_library() {
+  return array(
+    'jquery.mask' => array(
+      'title' => 'jQuery Mask',
+      'website' => 'http://igorescobar.github.io/jQuery-Mask-Plugin',
+      'vendor url' => 'https://github.com/igorescobar/jQuery-Mask-Plugin',
+      'version' => '1.14.15',
+      'download url' => 'https://github.com/igorescobar/jQuery-Mask-Plugin/archive/v1.14.15.zip',
+      'js' => array(libraries_get_path('jquery.mask') . '/jquery.mask.min.js' => NULL),
+      'version arguments' => array(
+        'file' => 'jquery.mask.js',
+        'pattern' => '/@version: v(\d+\.+\d+)/',
+        'lines' => 3,
+      ),
+    ),
+  );
+}
+
+/**
+ * Custom access to the "Contact this LAG" webform submissions.
+ *
+ * @param object $node
+ *   The Webform node on which this submission was made.
+ * @param object $submission
+ *   The Webform submission.
+ * @param string $op
+ *   The operation to be performed on the submission. Possible values are:
+ *   - "view"
+ *   - "edit"
+ *   - "delete"
+ *   - "list".
+ * @param object $account
+ *   A user account object.
+ *
+ * @return bool
+ *   TRUE if the current user has access to submission,
+ *   or FALSE otherwise.
+ */
+function enrd_lag_database_webform_submission_access($node, $submission, $op = 'view', $account = NULL) {
+  // Custom access behavior for the "Contact this LAG" webform results.
+  // Check that it' the "Contact this LAG" webform.
+  if ($node->type == 'webform' && $node->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID) {
+
+    $domain = _enrd_lag_database_get_lag_domain($account);
+
+    // Allow viewing submissions to LAG manager/contact users.
+    if (count($domain['lags'])) {
+      // Fetch "LAG" Webform component id.
+      foreach ($node->webform['components'] as $component) {
+        if ($component['form_key'] == 'enrd_lag_database_contact_this_lag_lag') {
+          $id = $component['cid'];
+
+          // Compare the component's id with the LAG man.'s ids.
+          if (isset($submission->data[$id][0]) && in_array($submission->data[$id][0], $domain['lags'])) {
+            if ($op == 'view') {
+              return TRUE;
+            }
+          }
+
+          break;
+        }
+      }
+    }
+
+    // Deny access if user is not LAG man/con and 'op' is not view.
+    // Users having "access all webform results" perm. can access in any case.
+    return FALSE;
+
+  }
+
+}
+
+/**
+ * Assign/revoke LAG User role to LAG users or NSU.
+ *
+ * @param \OgMembership $og_membership
+ *   A valid og_membership object.
+ */
+function _enrd_lag_database_sync_external_role(OgMembership $og_membership) {
+  // Group ID from user membership.
+  $gid = $og_membership->gid;
+  // Load the node to check for node type.
+  $node = entity_load('node', array($gid));
+  $node = reset($node);
+  // Check if membership for user is related to a LAG or an ESI Funds OG group.
+  if ($og_membership->entity_type == 'user' && ($node->type == 'lag' || $node->type == 'esi_funds_og')) {
+    $uid = $og_membership->etid;
+    // Check LAG/ESI Fund OG membership for the given user.
+    $is_lag_member = _enrd_lag_database_is_lag_member($uid);
+    // Call assign or revoke functions according to membership status.
+    $function = $is_lag_member ? '_enrd_lag_database_assign_role' : '_enrd_lag_database_revoke_role';
+    // Assign/revoke "LAG User" role to  LAG Contact/Managers or NSU users.
+    $function(ENRD_LAG_DATABASE_USER_EXTERNAL_ROLE, $uid);
+  }
+}
+
+/**
+ * Check if the user has privileges in a LAG or Cooperation Offer nodes.
+ *
+ * @param mixed $lag_node
+ *   The node object.
+ *
+ * @return bool
+ *   TRUE if the user has privileges. FALSE otherwise.
+ */
+function _enrd_lag_database_check_permission_user($lag_node) {
+  $grant = FALSE;
+  $domain = _enrd_lag_database_get_lag_domain();
+
+  if ($domain['nsu']) {
+    $lag_wrapper = entity_metadata_wrapper('node', $lag_node);
+
+    // NSU can edit LAGs of his country and main ESI Fund.
+    $main_esi_fund_ok = in_array($lag_wrapper->{OG_AUDIENCE_FIELD}->value()[0]->nid, $domain['esi_funds_og']);
+    $country_ok = $lag_wrapper->field_enrd_lag_country->value()->tid === $domain['country'];
+
+    $grant = $main_esi_fund_ok && $country_ok;
+  }
+  else {
+    if (in_array($lag_node->nid, $domain['lags'])) {
+      // It's my LAG.
+      $grant = TRUE;
+    }
+  }
+
+  return $grant;
+}
+
+/**
+ * Custom function to render publish notice checkbox.
+ *
+ * @param mixed $node
+ *   The node object.
+ *
+ * @return array
+ *   A Drupal renderable array element.
+ */
+function _enrd_lag_database_get_publish_legal_notice_element($node) {
+  $type_name = node_type_get_name($node);
+  return array(
+    '#type' => 'checkbox',
+    '#title' => t('I confirm that the data I have added in my @type_name can be published by the Webmaster.', array(
+      '@type_name' => $type_name,
+    )),
+    '#description' => t('Please double check the submitted information before proceeding. After checking this box and saving your changes you will not be able to create a new or edit this @type_name until the update has been approved/rejected by the Webmaster. If you want to return and edit this @type_name save your update without checking this box', array(
+      '@type_name' => $type_name,
+    )),
+  );
+}
+
+/**
+ * Implements hook_field_attach_load().
+ */
+function enrd_lag_database_field_attach_load($entity_type, $entities, $age, $options) {
+
+  // Filter only by node entities.
+  if ($entity_type == 'node') {
+    foreach ($entities as $entity) {
+
+      // Check if entity is a Cooperation Offer and it has no spoken languages.
+      $empty_coop_languages = $entity->type == ENRD_LAG_DATABASE_COOP_OFFER_NODE &&
+        empty($entity->field_enrd_coop_spoken_languages);
+
+      if ($empty_coop_languages) {
+        // Get the parent group id (Offering LAG).
+        if (!empty($entity->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF})) {
+          $lag_id = $entity->{ENRD_LAG_DATABASE_LAG_OG_GROUP_REF}[LANGUAGE_NONE][0]['target_id'];
+          $parent_group = entity_load('node', [$lag_id]);
+          $parent_group = reset($parent_group);
+          // Get the parent spoken languages.
+          $items = field_get_items('node', $parent_group, 'field_enrd_lag_spoken_languages', LANGUAGE_NONE);
+          // If Cooperation Offer has no languages, set the parent ones.
+          if (!empty($items)) {
+            $entity->field_enrd_coop_spoken_languages[LANGUAGE_NONE] = $items;
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Helper function to copy values from parent group shs field.
+ *
+ * @param mixed $form
+ *   The original form where alter is occurring.
+ * @param mixed $form_state
+ *   The original form_state values.
+ * @param int $group_id
+ *   The parent group id (Offering LAG id).
+ * @param string $field_from
+ *   The original field from where values are copied from.
+ * @param string $field_to
+ *   The destination field where values are copied into.
+ *
+ * @return mixed
+ *   Return the altered form field or void if destination field is not empty.
+ */
+function _enrd_lag_database_set_shs_parent_field_values(&$form, &$form_state, $group_id, $field_from, $field_to) {
+
+  // Load parent group object (Offering LAG).
+  $parent_group = entity_load('node', [$group_id]);
+  $parent_group = reset($parent_group);
+
+  // If parent group (LAG) has values to copy for specified field, proceed.
+  if (!empty($parent_group->$field_from)) {
+    $field_values = $parent_group->{$field_from}[LANGUAGE_NONE];
+    $field_count = count($field_values);
+
+    // Default field settings.
+    $default_widget = $form[$field_to][LANGUAGE_NONE][0];
+
+    // Alter field default widgets if items count is not already set.
+    if (empty($form_state['field'][$field_to][LANGUAGE_NONE]['items_count'])) {
+      // Manage multiple saved value field for first for load.
+      if ($field_count > 1) {
+        $form_state['field'][$field_to][LANGUAGE_NONE]['items_count'] = $field_count;
+
+        // Remove first default element to build dynamic array of languages.
+        unset($form[$field_to][LANGUAGE_NONE][0]);
+
+        // Initialize the languages position counter.
+        $i = 0;
+
+        // Add settings for multiple fields (default_value, delta, etc...).
+        foreach ($field_values as $field_value) {
+          // Set default language values and delta.
+          $data = [
+            'tid' => [
+              '#default_value' => $field_value['tid'],
+            ],
+            '_weight' => [
+              '#delta' => $field_count,
+              '#default_value' => $i,
+            ],
+          ];
+
+          // Add language selection widgets for default values.
+          $form[$field_to][LANGUAGE_NONE][$i] = array_replace_recursive($default_widget, $data);
+          $i++;
+        }
+
+        // Get a count of languages (the array numeric keys).
+        $count = count(array_filter(array_keys($form[$field_to][LANGUAGE_NONE]), 'is_int'));
+        // Set the delta for the widgets weight element.
+        $delta = $count < 1 ? 1 : $count;
+
+        // Set data for new empty language selection widget.
+        $new_widget = [
+          '_weight' => [
+            '#delta' => $delta,
+            '#default_value' => $count,
+          ],
+        ];
+
+        // Build the new empty widget at the end of the default values list.
+        $form[$field_to][LANGUAGE_NONE][] = array_replace_recursive($default_widget, $new_widget);
+      }
+      // Manage single value field.
+      else {
+        $form_state['field'][$field_to][LANGUAGE_NONE]['items_count'] = $field_count;
+        // Set the initial widget default value, before any form rebuild.
+        $form[$field_to][LANGUAGE_NONE][0]['tid']['#default_value'] = $field_values[0]['tid'];
+        $form[$field_to][LANGUAGE_NONE][0]['_weight']['#delta'] = $field_count;
+        $form[$field_to][LANGUAGE_NONE][0]['_weight']['#default_value'] = 0;
+        // Build the new empty widget at the end of the default values list.
+        $form[$field_to][LANGUAGE_NONE][1] = $default_widget;
+        $form[$field_to][LANGUAGE_NONE][1]['_weight']['#delta'] = $field_count;
+        $form[$field_to][LANGUAGE_NONE][1]['_weight']['#default_value'] = $field_count;
+      }
+    }
+  }
+  else {
+    // Parent Group has no values set for field.
+    return;
+  }
+}

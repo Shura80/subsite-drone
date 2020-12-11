@@ -1,0 +1,493 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD Publications taxonomy terms.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_publications_install() {
+  $t = get_t();
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_publications', 'data/enrd_publications_taxonomies');
+
+  features_revert_module('enrd_publications');
+
+  // Imports Evaluation Publication Content Type data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_content_type(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_content_type'));
+
+  // Imports Evaluation Publication Theme data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_theme(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_theme'));
+
+  // Imports Evaluation Publication Type data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_evaluation_type(),
+    taxonomy_vocabulary_machine_name_load('enrd_evaluation_type'));
+
+  // Imports Programming Period data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_programming_period(),
+    taxonomy_vocabulary_machine_name_load('enrd_programming_period'));
+
+  // Imports Publications data (entity_translation enabled).
+  _enrd_taxonomies_save_taxo(_enrd_publications_publication_types(),
+    taxonomy_vocabulary_machine_name_load('enrd_publications'), 0, FALSE, 'en');
+
+  drupal_set_message($t('ENRD Publications is now installed on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_publications_uninstall() {
+  node_type_delete('publication_ehd');
+
+  // Deletes the vocabularies created by the feature.
+  $vocabularies = array(
+    'enrd_evaluation_content_type',
+    'enrd_evaluation_theme',
+    'enrd_evaluation_type',
+    'enrd_programming_period',
+  );
+
+  foreach ($vocabularies as $machine_name) {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+    if ($vocabulary) {
+      $vid = $vocabulary->vid;
+      taxonomy_vocabulary_delete($vid);
+    }
+  }
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Publications is now uninstalled on your site.'));
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_publications_enable() {
+  $t = get_t();
+
+  // SolR configuration add bundle.
+  multisite_drupal_toolbox_config_solr_bundle('publication_ehd', 'add');
+
+  drupal_set_message($t('ENRD Publications is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_publications_disable() {
+  $t = get_t();
+
+  // SolR configuration remove bundle.
+  multisite_drupal_toolbox_config_solr_bundle('publication_ehd', 'delete');
+
+  drupal_set_message($t('ENRD Publications is now disabled on your site.'));
+}
+
+/**
+ * Delete old elibrary view and point the menu link to related apachesolr page.
+ */
+function enrd_publications_update_7201() {
+  // Deletes Evaluation Helpdesk's eLibrary view.
+  if ($view = views_get_view('enrd_helpdesk_elibrary')) {
+    views_delete_view($view);
+  }
+
+  // Reset Menu item name to "eLibrary".
+  $main_menu_links = menu_load_links('main-menu');
+  foreach ($main_menu_links as $link) {
+    if (in_array('evaluation/publications/e-library', $link)) {
+      menu_reset_item($link);
+    }
+  }
+}
+
+/**
+ * Add the ENRD Publications vocabulary and its terms.
+ */
+function enrd_publications_update_7202() {
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_publications', 'data/enrd_publications_taxonomies');
+
+  // Revert taxonomies, fields bases and instances after terms import.
+  features_revert(array(
+    'enrd_publications' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Imports Publications data.
+  _enrd_taxonomies_save_taxo(_enrd_publications_publication_types(),
+    taxonomy_vocabulary_machine_name_load('enrd_publications'));
+}
+
+/**
+ * ENRDPORTAL-364.
+ */
+function enrd_publications_update_7203() {
+  features_revert(array('enrd_publications' => array('field_instance')));
+}
+
+/**
+ * ENRDPORTAL-491.
+ */
+function enrd_publications_update_7204(&$sandbox) {
+  $t = get_t();
+
+  // Initialize sandbox and counters.
+  if (!isset($sandbox['progress'])) {
+
+    // Revert features fields component to create new file upload field.
+    features_revert([
+      'enrd_publications' => [
+        'field_base',
+        'field_instance',
+      ],
+    ]);
+
+    // Get Publications nodes and count.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'publication')
+      ->fieldCondition('field_enrd_publication_file', 'description', 'NULL', '!=');
+    $publications = $query->execute();
+    $publications_count = $query->count()->execute();
+
+    // Get Evaluation Publications nodes and count.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'publication_ehd');
+    $publications_ehd = $query->execute();
+    $publications_ehd_count = $query->count()->execute();
+
+    // Set starting values for sandbox.
+    $sandbox['progress'] = 0;
+    $sandbox['#finished'] = 0;
+    // Count total sandbox elements.
+    $sandbox['max'] = $publications_count + $publications_ehd_count;
+    // Sandbox values to operate on.
+    $sandbox['publications'] = $publications['node'];
+    $sandbox['publications_ehd'] = $publications_ehd['node'];
+    // Starting message.
+    $sandbox['message'] = $t('Starting updating publication file languages.');
+  }
+
+  // Do operations on evaluation publication nodes.
+  if (!empty($sandbox['publications_ehd'])) {
+    // Extract nid from nids array.
+    $node = array_pop($sandbox['publications_ehd']);
+    // Load node object for operations on file fields.
+    $node = entity_load('node', [$node->nid]);
+    $node = reset($node);
+
+    if (!empty($node->field_enrd_publ_ehd_file)) {
+      // Loop through field_collection items.
+      foreach ($node->field_enrd_publ_ehd_file[LANGUAGE_NONE] as $delta => $fcollection) {
+        $item = entity_load('field_collection_item', [$fcollection['value']]);
+        $item = reset($item);
+        // Get the file uploaded through field collection items.
+        $fid = $item->field_enrd_publ_ehd_files[LANGUAGE_NONE][0]['fid'];
+        $file = entity_load('file', [$fid]);
+        $file = reset($file);
+        // Migrate file language if available and file has no language set.
+        $copy_file_language = !empty($item->field_enrd_publ_ehd_file_lang)
+          && empty($file->field_enrd_taxonomies_file_lang);
+        if ($copy_file_language) {
+          // Assign language and file to new node file field.
+          $lang = $item->field_enrd_publ_ehd_file_lang[LANGUAGE_NONE][0]['tid'];
+          $file->field_enrd_taxonomies_file_lang[LANGUAGE_NONE][$delta]['target_id'] = $lang;
+          try {
+            // Update file entity.
+            field_attach_update('file', $file);
+            // Clear file entity cache.
+            entity_get_controller('file')->resetCache([$file->fid]);
+          }
+          catch (Exception $e) {
+            watchdog('enrd_publications', 'Cannot save file with id %file_fid at %file_uri. Caught exception: @message',
+              [
+                '%file_fid' => $file->fid,
+                '%file_uri' => $file->uri,
+                '@message' => $e->getMessage(),
+              ]
+            );
+          }
+        }
+        // Copy the new values on node entity.
+        $node->field_enrd_publ_ehd_file_upload[LANGUAGE_NONE][$delta] = $item->field_enrd_publ_ehd_files[LANGUAGE_NONE][0];
+        // Update node entity.
+        field_attach_update('node', $node);
+        // Clear node entity cache.
+        entity_get_controller('node')->resetCache([$node->nid]);
+        // Delete field collection item copied into node entity.
+        field_attach_delete('field_collection_item', $item);
+
+        // Update language in entity translation table.
+        db_update('entity_translation')
+          ->fields(array('language' => 'en'))
+          ->condition('entity_type', 'file', '=')
+          ->condition('language', 'und', '=')
+          ->condition('entity_id', $file->fid, '=')
+          ->execute();
+
+        // Find filename field entries with only language neutral.
+        $languages = db_select('field_data_filename_field', 'fnf')
+          ->condition('entity_id', $file->fid)
+          ->fields('fnf', array('language'))
+          ->execute()->fetchCol();
+        // Update filename field to EN language.
+        $to_update = count($languages) == 1 && $languages[0] == LANGUAGE_NONE;
+        if (!empty($languages) && $to_update) {
+          db_update('field_data_filename_field')
+            ->fields(array('language' => 'en'))
+            ->condition('entity_id', $file->fid, '=')
+            ->execute();
+          db_update('field_revision_filename_field')
+            ->fields(array('language' => 'en'))
+            ->condition('entity_id', $file->fid, '=')
+            ->execute();
+        }
+      }
+    }
+    $sandbox['progress']++;
+  }
+
+  // Do operations on publications nodes.
+  if (!empty($sandbox['publications'])) {
+    // Extract nid from nids array.
+    $node = array_pop($sandbox['publications']);
+
+    // Node wrapper for operations on file fields.
+    $node = entity_load('node', [$node->nid]);
+    $node = reset($node);
+
+    // Iterate through 'field_enrd_publication_file' values.
+    foreach ($node->field_enrd_publication_file[LANGUAGE_NONE] as $delta => $file_data) {
+
+      // Load each file entity.
+      $fid = $file_data['fid'];
+      $file = entity_load('file', [$fid]);
+      $file = reset($file);
+
+      // Get the actual file language iso in description field.
+      $description = $file_data['description'];
+
+      if (!empty($description)) {
+        $iso = drupal_strtolower($description);
+        // Get term id with found language iso.
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'taxonomy_term')
+          ->entityCondition('bundle', 'enrd_languages')
+          ->fieldCondition('field_enrd_language_iso', 'value', $iso, '=');
+        $result = $query->execute();
+
+        if (!empty($result['taxonomy_term'])) {
+          $result['taxonomy_term'] = reset($result['taxonomy_term']);
+          // Set the term reference field values in the node field.
+          $file->field_enrd_taxonomies_file_lang[LANGUAGE_NONE][0]['target_id'] = $result['taxonomy_term']->tid;
+          try {
+            // Update file entity.
+            field_attach_update('file', $file);
+            // Clear file entity cache.
+            entity_get_controller('file')->resetCache([$file->fid]);
+          }
+          catch (Exception $e) {
+            watchdog('enrd_publications', 'Cannot save file with id %file_fid at %file_uri. Caught exception: @message',
+              [
+                '%file_fid' => $file->fid,
+                '%file_uri' => $file->uri,
+                '@message' => $e->getMessage(),
+              ]
+            );
+          }
+        }
+        // Empty the old description field.
+        unset($node->field_enrd_publication_file[LANGUAGE_NONE][$delta]['description']);
+        field_attach_update('node', $node);
+        // Clear node entity cache.
+        entity_get_controller('node')->resetCache([$node->nid]);
+      }
+
+      // Update language in entity translation table.
+      db_update('entity_translation')
+        ->fields(array('language' => 'en'))
+        ->condition('entity_type', 'file', '=')
+        ->condition('language', 'und', '=')
+        ->condition('entity_id', $file->fid, '=')
+        ->execute();
+
+      // Find filename field entries with only language neutral.
+      $languages = db_select('field_data_filename_field', 'fnf')
+        ->condition('entity_id', $file->fid)
+        ->fields('fnf', array('language'))
+        ->execute()->fetchCol();
+      // Update filename field to EN language.
+      $to_update = count($languages) == 1 && $languages[0] == LANGUAGE_NONE;
+      if (!empty($languages) && $to_update) {
+        db_update('field_data_filename_field')
+          ->fields(array('language' => 'en'))
+          ->condition('entity_id', $file->fid, '=')
+          ->execute();
+        db_update('field_revision_filename_field')
+          ->fields(array('language' => 'en'))
+          ->condition('entity_id', $file->fid, '=')
+          ->execute();
+      }
+    }
+    $sandbox['progress']++;
+  }
+
+  // Update batch status.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+  // If batch is finished perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    // Delete the old field collection field instance and data).
+    field_delete_field('field_enrd_publ_ehd_file');
+    // Clear deleted fields.
+    field_purge_batch(50);
+    return $t('Finished updating publications and evaluation publications file languages.');
+  }
+}
+
+/**
+ * ENRDPORTAL-516.
+ */
+function enrd_publications_update_7205(&$sandbox) {
+  $t = get_t();
+
+  // Initialize sandbox and counters.
+  if (!isset($sandbox['progress'])) {
+    $tags_voc = taxonomy_vocabulary_machine_name_load('tags');
+    $eval_helpdesk_obj = taxonomy_get_term_by_name('Evaluation Helpdesk', 'enrd_origin');
+    $enrd_evaluation = taxonomy_vocabulary_machine_name_load('enrd_evaluation');
+    $eval_helpdesk_term = reset($eval_helpdesk_obj);
+
+    // Get "Tags" terms and related nodes not belonging to the Eval. domain.
+    $not_eval_query = db_select('taxonomy_term_data', 'td');
+    $not_eval_query->leftjoin('taxonomy_index', 'ti', 'td.tid = ti.tid');
+    $not_eval_query->leftjoin('node', 'n', 'ti.nid = n.nid');
+    $not_eval_query->innerjoin('field_data_field_tax_origin', 'taxo', 'n.nid = taxo.entity_id');
+    $not_eval_query->fields('td', ['tid'])
+      ->condition('td.vid', $tags_voc->vid)
+      ->condition('taxo.field_tax_origin_tid', $eval_helpdesk_term->tid, '<>')
+      ->distinct();
+    $not_eval_query_results = $not_eval_query->execute()->fetchCol();
+
+    // Get "Tags" terms and related nodes belonging to the Eval. domain.
+    $eval_query = db_select('taxonomy_term_data', 'td');
+    $eval_query->leftjoin('taxonomy_index', 'ti', 'td.tid = ti.tid');
+    $eval_query->leftjoin('node', 'n', 'ti.nid = n.nid');
+    $eval_query->innerjoin('field_data_field_tax_origin', 'taxo', 'n.nid = taxo.entity_id');
+    $eval_query->fields('td', ['tid'])
+      ->fields('n', ['nid'])
+      ->condition('td.tid', $not_eval_query_results, 'NOT IN')
+      ->condition('td.vid', $tags_voc->vid)
+      ->condition(db_or()
+        ->condition('n.type', 'publication_ehd')
+        ->condition('taxo.field_tax_origin_tid', $eval_helpdesk_term->tid)
+      )
+      ->distinct();
+    $eval_query_results = $eval_query->execute()->fetchAll();
+
+    // Set starting values for sandbox.
+    $sandbox['progress'] = 0;
+    $sandbox['#finished'] = 0;
+    // Tot. Evaluation nodes that must be updated for a term.
+    $sandbox['max'] = count($eval_query_results);
+    // Sandbox values to operate on ("Tags" terms and Eval. nodes).
+    $sandbox['tags_evaluation_nodes'] = $eval_query_results;
+    $sandbox['enrd_evaluation'] = $enrd_evaluation;
+    // Starting message.
+    $sandbox['message'] = $t('Starting updating "Tags" and "ENRD Evaluation" taxonomy terms, and Evaluation nodes.');
+  }
+
+  // Update "Tags" terms and Evaluation nodes.
+  if (!empty($sandbox['tags_evaluation_nodes'])) {
+    // Move terms from "Tags" to "ENRD Evaluation" voc.
+    // Extract result with tid + nid combo to work on.
+    $tag_evaluation_node = array_pop($sandbox['tags_evaluation_nodes']);
+
+    $tags_term_to_migrate = taxonomy_term_load($tag_evaluation_node->tid);
+
+    // Check if term has been already assigned to ENRD Evaluation.
+    if ($tags_term_to_migrate->vid !== $sandbox['enrd_evaluation']->vid) {
+      try {
+        // Migrate term from "Tags" to "ENRD Evaluation" voc.
+        $term_wrapper = entity_metadata_wrapper('taxonomy_term', $tags_term_to_migrate);
+        $term_wrapper->vocabulary->set($sandbox['enrd_evaluation']->vid);
+        $term_wrapper->save();
+
+        // Force term url alias update with new voc.
+        pathauto_taxonomy_term_update_alias($tags_term_to_migrate, 'update', ['force' => TRUE]);
+      }
+      catch (Exception $e) {
+        watchdog('enrd_publications', 'Cannot move taxonomy term %term_tid: @term_name from Tags to ENRD Evaluation. Caught exception: @message',
+          [
+            '%term_tid' => $tags_term_to_migrate->tid,
+            '@term_name' => $tags_term_to_migrate->name,
+            '@message' => $e->getMessage(),
+          ]
+        );
+      }
+    }
+
+    // Move value from "Tags" to "Evaluation" field on node.
+    $evaluation_node = entity_load('node', [$tag_evaluation_node->nid]);
+    $evaluation_node = reset($evaluation_node);
+
+    if (isset($evaluation_node->field_tags[LANGUAGE_NONE])) {
+      foreach ($evaluation_node->field_tags[LANGUAGE_NONE] as $key => $tags_field) {
+        // Check if field_tags tid is the same as the fetched tid.
+        if ($tags_field['tid'] == $tag_evaluation_node->tid) {
+          try {
+            // Move "Tags" term from field_tags to field_tax_evaluation.
+            unset($evaluation_node->field_tags[LANGUAGE_NONE][$key]);
+            $evaluation_node->field_tax_evaluation[LANGUAGE_NONE][] = $tags_field;
+
+            field_attach_update('node', $evaluation_node);
+            // Clear node entity cache.
+            entity_get_controller('node')->resetCache([$evaluation_node->nid]);
+          }
+          catch (Exception $e) {
+            watchdog('enrd_publications', 'Cannot save taxonomy term %term_tid: @term_name on field_tax_evaluation for node: %node_nid. Caught exception: @message',
+              [
+                '%term_tid' => $tags_term_to_migrate->tid,
+                '@term_name' => $tags_term_to_migrate->name,
+                '%node_nid' => $evaluation_node->nid,
+                '@message' => $e->getMessage(),
+              ]
+            );
+          }
+        }
+      }
+    }
+    $sandbox['progress']++;
+  }
+
+  // Update batch status.
+  $sandbox['#finished'] = ($sandbox['progress'] >= $sandbox['max']) ? 1 : $sandbox['progress'] / $sandbox['max'];
+  // If batch is finished perform last operations.
+  if ($sandbox['#finished'] >= 1) {
+    // Reset enrd_evaluation voc. to alphabetical order.
+    db_update('taxonomy_term_data')
+      ->fields(array('weight' => 0))
+      ->condition('vid', $sandbox['enrd_evaluation']->vid)
+      ->execute();
+    drupal_set_message($t('Reset vocabulary @name to alphabetical order.', array('@name' => $sandbox['enrd_evaluation']->name)));
+
+    // Revert feature component after migration.
+    features_revert([
+      'enrd_publications' => [
+        'variable',
+      ],
+    ]);
+
+    return $t('Finished updating "Tags" and "ENRD Evaluation" taxonomy terms, and Evaluation nodes.');
+  }
+}

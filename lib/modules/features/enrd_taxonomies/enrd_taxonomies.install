@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * Install file of the enrd_taxonomies module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_taxonomies_enable() {
+
+  // Revert taxonomies, fields bases and instances after terms import.
+  features_revert(array(
+    'enrd_taxonomies' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Import taxonomy terms.
+  _enrd_taxonomies_import_taxonomies();
+  _enrd_taxonomies_save_rdp();
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Taxonomies is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_taxonomies_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Taxonomies has been deactivated on your site.'));
+}
+
+/**
+ * Adds the import of new taxonomies.
+ */
+function enrd_taxonomies_update_7101() {
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_taxonomies', 'data/enrd_taxonomies_taxonomies');
+
+  // Revert taxonomies, fields bases and instances after terms import.
+  features_revert(array(
+    'enrd_taxonomies' => array(
+      'taxonomy',
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Import taxonomy terms.
+  $vocabulary = 'enrd_rdps';
+  _enrd_taxonomies_save_taxo(_enrd_taxonomies_taxonomies($vocabulary),
+    taxonomy_vocabulary_machine_name_load($vocabulary));
+
+  // Set the value on RDP terms' MS field.
+  _enrd_taxonomies_save_rdp();
+}
+
+/**
+ * ENRDPORTAL-446 Rename country name in all drop down.
+ */
+function enrd_taxonomies_update_7102() {
+
+  // Rename old Macedonia term name to 'North Macedonia'.
+  $old_term_name = 'FYROM - Former Yugoslav Republic of Macedonia';
+  $new_term_name = 'North Macedonia';
+  $old_term_obj = taxonomy_get_term_by_name($old_term_name, 'enrd_countries');
+
+  if (!empty($old_term_obj)) {
+    // Updated term name in English and national language.
+    $new_term_lang = 'Република Северна Македонија';
+    $wrapper = entity_metadata_wrapper('taxonomy_term', reset($old_term_obj));
+    $wrapper->name->set($new_term_name);
+    $wrapper->field_enrd_countries_language->set($new_term_lang);
+    $wrapper->save();
+
+    watchdog('enrd_taxonomies', 'Updated name %old_term_name to %new_term_name', [
+      '%old_term_name' => $old_term_name,
+      '%new_term_name' => $new_term_name,
+    ], WATCHDOG_INFO);
+  }
+
+  // Update Congo [Republic] ISO 3166-1 alpha-2 code.
+  $existing_term_name = 'Congo [Republic]';
+  $country_code = 'CG';
+  $existing_term_obj = taxonomy_get_term_by_name($existing_term_name, 'enrd_countries');
+
+  if (!empty($existing_term_obj)) {
+    // Update ISO 3166-1 alpha-2 code of Congo [Republic].
+    $wrapper = entity_metadata_wrapper('taxonomy_term', reset($existing_term_obj));
+    $wrapper->field_enrd_countries_iso_2->set($country_code);
+    $wrapper->save();
+
+    watchdog('enrd_taxonomies', 'Updated ISO 3166-1 alpha-2 code of %existing_term_name', [
+      '%existing_term_name' => $existing_term_name,
+    ], WATCHDOG_INFO);
+  }
+
+  // Add "Democratic Republic of the Congo" and its ISO 3166-1 alpha-2 code.
+  $enrd_countries = taxonomy_vocabulary_machine_name_load('enrd_countries');
+  $country = 'Democratic Republic of the Congo';
+  $country_term = taxonomy_get_term_by_name($country, 'enrd_countries');
+
+  if (empty($country_term)) {
+    $country_code = 'CD';
+    $parent = 'Africa';
+    $parent_term = taxonomy_get_term_by_name($parent, 'enrd_countries');
+
+    // Use enrd_taxonomies helper functions for taxonomy term save.
+    _enrd_taxonomies_save_taxo([$country], $enrd_countries, reset($parent_term)->tid, TRUE);
+
+    // Add other info to the saved term.
+    $country_term = taxonomy_get_term_by_name($country, 'enrd_countries');
+    $wrapper = entity_metadata_wrapper('taxonomy_term', reset($country_term));
+    $wrapper->field_enrd_countries_iso_2->set($country_code);
+    $wrapper->weight->set('11');
+    $wrapper->save();
+
+    watchdog('enrd_taxonomies', 'Added new country %country in ENRD Countries vocacbulary.', [
+      '%country' => $country,
+    ], WATCHDOG_INFO);
+  }
+}
+
+/**
+ * ENRDPORTAL-468: Renaming of the term "North Macedonia".
+ */
+function enrd_taxonomies_update_7103() {
+  // Rename old Macedonia term name to 'Republic of North Macedonia'.
+  $old_term_name = 'North Macedonia';
+  $new_term_name = 'Republic of North Macedonia';
+  $old_term_obj = taxonomy_get_term_by_name($old_term_name, 'enrd_countries');
+
+  if (!empty($old_term_obj)) {
+    // Updated term name in English.
+    $wrapper = entity_metadata_wrapper('taxonomy_term', reset($old_term_obj));
+    $wrapper->name->set($new_term_name);
+    $wrapper->weight->set('131');
+    $wrapper->save();
+
+    watchdog('enrd_taxonomies', 'Updated name %old_term_name to %new_term_name', [
+      '%old_term_name' => $old_term_name,
+      '%new_term_name' => $new_term_name,
+    ], WATCHDOG_INFO);
+  }
+
+  // Disable and uninstall Taxonomy CSV contrib module.
+  // @see: https://www.drupal.org/sa-contrib-2019-084
+  features_revert(['enrd_taxonomies' => ['dependencies']]);
+  module_disable(array('taxonomy_csv'));
+  drupal_uninstall_modules(array('taxonomy_csv'));
+}

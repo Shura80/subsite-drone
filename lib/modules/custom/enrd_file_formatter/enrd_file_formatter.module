@@ -1,0 +1,379 @@
+<?php
+/**
+ * @file
+ * Field formatter for the file entities.
+ */
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function enrd_file_formatter_field_formatter_info() {
+  $settings = _enrd_file_formatter_default_formatter_settings();
+
+  return array(
+    'enrd_file_formatter' => array(
+      'label' => t('ENRD file formatter'),
+      'field types' => array('file'),
+      'settings' => $settings,
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function enrd_file_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $settings += _enrd_file_formatter_default_formatter_settings();
+
+  $element = array();
+  if ($display['type'] == 'enrd_file_formatter') {
+    $element['display_type'] = array(
+      '#type' => 'select',
+      '#required' => TRUE,
+      '#title' => t('Display'),
+      '#description' => t('<b>Full</b>: Icon + File title + Language + Size. <b>Short</b>: Language as File Title + File size'),
+      '#default_value' => $settings['display_type'],
+      '#options' => _enrd_file_formatter_get_display_type_options(),
+    );
+    $element['force_file_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Force file title'),
+      '#default_value' => $settings['force_file_title'],
+    );
+    $element['custom_file_title'] = array(
+      '#type' => 'textfield',
+      '#required' => FALSE,
+      '#title' => t('Custom file title'),
+      '#description' => t('Define a text to replace the file title.'),
+      '#default_value' => $settings['custom_file_title'],
+    );
+    $element['token_file_language'] = array(
+      '#type' => 'textfield',
+      '#title' => t('File language token'),
+      '#description' => t('Define a token to retrieve the ISO code of the file language.'),
+      '#default_value' => $settings['token_file_language'],
+      // Required if "ENRD file formatter" is checked.
+      '#states' => array(
+        'required' => array(
+          ':input[name="displays[file_field_enrd_file_formatter][status]"]' => array(
+            'checked' => TRUE,
+          ),
+        ),
+      ),
+      '#element_validate' => array('_enrd_file_formatter_validate_file_lang_token'),
+      '#weight' => 90,
+    );
+    $element['token_tree_help'] = array(
+      '#theme' => 'token_tree_link',
+      '#token_types' => array('file'),
+      '#show_restricted' => TRUE,
+      '#global_types' => FALSE,
+      '#weight' => 90,
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Validate function for the File language token textfield.
+ *
+ * @param array $element
+ *   Drupal form array element.
+ * @param array $form_state
+ *   Drupal form state array.
+ */
+function _enrd_file_formatter_validate_file_lang_token(array $element, array &$form_state) {
+  if (empty($element['#value'])) {
+    form_error($element, t('"!name" field is required.', array('!name' => $element['#title'])));
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function enrd_file_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $settings += _enrd_file_formatter_default_formatter_settings();
+  $display_type = _enrd_file_formatter_get_display_type_options();
+  $return = array();
+
+  if ($display['type'] == 'enrd_file_formatter') {
+    $return['Display type'] = $display_type[$settings['display_type']];
+    $return['File language token'] = $settings['token_file_language'];
+
+    if (isset($settings['force_file_title']) && $settings['force_file_title']) {
+      $return['Force file title'] = t('Yes');
+      $return['Custom file title'] = isset($settings['custom_file_title']) ? $settings['custom_file_title'] : '';
+    }
+    else {
+      $return['Force file title'] = t('No');
+    }
+  }
+
+  $output = '';
+  foreach ($return as $label => $value) {
+    $output .= '<strong>' . $label . '</strong>: ' . check_plain($value) . '<br />';
+  }
+
+  return $output;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function enrd_file_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, &$items, $display) {
+  $settings = $display['settings'];
+  $element = array();
+
+  if ($display['type'] == 'enrd_file_formatter') {
+
+    foreach ($items as $delta => $item) {
+      if (!empty($item['fid']) && ($file = entity_load_single('file', $item['fid']))) {
+        $term_language_iso = _enrd_file_formatter_get_language($file, $settings['token_file_language']);
+
+        if (isset($settings['force_file_title']) && $settings['force_file_title']) {
+          $file->filename = $settings['custom_file_title'];
+        }
+
+        if (isset($item['display'])) {
+          $file->display = $item['display'];
+        }
+
+        if (isset($item['description'])) {
+          $file->description = $item['description'];
+        }
+
+        if ($settings['display_type'] == 'full') {
+          $theme_function = 'enrd_file_formatter_full';
+        }
+        elseif ($settings['display_type'] == 'short') {
+          $theme_function = 'enrd_file_formatter_short';
+        }
+
+        $element[$delta] = array(
+          '#theme' => $theme_function,
+          '#file' => $file,
+          '#language_iso' => $term_language_iso,
+        );
+      }
+    }
+
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function enrd_file_formatter_theme() {
+  return array(
+    'enrd_file_formatter_full' => array(
+      'variables' => array(
+        'file' => NULL,
+        'icon_directory' => NULL,
+        'language_iso' => NULL,
+      ),
+    ),
+    'enrd_file_formatter_short' => array(
+      'variables' => array(
+        'file' => NULL,
+        'icon_directory' => NULL,
+        'language_iso' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Returns HTML for a link to a file using the "full" formatter.
+ *
+ * @see theme_file_link()
+ */
+function theme_enrd_file_formatter_full($variables) {
+
+  $file = $variables['file'];
+  $file_info = _enrd_file_formatter_build_file_information($file, $variables);
+  $language_iso = $variables['language_iso'];
+
+  $lang_element = array(
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => drupal_strtoupper($language_iso),
+    '#attributes' => array(
+      'class' => array('iso'),
+    ),
+  );
+
+  $size_element = array(
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => '(' . format_size($file->filesize) . ')',
+    '#attributes' => array(
+      'class' => array('size'),
+    ),
+  );
+
+  $file_link = l($file->filename, $file_info['url'], $file_info['options']);
+
+  $element = array(
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => $file_link . ' ' . render($lang_element) . $file_info['icon'] . ' ' . render($size_element),
+    '#attributes' => array(
+      'class' => array(
+        'file',
+        'enrd_file_formatter',
+      ),
+    ),
+  );
+
+  return render($element);
+}
+
+/**
+ * Returns HTML for a link to a file using the "short" formatter.
+ *
+ * @see theme_file_link()
+ */
+function theme_enrd_file_formatter_short($variables) {
+  $file = $variables['file'];
+  $file_info = _enrd_file_formatter_build_file_information($file, $variables);
+  $language_iso = $variables['language_iso'];
+
+  $size_element = array(
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => '(' . format_size($file->filesize) . ')',
+    '#attributes' => array(
+      'class' => array('size'),
+    ),
+  );
+
+  $file_link = l(drupal_strtoupper($language_iso), $file_info['url'], $file_info['options']);
+
+  $element = array(
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => $file_link . ' ' . $file_info['icon'] . ' ' . render($size_element),
+    '#attributes' => array(
+      'class' => array(
+        'file',
+        'enrd_file_formatter',
+      ),
+    ),
+  );
+
+  return render($element);
+}
+
+/**
+ * Provide a list of the display type.
+ *
+ * @return array
+ *   Return the default value.
+ */
+function _enrd_file_formatter_get_display_type_options() {
+  return array(
+    'full' => t('Full'),
+    'short' => t('Short'),
+  );
+}
+
+/**
+ * Provide default settings for the formatter.
+ *
+ * @return array
+ *   Return the default settings.
+ */
+function _enrd_file_formatter_default_formatter_settings() {
+  return array(
+    'display_type' => 'full',
+    'force_file_title' => FALSE,
+    'custom_file_title' => '',
+    'token_file_language' => '',
+  );
+}
+
+/**
+ * Get the ISO code language from the file object.
+ *
+ * @param mixed $file
+ *   The file object.
+ * @param string $field_file_lang_token
+ *   The token of the file language ISO code.
+ *
+ * @return string
+ *   The ISO code for the language. EN is returned as default value.
+ */
+function _enrd_file_formatter_get_language($file, $field_file_lang_token) {
+
+  // Get language ISO with the token system.
+  $term_language_iso = token_replace($field_file_lang_token, array('file' => $file), array('clear' => TRUE));
+
+  // Set EN if the language is not set in entity file.
+  if (empty($term_language_iso)) {
+    $term_language_iso = language_default('language');
+  }
+
+  return $term_language_iso;
+}
+
+/**
+ * Get file information from the file object.
+ *
+ * @param object $file
+ *   The file object.
+ * @param array $variables
+ *   The theme variables.
+ *
+ * @return mixed
+ *   An array with the file information.
+ *
+ * @see theme_file_link()
+ */
+function _enrd_file_formatter_build_file_information($file, $variables) {
+  $file_info = array();
+  $file_info['url'] = file_create_url($file->uri);
+  $icon_directory = $variables['icon_directory'];
+
+  // Human-readable names, for use as text-alternatives to icons.
+  $mime_name = array(
+    'application/msword' => t('Microsoft Office document icon'),
+    'application/vnd.ms-excel' => t('Office spreadsheet icon'),
+    'application/vnd.ms-powerpoint' => t('Office presentation icon'),
+    'application/pdf' => t('PDF icon'),
+    'video/quicktime' => t('Movie icon'),
+    'audio/mpeg' => t('Audio icon'),
+    'audio/wav' => t('Audio icon'),
+    'image/jpeg' => t('Image icon'),
+    'image/png' => t('Image icon'),
+    'image/gif' => t('Image icon'),
+    'application/zip' => t('Package icon'),
+    'text/html' => t('HTML icon'),
+    'text/plain' => t('Plain text icon'),
+    'application/octet-stream' => t('Binary Data'),
+  );
+
+  $mime_type = file_get_mimetype($file->uri);
+
+  $file_info['icon'] = theme('file_icon', array(
+    'file' => $file,
+    'icon_directory' => $icon_directory,
+    'alt' => !empty($mime_name[$mime_type]) ? $mime_name[$mime_type] : t('File'),
+  ));
+
+  // Set options as per anchor format described at
+  // http://microformats.org/wiki/file-format-examples
+  $file_info['options'] = array(
+    'attributes' => array(
+      'type' => $file->filemime . '; length=' . $file->filesize,
+    ),
+  );
+
+  return $file_info;
+}

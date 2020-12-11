@@ -1,0 +1,12 @@
+{
+  "require": {
+    "phpoffice/phpspreadsheet": "1.8.2",
+    "oomphinc/composer-installers-extender": "^1.1"
+  },
+  "extra": {
+    "installer-types": ["library"],
+    "installer-paths": {
+      "libraries/PhpSpreadsheet/": ["phpoffice/phpspreadsheet"]
+    }
+  }
+}

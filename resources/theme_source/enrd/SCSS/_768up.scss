@@ -1,0 +1,139 @@
+
+body.admin-menu {
+    margin-top: 40px !important;
+}
+
+#enrd-logo-header{
+  background-size: initial;
+  min-height:200px;
+}
+
+#enrd-country-map{display:none;}
+
+#layout-header .region-header-top {
+  padding:0px;
+}
+
+#enrd-logo-header{
+  >div+div{
+    font-size: 30px;
+    padding: 8px 25px;
+  }
+}
+
+
+// Reset header container, row and col margin and padding on xs screens by default.
+#layout-header > .container, #enrd-header.container{
+  padding:0 15px;
+
+  > .row {
+    margin:0 -15px;
+
+    > [class*=' col-'], > [class^='col-']{
+      padding:0 15px;
+    }
+  }
+}
+
+#enrd-header #enrd-logo-header{
+  #enrd-logo-holder {
+    left:15px;
+    right:15px;
+  }
+}
+
+#layout-header{
+
+	#EC-header{
+		margin-top:0;
+	}
+
+	#banner-flag {
+		left:40px;
+		top:15px;
+		width:172px;
+		height:119px;
+	}
+
+  #main-title {
+    color: #0065a2;
+    text-transform: uppercase;
+    font-size: 24px;
+    position: absolute;
+    z-index: 10;
+    left: 245px;
+	top:auto;
+	bottom:45px;
+    padding:0;
+
+  }
+
+  #sub-title {
+    color: #fff;
+    font-size: 19px !important;
+    position: absolute;
+    z-index: 10;
+    left: 245px;
+    top: 100px;
+    text-decoration: none;
+    display:block;
+    padding-left:0;
+  }
+
+    #EC-header{
+  	height:145px;
+  }
+}
+
+
+.region-header-top > section.block-enrd-mastermind{float: right;}
+
+
+/* Views Filters  */
+
+.view-filters{
+
+	#views-exposed-form-enrd-projects-list-page {
+
+		.views-exposed-widgets .views-exposed-widget{
+			width: 33.33%;
+
+			.chosen-container{width:100% !important;}
+
+		}
+	}
+
+	#views-exposed-form-enrd-lag-database-lag-profiles-list{
+
+		#edit-fulltext-wrapper{
+			width:40%
+		}
+
+		#edit-rdp-wrapper{
+			width:60%;
+
+		}
+
+		.views-exposed-widgets .views-exposed-widget:last-child{padding-right:20px;}
+	}
+}
+
+.advanced_filters{
+
+	.dropdown.dropdown-lg {
+		position: static !important;
+	}
+	.dropdown.dropdown-lg .dropdown-menu {
+		width:100%;
+	}
+}
+
+#footer {
+    .footerECSection {
+        text-align: left;
+        position: absolute;
+    }
+    .region-footer {
+        text-align: right;
+    }
+}

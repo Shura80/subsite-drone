@@ -1,0 +1,560 @@
+/* Notifications Quicktabs */
+section#block-enrd-notifications-enrd-notifications-panel-desc {
+  margin-left: 5px;
+  font-style: italic;
+
+  span.glyphicon.glyphicon-pushpin {
+    color: #009193;
+    font-size: 1em;
+    padding: 4px 5px 4px 4px;
+    margin-right: 5px;
+    border-radius: 15px;
+  }
+}
+div.enrd-notifications.email-settings {
+  padding: 15px;
+  margin: 5px 0 5px 2px;
+
+  div#edit-description > .description {
+    font-size: 1em;
+    width: 100%;
+    position: relative;
+    top: -29px;
+    left: -15px;
+    display: inline-block;
+    border: 1px solid #dedede;
+    background: #e9f5f5;
+    padding: 10px;
+
+    &:before {
+      content:"\e086";
+      font-family: 'Glyphicons Halflings';
+      color: #009193;
+      font-size: 1em;
+      padding: 2px;
+      margin-right: 5px;
+      border-radius: 15px;
+    }
+  }
+
+  div.form-item-message-subscribe-email-freq,
+  div.form-item-field-enrd-notifications-remind {
+    position: relative;
+    top: -29px;
+    left: -15px;
+  }
+}
+#quicktabs-enrd_notifications_settings {
+  input[type="checkbox"] {
+    margin: 0;
+  }
+  span.glyphicon {
+    margin-right: 5px;
+  }
+  ul.quicktabs-tabs {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    top: 5px;
+    background: #fff;
+
+    li {
+      background: #f2f2f2;
+      border: 1px solid #dddddd;
+      border-bottom: none;
+      padding: 6px 10px;
+      margin: 0 2px;
+      -webkit-border-radius: 5px 5px 0 0;
+      -moz-border-radius: 5px 5px 0 0;
+      border-radius: 5px 5px 0 0;
+
+      span.user-follow-count {
+        border: 1px solid rgba(187, 187, 187, 0.5);
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        background: rgba(187, 187, 187, 0.5);
+        color: #ffffff;
+        padding: 1px 6px;
+        margin: 2px;
+        font-size: 11px;
+        font-weight: bold;
+        position: relative;
+        bottom: 2px;
+        left: 4px;
+      }
+      a:active, a:focus, a:visited {
+        text-decoration: none;
+      }
+      &.active {
+        background: #009193;
+        border: 1px solid #009193;
+        border-bottom: none;
+
+        span.user-follow-count {
+          border: 1px solid rgb(0, 145, 147);
+          background: rgb(0, 145, 147);
+        }
+        a:link, a:visited {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+  #quicktabs-container-enrd_notifications_settings {
+    .view-enrd-notifications-node-flags {
+      span.enrd-notifications-lag-display.intro {
+        display: inline-block;
+        background: #e9f5f5;
+        border: 1px solid #dedede;
+        padding: 10px;
+        margin: 5px 0 10px 2px;
+        width: 100%;
+
+        span.glyphicon.glyphicon-info-sign {
+          color: #009193;
+          font-size: 1em;
+          padding: 2px;
+          margin-right: 5px;
+          border-radius: 15px;
+        }
+      }
+      span.enrd-notifications-lag-display.results-count {
+        background: #efefef;
+        padding: 2px 5px;
+        border: 1px solid #cccccc;
+      }
+      select#edit-flagged.form-control.form-select {
+        margin-right: 10px;
+        -moz-padding-start: 10px;
+        -moz-padding-end: 0;
+      }
+      div.view-filters {
+        margin-bottom: 0;
+        padding-bottom: 0;
+
+        div.advanced_filters {
+          position: relative;
+          top: -70px;
+          left: 250px;
+
+          div.dropdown-menu.keep-open {
+            margin-left: 0;
+            -webkit-border-radius: 0 0 8px 8px;
+            -moz-border-radius: 0 0 8px 8px;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 1px 2px 4px 0 rgba(0,0,0,0.2);
+            width: 292px;
+
+            div.bef-secondary-options {
+              div.form-item-search {
+                padding-right: 5px;
+                width: 255px;
+
+                label {
+                  margin-bottom: 11px;
+                }
+                input.form-control {
+                  height: 45px;
+                }
+              }
+              div.form-type-select.form-item-country,
+              div.form-type-select.form-item-esi-fund,
+              div.form-type-select.form-item-esif-programme {
+                margin-bottom: 5px;
+              }
+            }
+          }
+        }
+      }
+      td.views-field-title {
+        max-width: 500px;
+      }
+      span[class*="flag-enrd-follow-"] {
+        a.flag-action {
+          &:before {
+            content: "\2b";
+            font-family: 'Glyphicons Halflings';
+            margin-right: 5px;
+            float: left;
+          }
+        }
+        a.unflag-action {
+          &:before {
+            content: "\e013";
+            font-family: 'Glyphicons Halflings';
+            margin-right: 5px;
+            float: left;
+          }
+        }
+      }
+      span.flag-wrapper span.flag-message.flag-failure-message {
+        top: -10px;
+        left: -65px;
+        width: 150px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        padding: 3px 5px;
+      }
+      span[class*="flag-email"] {
+        left: 30px;
+      }
+      .view-empty {
+        margin: 5px 0 0 2px;
+      }
+      ul.pager {
+        margin-top: 0;
+      }
+    }
+    .view-enrd-notifications-user-flags {
+      span.enrd-notifications-content-display.intro {
+        display: inline-block;
+        background: #e9f5f5;
+        border: 1px solid #dedede;
+        padding: 10px;
+        margin: 5px 0px 0px 2px;
+        width: 100%;
+
+        span.glyphicon.glyphicon-info-sign {
+          color: #009193;
+          font-size: 1em;
+          padding: 2px;
+          margin-right: 5px;
+          border-radius: 15px;
+        }
+      }
+      span[class*="flag-enrd-follow-"] {
+        a.flag-action {
+          &:before {
+            content: "\2b";
+            font-family: 'Glyphicons Halflings';
+            padding-right: 5px;
+            float: left;
+          }
+        }
+        a.unflag-action {
+          &:before {
+            content: "\e013";
+            font-family: 'Glyphicons Halflings';
+            padding-right: 5px;
+            float: left;
+          }
+        }
+      }
+      span.flag-wrapper span.flag-message.flag-failure-message {
+        position: relative;
+        top: 0px;
+        left: -20px;
+        width: 150px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        padding: 3px 5px;
+      }
+      .views-view-grid {
+        .grid-item {
+          .views-field {
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.page-user-notifications span.glyphicon.glyphicon-warning-sign {
+  color: #ff8e42;
+}
+
+/* Notifications VBO Select */
+.page-user-notifications {
+  select#edit-operation {
+    width: 250px;
+    float: left;
+    margin: 0 10px 20px 0;
+  }
+  #edit-rules-componentrules-enrd-flag-read-unread {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+  }
+}
+
+div.view.view-enrd-notifications-user-flags {
+  div.grid-item {
+    div.views-field {
+      float: left;
+      width: 50%;
+      padding: 5px 10px;
+
+      span.views-label {
+        float: left;
+        width: 100%;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+/* ENRD Notifications Panel */
+#block-enrd-notifications-enrd-notifications-panel {
+  .dropdown.open {
+    .caret {
+      border-top: none;
+      border-bottom: 4px solid #000000;
+    }
+  }
+  a.glyphicon {
+    font-size: 18px;
+    position: relative;
+    top: 0;
+    left: 0;
+    text-decoration: none;
+    line-height: 1;
+    color: #009193;
+  }
+  div.enrd-notifications-panel.latest-messages-list {
+    border: 1px solid #bbbbbb;
+    left: -290px;
+    padding: 0px 10px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    width: 320px;
+    box-shadow: 2px 3px 10px rgba(0, 145, 147, 0.3);
+    top: 35px;
+    z-index: 100;
+    background: #fefefe;
+
+    .ajax-progress {
+      .throbber {
+        position: relative;
+        top: 2px;
+        left: -3px;
+      }
+    }
+    span.enrd-notifications-panel.loading-message {
+      position: relative;
+      top: -3px;
+      left: -5px;
+      font-size: 12px;
+    }
+    .view-enrd-notifications-messages {
+      .view-content {
+        border-radius: 5px;
+        border: 1px solid #a6dddd;
+        padding: 4px;
+        margin: 10px 0 15px 0;
+
+        .unread {
+          font-weight: bold;
+          background: #a6dddd;
+          padding: 0px 10px;
+
+          div.views-row:not(:last-child) {
+            border-bottom: 1px solid #efefef;
+          }
+          div.views-row {
+            padding: 5px 0px;
+          }
+        }
+        .read {
+          background: #eaf6f6;
+          padding: 0px 10px;
+
+          div.views-row:not(:last-child) {
+            border-bottom: 1px solid #ccc;
+          }
+          div.views-row {
+            padding: 5px 0px;
+          }
+
+        }
+      }
+      .view-header, .view-empty {
+        text-align: center;
+        margin-top: 5px;
+      }
+      .view-empty .empty-notifications {
+        text-align: left;
+        padding: 10px 20px;
+        font-size: 12px;
+      }
+      .view-filters {
+        display: none;
+      }
+    }
+    div.more-link {
+      text-align: center;
+      margin: 0px 10px 20px 0px;
+      width: 100%;
+      font-size: 12px;
+
+      & > a {
+        padding: 5px 10px;
+      }
+
+      div.btn.enrd-notifications.settings-link {
+        margin-left: 10px;
+
+        span.glyphicon {
+          color: #009193;
+          padding: 0 2px;
+        }
+        a {
+          text-transform: uppercase;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+  .enrd-notifications-counter {
+    position: relative;
+    top: -40px;
+    left: 20px;
+
+    span.badge {
+      font-size: 0.7em;
+      padding: 4px 6px 3px 6px;
+      -webkit-padding-before: 3px;
+      -webkit-padding-end: 5px;
+      -webkit-padding-after: 3px;
+      -webkit-padding-start: 5px;
+      background: #e53435;
+      font-weight: bold;
+      -webkit-border-radius: 10px;
+      -moz-border-radius: 10px;
+      border-radius: 10px;
+      -webkit-box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.5);
+      -moz-box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.5);
+      box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.5);
+    }
+  }
+}
+
+/* Notifications Full List */
+.view-enrd-notifications-messages {
+  .view-content {
+    div.table-responsive {
+      overflow: hidden;
+
+      span.flag-enrd-message-read-unread {
+        a.flag-action {
+          visibility: hidden;
+          &:before {
+            content: "\e106";
+            font-family: 'Glyphicons Halflings';
+            display: inline;
+            visibility: visible;
+          }
+        }
+        a.unflag-action {
+          visibility: hidden;
+          &:before {
+            content: "\e105";
+            font-family: 'Glyphicons Halflings';
+            float: left;
+            visibility: visible;
+          }
+        }
+      }
+      table {
+        margin-bottom: -1px;
+
+        caption {
+          display: none;
+        }
+        tr {
+          &.unread {
+            font-weight: bold;
+            background: #a6dddd;
+            border-bottom-color: #fff;
+
+            td {
+              border-top: 1px solid #fff;
+
+              &.views-field-timestamp {
+                font-weight: normal;
+              }
+            }
+          }
+        }
+      }
+    }
+    /* Notifications Full List */
+    .vbo-select-all-markup {
+      display: none !important;
+    }
+    table.unread {
+      margin-bottom: -1px;
+
+      caption {
+        display: none;
+      }
+      tr {
+        &.unread {
+          font-weight: bold;
+          background: #a6dddd;
+          border-bottom-color: #fff;
+          padding: 0px 10px;
+
+          td {
+            border-top: 1px solid #fff;
+            &.views-field-timestamp {
+              font-weight: normal;
+            }
+          }
+        }
+      }
+    }
+    table.read {
+      caption, th.views-field-views-bulk-operations {
+        display: none;
+      }
+      tbody {
+        td.views-field-views-bulk-operations {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+/* Lag node FUll display */
+.node-type-lag {
+  section#block-enrd-notifications-enrd-notifications-lag-flag-link {
+    .block-title {
+      h3 {
+        color: #009193;
+        border: none;
+        font-size: 18px;
+        font-weight: bold;
+        border-bottom: 1px solid #cccccc;
+        padding-bottom: 2px;
+        margin-bottom: 0;
+        width: 100%;
+      }
+    }
+  }
+  span.flag-enrd-follow-lags {
+    a.flag-action {
+      &:before {
+        content: "\2b";
+        font-family: 'Glyphicons Halflings';
+        padding-right: 5px;
+        display: inline-block;
+      }
+    }
+    a.unflag-action {
+      &:before {
+        content: "\e013";
+        font-family: 'Glyphicons Halflings';
+        padding-right: 5px;
+        display: inline-block;
+      }
+    }
+  }
+}

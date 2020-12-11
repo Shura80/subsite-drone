@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * ENRD Country Pages install file.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_country_pages_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Country Pages is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_country_pages_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Country Pages has been deactivated on your site.'));
+}
+
+/**
+ * Delete field_tax_networking instances.
+ */
+function enrd_country_pages_update_7201() {
+  $instance = field_info_instance('node', 'field_tax_networking', 'rdp_information');
+  if (!empty($instance) && isset($instance)) {
+    field_delete_instance($instance, TRUE);
+  }
+}

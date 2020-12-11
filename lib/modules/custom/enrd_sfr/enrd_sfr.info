@@ -1,0 +1,9 @@
+name = ENRD Subscription Form Requests
+description = Custom entity Subscription request creation module.
+package = ENRD
+core = 7.x
+dependencies[] = entity
+dependencies[] = registry_autoload
+registry_autoload[] = PSR-4
+php = 7.3
+multisite_version = 2.6

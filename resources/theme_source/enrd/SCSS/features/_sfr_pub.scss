@@ -1,0 +1,342 @@
+/* Subscription request forms */
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-cp,
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-ehd,
+.page-enrd-sfr-add-enrd-sfr-pub-contact-cp,
+.page-enrd-sfr-add-enrd-sfr-pub-contact-ehd {
+
+    input#edit-submit {
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+    .form-item-field-enrd-sfr-pub-eu-legal-notice,
+    .form-item-field-enrd-sfr-pub-privacy-policy,
+    .form-item-field-enrd-sfr-pub-subcp-type-und-0-field-enrd-sfr-pub-subcp-paper-und,
+    .form-item-field-enrd-sfr-pub-subcp-type-und-0-field-enrd-sfr-pub-subcp-electr-und,
+    .form-item-field-enrd-sfr-pub-contcp-papel-und-electronic,
+    .form-item-field-enrd-sfr-pub-contcp-papel-und-paper {
+        label.option {
+            padding-left: 5px;
+        }
+    }
+}
+/* CP Subscription request form */
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-cp form {
+    div.group-contact-details,
+    div.group-public-choices,
+    div.group-delivery-address {
+        h2 > span {
+            color: $lblue;
+        }
+    }
+    // Contact details field group.
+    .group-contact-details {
+        .field-name-field-enrd-sfr-pub-subcp-petitle {
+            @media(min-width: 1199px) {
+                float: left;
+                margin-top: -11px;
+                display: inline-block;
+
+                .form-type-select {
+                    width: 163px;
+                    margin-right: 25px;
+                }
+            }
+        }
+        .field-name-field-enrd-sfr-pub-subcp-name {
+            @media(min-width: 1199px) {
+                display: inline-block;
+
+                > div {
+                    width: 334px;
+                    margin-right: 25px;
+                }
+            }
+        }
+        .field-name-field-enrd-sfr-pub-subcp-surname {
+            @media(min-width: 1199px) {
+                float: right;
+                display: inline-block;
+
+                > div {
+                    width: 300px;
+                }
+            }
+        }
+        .field-name-field-enrd-sfr-pub-subcp-email div.form-item-field-enrd-sfr-pub-subcp-email-und-0-email {
+            @media(min-width: 1199px) {
+                margin-top: 0;
+            }
+        }
+    }
+    // Your choice of publications field group.
+    .group-public-choices > div.field-name-field-enrd-sfr-pub-subcp-type {
+        // Field collection "Add more" btn.
+        input[name="field_enrd_sfr_pub_subcp_type_add_more"] {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 20px;
+        }
+        // Field collection item.
+        table.field-enrd-sfr-pub-subcp-type {
+            margin-top: 13px;
+
+            tbody {
+                border: 0;
+
+                tr.field-enrd-sfr-pub-subcp-type td {
+                    border: 0;
+                    padding: 20px 0 0 0;
+
+                    // Wrapper around Type of pub. select + Remove btn.
+                    div.enrd-sfr-grouping-type-publications {
+                        div.field-name-field-enrd-sfr-pub-subcp-typepub {
+                            @media(max-width: 992px) {
+                                padding-right: 0;
+                            }
+
+                            label {
+                                display: none;
+                            }
+                        }
+
+                        input.form-submit {
+                            text-transform: uppercase;
+                            font-weight: bold;
+                        }
+                        @media(min-width: 768px) {
+                            display: flex;
+                            justify-content: space-between;
+                            flex-direction: row;
+
+                            div.field-name-field-enrd-sfr-pub-subcp-typepub {
+                                flex: 4;
+                            }
+                            input.form-submit {
+                                flex: 1;
+                                margin-left: 20px;
+                            }
+                        }
+                        @media(max-width: 768px) {
+                            input.form-submit {
+                                margin-top: 15px;
+                            }
+                        }
+                    }
+                    // Wrapper around Paper & Electronic fields.
+                    div.enrd-sfr-grouping-publ-versions {
+                        @media(min-width: 768px) {
+                            display: flex;
+                            justify-content: space-between;
+                            flex-direction: row;
+
+                            div.enrd-sfr-separator {
+                                border-left: 1px solid #ccc;
+                                margin-bottom: 18px;
+                                margin-top: 20px;
+                            }
+                        }
+
+                        fieldset.enrd-sfr-group-paper,
+                        fieldset.enrd-sfr-group-electronic,
+                        fieldset.enrd-sfr-group-paper .field-name-field-enrd-sfr-pub-subcp-paper > .form-type-checkbox,
+                        fieldset.enrd-sfr-group-electronic .field-name-field-enrd-sfr-pub-subcp-electr > .form-type-checkbox {
+                            padding-left: 0;
+                            padding-right: 0;
+                        }
+
+                        fieldset.enrd-sfr-group-paper {
+                            @media(min-width: 768px) {
+                                flex: 2;
+
+                                .fieldset-wrapper {
+                                    margin-right: 20px;
+                                }
+                            }
+
+                            .field-name-field-enrd-sfr-pub-subcp-paper {
+                                margin: 20px 0 5px;
+
+                                & > .form-type-checkbox {
+                                    margin-bottom: 20px;
+                                }
+                            }
+                            .field-name-field-enrd-sfr-pub-subcp-lng-cop {
+                                div.form-item {
+                                    margin-top: 10px;
+                                }
+                                input.field-add-more-submit {
+                                    margin-top: 20px;
+                                    margin-bottom: 20px;
+                                }
+                                .form-item .double-field-elements {
+                                    select {
+                                        margin-right: 8px;
+                                    }
+                                    span.glyphicon-remove {
+                                        z-index: 1;
+                                        top: 3px;
+                                        left: 7px;
+
+                                        &::before {
+                                            color: $lblue;
+                                        }
+                                    }
+                                    input.multiple-fields-remove-button {
+                                        position: relative;
+                                        right: 14px;
+                                        z-index: 99;
+                                        height: 28px;
+                                        width: 28px;
+                                        background: transparent;
+                                        color: transparent;
+                                        border: 1px solid $lblue;
+                                        box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+                                    }
+                                }
+                            }
+                        }
+                        fieldset.enrd-sfr-group-electronic {
+                            @media(min-width: 768px) {
+                                flex: 2;
+
+                                .fieldset-wrapper {
+                                    margin-left: 20px;
+                                }
+                            }
+
+                            .field-name-field-enrd-sfr-pub-subcp-electr {
+                                margin: 20px 0 20px;
+                            }
+                            .field-name-field-enrd-sfr-pub-subcp-el-lang > .form-type-select {
+                                margin-bottom: 20px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Delivery Address field group.
+    .group-delivery-address {
+        .field-name-field-enrd-sfr-pub-subcp-addr {
+            legend {
+                display: none;
+            }
+        }
+    }
+
+    #edit-enrd-sfr-pub-newsletter-link,
+    #edit-enrd-sfr-pub-contact-cp {
+        margin: 0;
+    }
+}
+
+/* CP Subscription request form: "Language(s) + N. of copies" field + Remove btn */
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-cp div#edit-field-enrd-sfr-pub-subcp-type table.field-multiple-table {
+    tr.draggable.even {
+        background-color: #eaf6f6;
+
+        select.form-select {
+            background-color: white;
+        }
+
+        table.field-multiple-table, tr {
+            background-color: #eaf6f6;
+        }
+    }
+
+    .double-field-elements {
+        .form-type-select .form-select {
+            margin-bottom: 10px;
+
+            @media(min-width: 768px) {
+                display: inline;
+                max-width: 130px;
+                min-width: 100px;
+                margin-bottom: 0;
+
+                &:first-child {
+                    margin-right: 10px;
+                }
+            }
+        }
+    }
+
+}
+/* CP Subscription & CP Contact request form: Address field corrections. */
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-cp form .field-name-field-enrd-sfr-pub-subcp-addr,
+.page-enrd-sfr-add-enrd-sfr-pub-contact-cp form .field-name-field-enrd-sfr-pub-contcp-oldadd {
+    // Address 1 & Address 2.
+    .street-block {
+        @media(min-width: 768px) {
+            label.element-invisible ~ input.premise {
+                margin-top: 30px;
+            }
+            .form-item-field-enrd-sfr-pub-subcp-addr-und-0-thoroughfare,
+            .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-thoroughfare {
+                float: left;
+                width: 49%;
+            }
+            .form-item-field-enrd-sfr-pub-subcp-addr-und-0-premise,
+            .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-premise {
+                float: right;
+                width: 49%;
+            }
+        }
+    }
+    // City, Suburb, Province, State, Postal code, Zip code.
+    .locality-block {
+        .form-item-field-enrd-sfr-pub-subcp-addr-und-0-locality,
+        .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-locality {
+            input.form-control {
+                margin-top: 6px;
+            }
+        }
+        .form-item-field-enrd-sfr-pub-subcp-addr-und-0-administrative-area,
+        .form-item-field-enrd-sfr-pub-subcp-addr-und-0-dependent-locality,
+        .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-administrative-area,
+        .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-dependent-locality {
+            label {
+                margin-top: 0;
+                margin-bottom: 4px;
+            }
+            input.form-control {
+                margin-top: 7px;
+            }
+            select.form-select {
+                margin-top: 11px;
+            }
+        }
+        .form-item-field-enrd-sfr-pub-subcp-addr-und-0-postal-code input.postal-code,
+        .form-item-field-enrd-sfr-pub-contcp-oldadd-und-0-postal-code input.postal-code {
+            margin-top: 6px;
+        }
+    }
+}
+/* EHD Subscription request form */
+.page-enrd-sfr-add-enrd-sfr-pub-subscribe-ehd form {
+    .field-name-field-enrd-sfr-pub-subehd-countr legend {
+        display: none;
+    }
+
+    #edit-enrd-sfr-pub-contact-ehd {
+        margin: 0;
+    }
+}
+/* CP Contact request form */
+.page-enrd-sfr-add-enrd-sfr-pub-contact-cp form {
+    .field-name-field-enrd-sfr-pub-contcp-oldadd {
+        legend {
+            margin-bottom: 0;
+
+            span.fieldset-legend {
+                display: block;
+                margin-top: -1px;
+                margin-bottom: 4px;
+                font-size: 15px;
+                font-weight: bold;
+            }
+        }
+    }
+}

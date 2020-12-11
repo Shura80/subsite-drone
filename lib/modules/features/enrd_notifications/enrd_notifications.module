@@ -1,0 +1,1261 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Notifications feature.
+ */
+
+include_once 'enrd_notifications.features.inc';
+
+// Content types.
+define('ENRD_NOTIFICATIONS_NEWS_NODE', 'news');
+define('ENRD_NOTIFICATIONS_EVENT_NODE', 'event');
+define('ENRD_NOTIFICATIONS_COOPERATION_OFFER_NODE', 'cooperation_offer');
+
+// Message types.
+define('ENRD_NOTIFICATIONS_LAG_MESSAGE', 'enrd_notifications_lag_content_publication');
+define('ENRD_NOTIFICATIONS_CONTENT_MESSAGE', 'enrd_notifications_content_publication_no_groups');
+
+// Follow global content flags.
+define('ENRD_NOTIFICATIONS_NEWS_FLAG', 'enrd_follow_news');
+define('ENRD_NOTIFICATIONS_EVENTS_FLAG', 'enrd_follow_events');
+define('ENRD_NOTIFICATIONS_COOPERATION_OFFERS_FLAG', 'enrd_follow_cooperation_offers');
+
+// Follow nodes flags.
+define('ENRD_NOTIFICATIONS_LAGS_FLAG', 'enrd_follow_lags');
+
+// Email flags.
+define('ENRD_NOTIFICATIONS_NEWS_EMAIL_FLAG', 'email_news');
+define('ENRD_NOTIFICATIONS_EVENTS_EMAIL_FLAG', 'email_events');
+define('ENRD_NOTIFICATIONS_COOPERATION_OFFERS_EMAIL_FLAG', 'email_cooperation_offers');
+define('ENRD_NOTIFICATIONS_LAGS_EMAIL_FLAG', 'email_lags');
+
+// Read/Unread flag.
+define('ENRD_NOTIFICATIONS_READ_UNREAD_FLAG', 'enrd_message_read_unread');
+
+// Notifications View.
+define('ENRD_NOTIFICATIONS_MESSAGES_LIST_VIEW', 'enrd_notifications_messages');
+// Followed LAG and LAG Search View.
+define('ENRD_NOTIFICATIONS_LAG_LIST_VIEW', 'enrd_notifications_node_flags');
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_notifications_permission() {
+  return [
+    'access notifications settings panel' => [
+      'title' => t('Access Notifications settings panel'),
+      'description' => t('Let users access to the form where ENRD Notications settings can be customized.'),
+    ],
+    'access notifications list' => [
+      'title' => t('Access Notifications list'),
+      'description' => t('Let users access to the block or page with list of received message notifications.'),
+    ],
+  ];
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_notifications_menu() {
+
+  // Notifications settings main page.
+  $items['user/%user/notifications/settings'] = [
+    'title' => 'Settings',
+    'page callback' => 'enrd_notifications_settings_page',
+    'access arguments' => ['access notifications settings panel'],
+    'file' => 'enrd_notifications.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+  ];
+
+  // Notifications email settings panel.
+  $items['user/%/notifications/settings/email'] = [
+    'title' => 'Email settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => ['enrd_notifications_settings_form', 1],
+    'access arguments' => ['access notifications settings panel'],
+    'file' => 'enrd_notifications.pages.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  // Fake default tab for views with notifications list.
+  $items['user/%user/notifications/list'] = [
+    'title' => 'My notifications',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  ];
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_notifications_menu_alter(&$items) {
+  // Override the default Message Subscribe UI menu tab access.
+  $paths = [
+    'user/%user/message-subscribe',
+
+    // Forbid access to standard flag names that message-subscribe expects.
+    // And use custom quicktab instance instead.
+    'user/%user/message-subscribe/enrd_follow_events',
+    'user/%user/message-subscribe/enrd_follow_news',
+    'user/%user/message-subscribe/enrd_follow_cooperation_offers',
+    'user/%user/message-subscribe/enrd_follow_lags',
+  ];
+
+  foreach ($paths as $path) {
+    if (isset($items[$path])) {
+      $items[$path]['access callback'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function enrd_notifications_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if (strpos($root_path, 'user/%') !== FALSE) {
+    foreach ($data['tabs'][0]['output'] as $key => $value) {
+      // Hide Subscriptions tab but allow access on path.
+      if ($value['#link']['path'] == 'user/%/subscriptions') {
+        unset($data['tabs'][0]['output'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function enrd_notifications_node_view_alter(&$build) {
+  if ($build['#node']->type == 'lag' && $build['#view_mode'] == 'full') {
+    // If in LAGs full mode is visible a subscriptions subscribe link remove it.
+    if (in_array('subscriptions-subscribe', array_keys($build['links']['node']['#links']))) {
+      unset($build['links']['node']['#links']['subscriptions-subscribe']);
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_notifications_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter') {
+    if (isset($implementations['enrd_notifications'])) {
+      $group = $implementations['enrd_notifications'];
+      unset($implementations['enrd_notifications']);
+      $implementations['enrd_notifications'] = $group;
+    }
+  }
+  // Avoid 403 errors introduced by message_subscribe_email_flag_access.
+  // @see enrd_notifications_flag_access()
+  if ($hook == 'flag_access') {
+    unset($implementations['message_subscribe_email']);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_notifications_form_message_subscribe_admin_settings_alter(&$form, &$form_state, $form_id) {
+  // Hide notify own content field from message subscribe module.
+  hide($form['message_subscribe_notify_own_actions']);
+
+  // Add a field to message_subscribe form to set notifications items limit.
+  $form['enrd_notifications_panel_limit'] = [
+    '#type' => 'select',
+    '#options' => _enrd_notifications_panel_limit_options(),
+    '#title' => t('Notifications panel item limit'),
+    '#description' => t('Set how many items should be displayed in the notifications panel.'),
+    '#default_value' => variable_get('enrd_notifications_panel_limit', '5'),
+  ];
+
+  // Add a field to message_subscribe form to set reminder's day of month.
+  $form['enrd_notifications_reminder_scheduled_day'] = [
+    '#type' => 'select',
+    '#options' => array_slice(range(0, 31), 1, NULL, TRUE),
+    '#title' => t('Choose a day of month to schedule unread notifications reminder.'),
+    '#description' => t('Set the day of the month in which the scheduled reminders should be sent by email.'),
+    '#default_value' => variable_get('enrd_notifications_reminder_scheduled_day', '1'),
+  ];
+
+  // Alternative digest sender email address.
+  $form['enrd_notifications_digest_from'] = [
+    '#type' => 'textfield',
+    '#title' => t('Mail sender address'),
+    '#description' => t("If you want to use a different email address and not the default site's email, set it here."),
+    '#default_value' => variable_get('enrd_notifications_digest_from', variable_get('site_mail')),
+  ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_notifications_form_message_type_form_alter(&$form, &$form_state) {
+
+  // Get the message_type machine name.
+  $current_message_type = $form['name']['#default_value'];
+
+  // Get the list of ENRD Notifications message types.
+  $enrd_notifications_message_types = _enrd_notifications_get_message_types();
+
+  // Load a list of allowed entity types for current message type.
+  if (in_array($current_message_type, $enrd_notifications_message_types)) {
+    $message_type = message_type_load($current_message_type);
+    $options = array();
+    foreach (entity_get_info() as $entity_id => $entity) {
+      $options[$entity_id] = $entity['label'];
+    }
+
+    // Defines which referenced entity types trigger, if deleted, the automatic
+    // deletion of messages that uses them as references.
+    // It has to be done here, specifically for custom message bundles
+    // to avoid using the global variable defined for all message types.
+    $form['data']['enrd_notifications_message_auto_delete'] = [
+      '#title' => t('ENRD Notifications: auto delete messages referencing the following entities'),
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#options' => $options,
+      '#default_value' => $message_type->data['enrd_notifications_message_auto_delete'],
+      '#description' => t('Messages that reference entities of these types will be deleted when the referenced entity gets deleted.'),
+    ];
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * @see: message_entity_delete()
+ */
+function enrd_notifications_entity_delete($entity, $entity_type) {
+  if ($entity_type == 'message') {
+    return;
+  }
+  // Check that field names from interested bundles are returned.
+  if (!$field_names = _enrd_notifications_message_get_referenced_fields($entity_type, $entity)) {
+    return;
+  }
+
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
+
+  // A deleted message with no reference doesn't need to create a queue worker.
+  $delete_referenced_entities = FALSE;
+  foreach ($field_names as $field_name) {
+    $field = field_info_field($field_name);
+    $columns = array_keys($field['columns']);
+    // Fetch messages with fields referencing the deleted entity.
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'message')
+      ->fieldCondition($field['field_name'], $columns[0], $entity_id)
+      ->execute();
+
+    if (!empty($result['message'])) {
+      $delete_referenced_entities = TRUE;
+      break;
+    }
+  }
+
+  if (!$delete_referenced_entities) {
+    return;
+  }
+
+  if (variable_get('message_use_queue')) {
+    $data = array(
+      'range' => 200,
+      'last_mid' => 0,
+      'field_names' => $field_names,
+      'entity_id' => $entity_id,
+    );
+    $queue = DrupalQueue::get('message_entity_delete');
+
+    return $queue->createItem($data);
+  }
+
+  _message_delete_messages($field_names, $entity_id);
+}
+
+/**
+ * Helper function to collect entity referencing fields in custom message types.
+ *
+ * @param string $entity_type
+ *   The string representing the entity type (node, user, etc...).
+ * @param object $entity
+ *   A fully loaded entity object.
+ *
+ * @return mixed
+ *   Returns array of fields referencing an entity or void.
+ *
+ * @see: _message_get_referenced_fields()
+ *
+ * @throws \EntityMalformedException
+ */
+function _enrd_notifications_message_get_referenced_fields($entity_type, $entity) {
+
+  // Get the list of ENRD Notifications message types.
+  $enrd_notifications_message_types = _enrd_notifications_get_message_types();
+
+  $entity_types = [];
+  $message_types = [];
+
+  // Build an array of fully-loaded message type definitions.
+  foreach ($enrd_notifications_message_types as $enrd_notifications_message_type) {
+    $message_types[] = message_type_load($enrd_notifications_message_type);
+  }
+
+  // Build an array of entity types selected in every custom message type form.
+  foreach ($message_types as $message_type_info) {
+    if (!empty($message_type_info->data['enrd_notifications_message_auto_delete'])) {
+      $entity_types[] = $message_type_info->data['enrd_notifications_message_auto_delete'];
+    }
+  }
+
+  // Clean $entity_types array from possible entity types duplicated names.
+  $entity_types = call_user_func_array('array_merge', $entity_types);
+
+  if (!$entity_types || !in_array($entity_type, $entity_types)) {
+    return;
+  }
+
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+
+  $field_names = array();
+
+  // Search for fields in which messages referenced the deleted entity.
+  foreach (field_info_fields() as $field) {
+    if (empty($field['bundles']['message'])) {
+      // This field isn't used in any message.
+      continue;
+    }
+
+    // Only delete messages due to referenced entity or referenced
+    // taxonomy term deletion.
+    if ($field['type'] == 'entityreference') {
+      // Check if the field references entities of the given type.
+      if ($entity_type != $field['settings']['target_type']) {
+        continue;
+      }
+      // Check if the field references specific bundles. If so, check if the
+      // field references the deleted entity's bundle.
+      if ($field['settings']['handler_settings']['target_bundles'] && !in_array($bundle, $field['settings']['handler_settings']['target_bundles'])) {
+        continue;
+      }
+    }
+    elseif ($field['type'] == 'taxonomy_term_reference') {
+      if ($entity_type != 'taxonomy_term') {
+        continue;
+      }
+    }
+    else {
+      continue;
+    }
+
+    $field_names[] = $field['field_name'];
+  }
+
+  return $field_names;
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function enrd_notifications_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+  if ($form['#form_id'] == 'views_form_enrd_notifications_messages_notifications_messages') {
+
+    // Remove VBO form label.
+    if (isset($form['select']) && $form['select']['#title'] == 'Operations') {
+      unset($form['select']['#title']);
+    }
+
+    // Don't VBO button if view has no results.
+    if (empty($vbo->view->result)) {
+      $form['select']['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ */
+function enrd_preprocess_views_view_field(&$variables) {
+
+  $view = $variables['view'];
+
+  $notifications_view = isset($view->name) && $view->name == ENRD_NOTIFICATIONS_MESSAGES_LIST_VIEW;
+
+  // List of views displays to override.
+  $displays = [
+    'notifications_messages',
+    'latest_notifications',
+  ];
+
+  // Rewrite output of flag links perform read action and redirect to node.
+  if ($notifications_view && in_array($view->current_display, $displays)) {
+
+    $field = $variables['field'];
+
+    // The entityreference field to rewrite.
+    $output_to_rewrite = $field->real_field == 'field_enrd_notif_target_nodes_target_id';
+
+    // Rewrite only the entityreference using label as formatter.
+    if ($output_to_rewrite && !is_numeric($field->original_value)) {
+
+      // List of tokens to use to get singel values.
+      $tokens = $field->last_tokens;
+      // Uae tokens on variables used to build flag link.
+      $nid = $tokens['[field_enrd_notif_target_nodes]'];
+      $mid = $tokens['[mid]'];
+      $type = $tokens['[type]'];
+      $label = $tokens['[field_enrd_notif_target_nodes_1]'];
+      $flag_token = flag_get_token($mid);
+      $flag_read_unread_link = "/flag/flag/enrd_message_read_unread/$mid";
+
+      // Build the querystring for node redirect and flag token validation.
+      $querystring = [
+        'destination' => "node/$nid",
+        'token' => $flag_token,
+      ];
+
+      // Build the strings before and after the field output.
+      $output_pre_text = "The new $type ";
+      $output_post_text = ' has been published.';
+
+      // Build the link and querystring.
+      $link = url($flag_read_unread_link, [
+        'absolute' => TRUE,
+        'query' => $querystring,
+      ]);
+
+      // Build the final output of the fields.
+      $variables['output'] = html_entity_decode($output_pre_text . l($label, $link) . $output_post_text);
+    }
+  }
+}
+
+/**
+ * Implements hook_views_ajax_data_alter().
+ */
+function enrd_notifications_views_ajax_data_alter(&$commands, $view) {
+  if ($view->name == ENRD_NOTIFICATIONS_LAG_LIST_VIEW) {
+    // Remove scroll to top behaviour.
+    foreach ($commands as $key => $command) {
+      if ($command['command'] == 'viewsScrollTop') {
+        unset($commands[$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function enrd_notifications_block_info() {
+  // Panel displayed when clicking on the notifications icon on top right.
+  $blocks['enrd_notifications_panel'] = ['info' => t('ENRD Notifications Panel')];
+  // Block to be displayed in the LAG Full node right sidebar.
+  $blocks['enrd_notifications_lag_flag_link'] = ['info' => t('ENRD Notifications LAG Flag link')];
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function enrd_notifications_block_view($delta = '') {
+  $block = [];
+
+  switch ($delta) {
+    case 'enrd_notifications_panel':
+
+      $block['content']['enrd_notifications_panel'] = [
+        '#theme' => 'link',
+        '#options' => [
+          'attributes' => [
+            'class' => [
+              'btn',
+              'btn-default',
+              'dropdown-toggle',
+              'enrd-notifications-panel-button',
+              'glyphicon glyphicon-bell',
+            ],
+            'data-toggle' => 'dropdown',
+            'role' => 'button',
+            'title' => t('Latest Notifications'),
+          ],
+          'html' => FALSE,
+        ],
+        // Hide notifications icon to users without permission.
+        '#access' => user_access('access notifications list'),
+      ];
+
+      // Add main JS to #attached property of the block.
+      $block['content']['enrd_notifications_panel']['#attached']['js'][] = [
+        'type' => 'file',
+        'data' => drupal_get_path('module', 'enrd_notifications') . '/js/enrd_notifications.js',
+      ];
+
+      // Pass notifications panel limit variable to JS.
+      $js_settings = [
+        'enrd_notifications' => [
+          'enrd_notifications_panel_limit' => variable_get('enrd_notifications_panel_limit', '5'),
+        ],
+      ];
+
+      // Add JS variable to #attached property of the block.
+      $block['content']['enrd_notifications_panel']['#attached']['js'][] = [
+        'type' => 'setting',
+        'data' => $js_settings,
+      ];
+      break;
+
+    case 'enrd_notifications_lag_flag_link':
+      // Get the node id to print the flag link.
+      $node = menu_get_object();
+      // Print a LAG flag link inside the block.
+      $flag = flag_get_flag('enrd_follow_lags');
+      // @var $flag Flag
+      $flag->flag_short = $flag->flag_long;
+      $flag->unflag_short = $flag->unflag_long;
+      // Define access for lag flag link block.
+      $enrd_notifications_lag_flag_link_access = user_access('access notifications settings panel')
+        && !(_enrd_lag_dashboard_check_og_lag_access($node, 'access lag dashboards'));
+
+      $block['content']['enrd_notifications_lag_flag_link'] = [
+        '#markup' => flag_create_link('enrd_follow_lags', $node->nid, array('flag' => $flag)),
+        '#access' => $enrd_notifications_lag_flag_link_access,
+      ];
+      break;
+
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_notifications_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  // Hide checkbox that sets email to default when subscribing to something.
+  hide($form['message_subscribe_email']);
+}
+
+/**
+ * Implements hook_message_subscribe_email_frequency_allowed_values_alter().
+ */
+function enrd_notifications_message_subscribe_email_frequency_allowed_values_alter(&$allowed_values) {
+
+  // Remove 'Immediately as they are triggered' and 'Never' interval options.
+  unset($allowed_values['email']);
+  unset($allowed_values['never']);
+  // Add monthly digest option.
+  $allowed_values['digest_month'] = t('Once a month in an email digest');
+
+  return $allowed_values;
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ */
+function enrd_notifications_ctools_plugin_type() {
+  $plugins['notifier'] = [
+    'classes' => ['class'],
+    'process' => 'message_notify_plugin_process',
+  ];
+  return $plugins;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function enrd_notifications_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'message_notify') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Helper function to include CTools plugins and get a notifier plugin.
+ *
+ * @param string $notifier_name
+ *   The plugin that should be laoded.
+ *
+ * @return array
+ *   An array of information arrays about the plugins received.
+ */
+function enrd_notifications_get_notifier($notifier_name) {
+  ctools_include('plugins');
+  return ctools_get_plugins('message_notify', 'notifier', $notifier_name);
+}
+
+/**
+ * Helper function to include CTools plugins and get all notifier plugins.
+ */
+function enrd_notifications_get_notifiers() {
+  ctools_include('plugins');
+  return ctools_get_plugins('message_notify', 'notifier');
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function enrd_notifications_node_insert($node) {
+  // Set conditions to check when creating new messages.
+  $state_new_is_published = isset($node->workbench_moderation_state_new) && $node->workbench_moderation_state_new == workbench_moderation_state_published();
+  $new_revision_is_published = isset($node->op) && $node->op == "Save" && $state_new_is_published;
+  $node_is_published = $node->status;
+
+  // New draft of existing node or new node.
+  if ($new_revision_is_published ||
+    // Existing node moderated to published.
+    ($state_new_is_published && $node_is_published)) {
+
+    // Call the message creation helper function.
+    _enrd_notifications_create_notification($node);
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function enrd_notifications_node_update($node) {
+  // Set conditions to check when creating new messages.
+  $state_new_is_published = isset($node->workbench_moderation_state_new) && $node->workbench_moderation_state_new == workbench_moderation_state_published();
+  $node_is_published = $node->status;
+  $is_draft_revision = isset($node->is_draft_revision);
+
+  // The published status should match the following conditions.
+  $published = $state_new_is_published && $node_is_published && !($is_draft_revision);
+
+  // New draft of existing node or new node.
+  if ($published) {
+    // Call the message creation helper function.
+    _enrd_notifications_create_notification($node);
+  }
+}
+
+/**
+ * Implements hook_flag_flag().
+ */
+function enrd_notifications_flag_flag($flag, $entity_id, $account, $flagging) {
+  // Available email flags.
+  $email_flags = [
+    ENRD_NOTIFICATIONS_NEWS_EMAIL_FLAG,
+    ENRD_NOTIFICATIONS_EVENTS_EMAIL_FLAG,
+    ENRD_NOTIFICATIONS_COOPERATION_OFFERS_EMAIL_FLAG,
+    ENRD_NOTIFICATIONS_LAGS_EMAIL_FLAG,
+  ];
+
+  // Act only on email flag, to see if user has digest frequency default value.
+  if (in_array($flag->name, $email_flags)) {
+    $frequencies = [
+      'digest_day',
+      'digest_week',
+      'digest_month',
+    ];
+
+    // User has checked email flag: see if he/she also has default value set.
+    $query = new EntityFieldQuery();
+    $query
+      ->entityCondition('entity_type', 'user')
+      ->entityCondition('entity_id', $account->uid, '=')
+      ->fieldCondition('message_subscribe_email_freq', 'value', $frequencies, 'IN');
+
+    $results = $query->execute();
+
+    // If there are no default value already set for flagging user.
+    if (empty($results)) {
+      $default_freq = 'digest_month';
+      $user = user_load($account->uid);
+      // Load user data and set default message_subscribe_frequency value.
+      $wrapper = entity_metadata_wrapper('user', $user);
+      $wrapper->message_subscribe_email_freq = $default_freq;
+      $wrapper->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_flag_access().
+ */
+function enrd_notifications_flag_access($flag, $content_id, $action, $account) {
+  // Don't execute message_subscribe_email hook implementation on a js request.
+  if (isset($_REQUEST['js'])) {
+    return TRUE;
+  }
+  else {
+    message_subscribe_email_flag_access($flag, $content_id, $action, $account);
+  }
+}
+
+/**
+ * Implements hook_flag_validate().
+ */
+function enrd_notifications_flag_validate($action, $flag, $entity_id, $account, $skip_permission_check, $flagging) {
+
+  if (strpos($flag->name, 'email_') !== FALSE && $action == 'flag') {
+
+    // Get all flags set by the current user.
+    $node_flags = flag_get_user_flags('node', NULL, $account->uid);
+    $user_flags = flag_get_user_flags('user', NULL, $account->uid);
+
+    // News email flag checkbox.
+    if ($flag->name == 'email_news' && !in_array('enrd_follow_news', array_keys($user_flags))) {
+      return (['access-denied' => t("You can't receive emails if you don't follow any news.")]);
+    }
+    // Events email flag checkbox.
+    elseif ($flag->name == 'email_events' && !in_array('enrd_follow_events', array_keys($user_flags))) {
+      return (['access-denied' => t("You can't receive emails if you don't follow any events.")]);
+    }
+    // Cooperation offers email flag checkbox.
+    elseif ($flag->name == 'email_cooperation_offers' && !in_array('enrd_follow_cooperation_offers', array_keys($user_flags))) {
+      return (['access-denied' => t("You can't receive emails if you don't follow any cooperation offer.")]);
+    }
+    // LAGs email flag checkbox.
+    elseif ($flag->name == 'email_lags' && !in_array($entity_id, array_keys($node_flags['enrd_follow_lags']))) {
+      return (['access-denied' => t("You can't receive emails if you don't follow any LAG.")]);
+    }
+  }
+}
+
+/**
+ * Helper function to get users that has a user flag flagged.
+ *
+ * @param string $flag_name
+ *   The flag name string.
+ *
+ * @return mixed
+ *   Returns an array of user ids or NULL.
+ */
+function _enrd_notifications_user_flag_get_counts($flag_name) {
+
+  $query = db_select('flag', 'f');
+  $query->leftJoin('flag_counts', 'fc', 'f.fid = fc.fid');
+  $query
+    ->fields('fc', ['entity_id'])
+    ->fields('f', ['name'])
+    ->condition('fc.entity_id', '', '<>')
+    ->condition('f.name', $flag_name);
+
+  $uids = $query->execute()->fetchAllKeyed();
+
+  if (empty($uids)) {
+    return [];
+  }
+  else {
+    foreach ($uids as $uid => $value) {
+      $uids[$uid] = ['flags' => [$value]];
+      /* Add also 'email' default notifier: this will be later replaced in
+       * message_subscribe_email_frequency_message_subscribe_get_subscribers_alter()
+       * with user email frequency value set in notifications settings panel.
+       */
+      $uids[$uid]['notifiers']['email'] = 'email';
+    }
+    return $uids;
+  }
+}
+
+/**
+ * Helper function to get users that has a flagged a group node.
+ *
+ * @param int $entity_id
+ *   The entity_id.
+ *
+ * @return mixed
+ *   Returns an array of user ids or NULL.
+ */
+function _enrd_notifications_node_flag_get_counts($flag_name, $entity_id) {
+  $query = db_select('flag', 'f');
+  $query->leftJoin('flagging', 'fl', 'f.fid = fl.fid');
+  $query
+    ->fields('fl', ['uid'])
+    ->fields('f', ['name'])
+    ->condition('fl.entity_id', $entity_id)
+    ->condition('f.name', $flag_name);
+
+  $uids = $query->execute()->fetchAllKeyed();
+
+  if (empty($uids)) {
+    return NULL;
+  }
+  else {
+    foreach ($uids as $uid => $value) {
+      $uids[$uid] = ['flags' => [$value]];
+      /* Add also 'email' default notifier: this will be later replaced in
+       * message_subscribe_email_frequency_message_subscribe_get_subscribers_alter()
+       * with user email frequency value set in notifications settings panel.
+       */
+      $uids[$uid]['notifiers']['email'] = 'email';
+    }
+    return $uids;
+  }
+
+}
+
+/**
+ * Implements hook_message_subscribe_get_subscribers_alter().
+ */
+function enrd_notifications_message_subscribe_get_subscribers_alter(&$uids, &$values) {
+  // Get flags (follow and email) from subscribe options.
+  $follow_flag = $values['subscribe_options']['subscribe_flag'];
+  $email_flag = $values['subscribe_options']['email_flag'];
+
+  // Non Group content types (global content type flags).
+  if ($values['message']->type == ENRD_NOTIFICATIONS_CONTENT_MESSAGE) {
+    // Get list of subscribers that also wants to receive email notifications.
+    if (!empty($follow_flag) && !empty($email_flag)) {
+      $uids = _enrd_notifications_user_flag_get_counts($email_flag);
+    }
+  }
+  // LAG content type.
+  if (($values['message']->type == ENRD_NOTIFICATIONS_LAG_MESSAGE)
+    && !empty($values['subscribe_options']['group_id'])) {
+    // Get list of subscribers that also wants to receive email notifications.
+    if (!empty($follow_flag) && !empty($email_flag)) {
+      $group_id = $values['subscribe_options']['group_id'];
+      $uids = _enrd_notifications_node_flag_get_counts($email_flag, $group_id);
+    }
+  }
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function enrd_notifications_mail_alter(&$message) {
+
+  if ($message['id'] == 'message_digest_digest') {
+    // Change the $message['id'] to match our single line queue_mail_keys value
+    // 'enrd_notifications_*' and avoid PHPCS warning on multiline variables:
+    // WARNING: "File has mixed line endings; this may cause incorrect results".
+    $message['id'] = 'enrd_notifications_digest';
+    // Add some details to Message Digest mail.
+    $user = user_load_by_mail($message['to']);
+    $intro = t('Greetings @username, you have received the following notifications on the site: @sitename.',
+      [
+        '@username' => format_username($user),
+        '@sitename' => '[site:name]',
+      ]
+    );
+
+    $message['from'] = variable_get('enrd_notifications_digest_from', variable_get('site_mail'));
+    $message['headers']['From'] = $message['from'];
+    // Prepend the intro to digest messages.
+    array_unshift($message['body'], $intro . "\r\n");
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function enrd_notifications_cron() {
+  // Get the reminder's scheduled day from saved message subscribe form.
+  $reminder_scheduled_day = variable_get('enrd_notifications_reminder_scheduled_day', '1');
+  $run = FALSE;
+
+  // Check the day of the month in which reminders should be sent.
+  if (date('j') == $reminder_scheduled_day) {
+    // Get, if set, the latest cron run that found reminders to send.
+    $last_run = variable_get('enrd_notifications_reminder_last_run', FALSE);
+    $scheduled = strtotime('+1 month', $last_run);
+    $now = time();
+    $diff = _enrd_notifications_count_reminder_date_diff($last_run, $scheduled);
+
+    // If scheduler did'n run before or
+    // we are after 1 month from the last successful cron.
+    if ($last_run == FALSE || ($now >= $scheduled && $diff == 1)) {
+      $run = TRUE;
+    }
+  }
+
+  // If cron should run for enrd_notifications, get users with pending digests
+  // and see if they have unread messages.
+  $digest_ids = _enrd_notifications_get_users_to_remind();
+
+  if (!empty($digest_ids) && $run) {
+    foreach ($digest_ids as $uid) {
+      if ($unread = _enrd_notifications_get_unread_messages_per_user($uid)) {
+
+        // Compose email message details.
+        $user = user_load($uid);
+        $username = format_username($user);
+        $module = 'enrd_notifications';
+        $key = 'unread_notifications_reminder';
+        $from = variable_get('enrd_notifications_digest_from', variable_get('site_mail'));
+        $site_name = variable_get('site_name');
+        $subject = "$site_name: unread notifications reminder";
+
+        $body = [];
+        $body[] = 'Greetings ' . $username . ',';
+        $body[] = "You have $unread messages to read on $site_name.";
+
+        $params = [
+          'subject' => $subject,
+          'body' => $body,
+          'headers' => [
+            'Return-Path' => $from,
+            'Sender' => $from,
+            'From' => $from,
+          ],
+        ];
+
+        drupal_mail($module, $key, $user->mail, LANGUAGE_NONE, $params, $from, TRUE);
+        watchdog('enrd_notifications',
+          'Unread Notifications reminder sent for @username',
+          ['@username' => $user->name],
+          WATCHDOG_INFO);
+      }
+    }
+    // Register last cron execution with pending reminders.
+    variable_set('enrd_notifications_reminder_last_run', time());
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function enrd_notifications_mail($key, &$message, $params) {
+  // Build the message.
+  if ($key == 'unread_notifications_reminder') {
+    $message['subject'] = $params['subject'];
+    $message['body'] = $params['body'];
+    $message['headers'] = array_merge($message['headers'], $params['headers']);
+  }
+}
+
+/**
+ * Implements hook_contextual_links_view_alter().
+ */
+function enrd_notifications_contextual_links_view_alter(&$element, $items) {
+  if (isset($element['#element']['#block'])) {
+
+    $delta = $element['#element']['#block']->delta;
+    // Delta of notifications panel button.
+    $notifications = 'enrd_notifications_panel';
+
+    // Remove contextual links from notifications panel button.
+    if ($delta == $notifications) {
+      unset($element['#links']);
+    }
+  }
+}
+
+/**
+ * Helper function to fill notifications panel limit form field options.
+ *
+ * @return array|null
+ *   Returns the associative array to use as field's allowed values options
+ */
+function _enrd_notifications_panel_limit_options() {
+  // Check if the notifications list view exists to get field settings from it.
+  if ($view = views_get_view(ENRD_NOTIFICATIONS_MESSAGES_LIST_VIEW)) {
+    // Load latest notifications display to get items per page options.
+    $items = $view->display['latest_notifications']->display_options['pager']['options']['expose']['items_per_page_options'];
+    $options = drupal_map_assoc(explode(',', $items));
+
+    return $options;
+  }
+}
+
+/**
+ * Helper function to get unread notifications for a user.
+ *
+ * @param int $uid
+ *   The user id to check fo unread notifications.
+ * @param string $flag
+ *   The flag name to user as filter.
+ *
+ * @return int
+ *   The count of unread messages.
+ */
+function _enrd_notifications_get_unread_messages_per_user($uid, $flag = ENRD_NOTIFICATIONS_READ_UNREAD_FLAG) {
+
+  // Get the "Read/Unread" message type flag.
+  $read_flag_id = db_select('flag', 'f')
+    ->fields('f', ['fid'])
+    ->condition('f.name', $flag, '=')
+    ->execute()->fetchField();
+
+  // Get the count of unread message per user.
+  $query = db_select('message', 'm');
+  $query->leftJoin('flagging', 'fl', '(fl.entity_id = m.mid AND fl.fid = :flag_id)',
+    [':flag_id' => $read_flag_id]);
+  $query->isNull('fl.uid');
+  $query
+    ->fields('m', ['mid'])
+    ->condition('m.uid', $uid, '=')
+    ->condition('m.type', [
+      ENRD_NOTIFICATIONS_CONTENT_MESSAGE,
+      ENRD_NOTIFICATIONS_LAG_MESSAGE,
+    ], 'IN');
+
+  $count = $query->execute()->rowCount();
+
+  if ($count > 0) {
+    return $count;
+  }
+  else {
+    return FALSE;
+  }
+
+}
+
+/**
+ * Helper function to get users with pending message digests.
+ *
+ * @return mixed
+ *   Returns a list of users uids or FALSE.
+ */
+function _enrd_notifications_get_users_to_remind() {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+    // Do not include blocked users.
+    ->propertyCondition('status', 1)
+    // Filter by user who have reminder option checked on settings form.
+    ->fieldCondition('field_enrd_notifications_remind', 'value', 1, '=');
+
+  $result = $query->execute();
+
+  if (!empty($result)) {
+    $ids = array_keys($result['user']);
+    return $ids;
+  }
+  else {
+    return FALSE;
+  }
+
+}
+
+/**
+ * Helper function to get month diff between to dates.
+ *
+ * @param int $start
+ *   The start date timestamp.
+ * @param bool $end
+ *   The end timestamp or FALSE.
+ *
+ * @return int
+ *   Returns diff month.
+ */
+function _enrd_notifications_count_reminder_date_diff($start, $end = FALSE) {
+
+  // Set default value of $end if it's not passed to the function.
+  $end || $end = time();
+
+  // Initialize $start and $end dates.
+  $start_date = new DateTime();
+  $start_date->setTimestamp($start);
+  $end_date = new DateTime();
+  $end_date->setTimestamp($end);
+
+  // Return array of diffs (y, m, d, etc..).
+  $diff = $start_date->diff($end_date);
+
+  // Returns the formatted mounth diff.
+  return $diff->format('%y') * 12 + $diff->format('%m');
+}
+
+/**
+ * Helper function for message_subscribe_send_message with custom parameters.
+ *
+ * @param object $node
+ *   The node object.
+ * @param array $uids
+ *   List of users to be notified via mail.
+ * @param string $subscribe_flag
+ *   The subscribe flag name to search for subscribers.
+ * @param string $email_flag
+ *   The email flag name to search for subscribers.
+ * @param string $message_type
+ *   The type of message to generate for the notifications.
+ * @param mixed $group_id
+ *   The Group ID if message is relative to an OG node or FALSE.
+ *
+ * @throws \Exception
+ */
+function _enrd_notifications_send_message($node, array $uids, $subscribe_flag, $email_flag, $message_type, $group_id = FALSE) {
+
+  // Clear static cache so node body will be ready for token replacement.
+  entity_get_controller('node')->resetCache([$node->nid]);
+
+  // Create messages for subscribed users.
+  foreach ($uids as $uid => $data) {
+    $message = _enrd_notifications_create_message($node, $uid, $message_type);
+  }
+
+  // Default subscription options (follow_flag and email_flag).
+  $subscribe_options = [
+    'subscribe_flag' => $subscribe_flag,
+    'email_flag' => $email_flag,
+  ];
+
+  // If node is of type group, pass additional data to message subscribe.
+  if ($group_id) {
+    $subscribe_options['group_id'] = $group_id;
+  }
+
+  // Send emails with message subscribe.
+  message_subscribe_send_message('node', $node, $message, [], $subscribe_options);
+}
+
+/**
+ * Helper function to create a message of a given type for a given user.
+ *
+ * @param object $node
+ *   The node object.
+ * @param int $uid
+ *   The user id.
+ * @param string $message_type
+ *   The message type machine name.
+ *
+ * @return object
+ *   Returns a message entity obejct.
+ *
+ * @throws \Exception
+ */
+function _enrd_notifications_create_message($node, $uid, $message_type) {
+  try {
+    $account = user_load($uid);
+    $message = message_create($message_type, [
+      'timestamp' => $node->timestamp,
+      'uid' => $uid,
+    ], $account);
+    $wrapper = entity_metadata_wrapper('message', $message);
+    $wrapper->field_enrd_notif_target_nodes = $node;
+    $wrapper->save();
+  }
+  catch (Exception $e) {
+    drupal_set_message(t('Could not create message for user @username. Caught exception: @message',
+      [
+        '@message' => $e->getMessage(),
+        '@username' => format_username($account),
+      ]
+    ), 'error');
+  }
+
+  return $message;
+}
+
+/**
+ * Helper function to get users id.
+ *
+ * @param string $global_content_flag
+ *   The flag's machine name.
+ * @param int $type
+ *   Type of subscription: 'single' or 'both'.
+ * @param int $group_id
+ *   The group id (if exists) or FALSE.
+ *
+ * @return array
+ *   Return list of subscribed users ids.
+ */
+function _enrd_notifications_get_subscriptions_type_users($global_content_flag, $type, $group_id = FALSE) {
+  // Get single group users.
+  $lags_uids = flag_get_entity_flags('node', $group_id);
+  // Get global content flag users.
+  $coop_uids = _enrd_notifications_user_flag_get_counts($global_content_flag);
+
+  // Get users based on subscription type (single or single + global).
+  switch ($type) {
+    case 'single':
+      // Users subscribed only to single group.
+      $uids = array_diff_key($lags_uids, $coop_uids);
+
+      break;
+
+    case 'both':
+      // Users subscribed only to global content flag.
+      $single_coop = array_diff_key($coop_uids, $lags_uids);
+      // Users subscribed both group and global content flag'.
+      $all = array_intersect_key($coop_uids, $lags_uids);
+
+      $uids = $single_coop + $all;
+
+      break;
+
+  }
+
+  return $uids;
+}
+
+/**
+ * Helper function to manage creation of notification messages for users.
+ *
+ * @param object $node
+ *   The node used as reference for message creation.
+ *
+ * @throws \Exception
+ */
+function _enrd_notifications_create_notification($node) {
+  // Content created in LAG groups.
+  if (property_exists($node, 'og_lag_group_ref')
+    && !empty($node->og_lag_group_ref[LANGUAGE_NONE])) {
+    $group_id = $node->og_lag_group_ref[LANGUAGE_NONE][0]['target_id'];
+  }
+
+  if (isset($group_id)) {
+    // Get id of users subscribed to single group.
+    $single_group_uids = _enrd_notifications_get_subscriptions_type_users(ENRD_NOTIFICATIONS_COOPERATION_OFFERS_FLAG, 'single', $group_id);
+
+    // Set flag types and message types and send message to retrieved users.
+    if (!empty($single_group_uids)) {
+      $subscribe_flag = ENRD_NOTIFICATIONS_LAGS_FLAG;
+      $email_flag = ENRD_NOTIFICATIONS_LAGS_EMAIL_FLAG;
+      $message_type = ENRD_NOTIFICATIONS_LAG_MESSAGE;
+
+      _enrd_notifications_send_message($node, $single_group_uids, $subscribe_flag, $email_flag, $message_type, $group_id);
+    }
+
+    // Get id of users subscribed to global content flag.
+    $global_content_uids = _enrd_notifications_get_subscriptions_type_users(ENRD_NOTIFICATIONS_COOPERATION_OFFERS_FLAG, 'both');
+
+    // Set flag types and message types and send message to retrieved users.
+    if (!empty($global_content_uids)) {
+      $subscribe_flag = ENRD_NOTIFICATIONS_COOPERATION_OFFERS_FLAG;
+      $email_flag = ENRD_NOTIFICATIONS_COOPERATION_OFFERS_EMAIL_FLAG;
+      $message_type = ENRD_NOTIFICATIONS_CONTENT_MESSAGE;
+
+      _enrd_notifications_send_message($node, $global_content_uids, $subscribe_flag, $email_flag, $message_type);
+    }
+  }
+
+  else {
+    // Contents with no group.
+    switch ($node->type) {
+
+      // News flags.
+      case ENRD_NOTIFICATIONS_NEWS_NODE:
+        $subscribe_flag = ENRD_NOTIFICATIONS_NEWS_FLAG;
+        $email_flag = ENRD_NOTIFICATIONS_NEWS_EMAIL_FLAG;
+        break;
+
+      // Events flags.
+      case ENRD_NOTIFICATIONS_EVENT_NODE:
+        $subscribe_flag = ENRD_NOTIFICATIONS_EVENTS_FLAG;
+        $email_flag = ENRD_NOTIFICATIONS_EVENTS_EMAIL_FLAG;
+        break;
+    }
+
+    // Do not run flag counts if no subscribe flag has been defined.
+    if (isset($subscribe_flag)) {
+
+      // Get id of users that subscribed a content type.
+      $uids = _enrd_notifications_user_flag_get_counts($subscribe_flag);
+
+      // Send message to retrieved users.
+      if ($uids) {
+
+        // Set message type.
+        $message_type = ENRD_NOTIFICATIONS_CONTENT_MESSAGE;
+
+        _enrd_notifications_send_message($node, $uids, $subscribe_flag, $email_flag, $message_type);
+      }
+    }
+  }
+}
+
+/**
+ * Helper function that returns the ENRD Notifications message types.
+ */
+function _enrd_notifications_get_message_types() {
+  return [
+    ENRD_NOTIFICATIONS_LAG_MESSAGE,
+    ENRD_NOTIFICATIONS_CONTENT_MESSAGE,
+  ];
+}

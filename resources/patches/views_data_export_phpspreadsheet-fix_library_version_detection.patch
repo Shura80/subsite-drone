@@ -1,0 +1,16 @@
+Index: views_data_export_phpspreadsheet.module
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- views_data_export_phpspreadsheet.module	(revision 2c285de339ba30fa9f0f8303f2d41fd3971bed97)
++++ views_data_export_phpspreadsheet.module	(date 1604428741917)
+@@ -32,7 +32,7 @@
+   $changelog_file = $library['library path'] . DIRECTORY_SEPARATOR . 'CHANGELOG.md';
+   if (file_exists($changelog_file)) {
+     $changelog = file_get_contents($changelog_file);
+-    if (preg_match('/^\#\#\s+\[([^\]]+)\]/m', $changelog, $match)) {
++    if (preg_match('/\[(\d.+)]/', $changelog, $match)) {
+       return $match[1];
+     }
+   }

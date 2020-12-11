@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * enrd_news.features.taxonomy.inc
+ */
+
+/**
+ * Implements hook_taxonomy_default_vocabularies().
+ */
+function enrd_news_taxonomy_default_vocabularies() {
+  return array(
+    'event_types' => (object) array(
+      'name' => 'Event types',
+      'machine_name' => 'event_types',
+      'description' => '',
+      'hierarchy' => 0,
+      'module' => 'taxonomy',
+      'weight' => 0,
+      'language' => 'und',
+      'i18n_mode' => 1,
+      'base_i18n_mode' => 1,
+      'base_language' => 'und',
+      'entity_type' => 'taxonomy_vocabulary',
+      'rdf_mapping' => array(
+        'rdftype' => array(
+          0 => 'skos:ConceptScheme',
+        ),
+        'name' => array(
+          'predicates' => array(
+            0 => 'dc:title',
+          ),
+        ),
+        'description' => array(
+          'predicates' => array(
+            0 => 'rdfs:comment',
+          ),
+        ),
+      ),
+    ),
+  );
+}

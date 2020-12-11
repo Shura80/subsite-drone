@@ -1,0 +1,714 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Taxonomies feature.
+ */
+
+include_once 'enrd_taxonomies.features.inc';
+
+define('ENRD_TAXONOMIES_COUNTRY_EU', 'European Union');
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_taxonomies_menu() {
+  $items = array();
+
+  $items['admin/config/search/enrd-classification'] = array(
+    'title' => 'ENRD Taxonomies',
+    'description' => 'Create field instances for Classifications and NRN Toolkit.',
+    'position' => 'left',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer fields'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['admin/config/search/enrd-classification/taxonomies'] = array(
+    'title' => 'Classification',
+    'description' => 'Set ENRD classification and technical taxonomies field intances related fields.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_taxonomies_field_instances_form'),
+    'access arguments' => array('administer fields'),
+    'file' => 'enrd_taxonomies.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_taxonomies_permission() {
+  return array(
+    'tag enrd taxonomies tag' => array(
+      'title' => t('Tag contents with Technical and Classifications taxonomies'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function enrd_taxonomies_form_node_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['#node']->type)) {
+    $field_list = _enrd_taxonomies_field_base_list();
+    if (module_exists('enrd_menu_tree')) {
+      $field_list['group_technical_taxonomy']['field_tax_menu_tree'] = t('Menu tree');
+    }
+
+    foreach ($field_list as $group_name => $widgets) {
+      foreach ($widgets as $fields) {
+        foreach ($fields as $field_name => $field_label) {
+          if (!empty($form[$field_name])) {
+            $right_position = (isset($form['#group_children'][$field_name]) && $form['#group_children'][$field_name] == $group_name);
+
+            $form[$field_name]['#access'] = user_access('tag enrd taxonomies tag') || !$right_position;
+
+            // Append description to "Evaluation" field to allow term addition.
+            $enrd_evaluation = taxonomy_vocabulary_machine_name_load('enrd_evaluation');
+
+            if (!empty($enrd_evaluation) && user_access('edit terms in ' . $enrd_evaluation->vid)) {
+              if (isset($form[$field_name][LANGUAGE_NONE]) && $form[$field_name][LANGUAGE_NONE]['#field_name'] == 'field_tax_evaluation') {
+                if (!empty($form[$field_name][LANGUAGE_NONE]['#description'])) {
+                  $form[$field_name][LANGUAGE_NONE]['#description'] .= '<br>';
+                }
+
+                $form[$field_name][LANGUAGE_NONE]['#description'] .= t('In order to add a new term to the "@eval" taxonomy, go to the !add and finally refresh this page to see the new value.', [
+                  '@eval' => $enrd_evaluation->name,
+                  '!add' => l(t('term addition page'), 'admin/structure/taxonomy/' . $enrd_evaluation->machine_name . '/add', [
+                    'html' => TRUE,
+                    'attributes' => ['target' => '_blank'],
+                  ]),
+                ]);
+              }
+            }
+
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * ENRD Taxonomies field structure.
+ *
+ * @return array
+ *   An array with ENRD Taxonomies field structure.
+ */
+function _enrd_taxonomies_field_base_list() {
+  return array(
+    'group_enrd_classification' => array(
+      'taxonomy_shs' => array(
+        'field_tax_country' => t('Country'),
+        'field_tax_languages' => t('Language'),
+        'field_tax_transversal_topics' => t('Transversal topics'),
+        'field_tax_rural_dev_policy' => t('Rural Development Policy'),
+      ),
+      'options_select' => array(
+        'field_tax_evaluation' => t('Evaluation'),
+      ),
+    ),
+    'group_technical_taxonomy' => array(
+      'options_select' => array(
+        'field_tax_origin' => t('Origin'),
+        'field_tax_translation_status' => t('Translation status'),
+        'field_tax_update_status' => t('Update status'),
+      ),
+    ),
+  );
+}
+
+/**
+ * ENRD Taxonomies field group structure.
+ *
+ * @return array
+ *   An array with ENRD Taxonomies field group structure.
+ */
+function _enrd_taxonomies_field_group_list() {
+  return array(
+    'group_enrd_classification' => array(
+      'label' => t('Classification'),
+    ),
+    'group_technical_taxonomy' => array(
+      'label' => t('Technical taxonomy'),
+    ),
+  );
+}
+
+/**
+ * Check if content type had at least one classification field.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $bundle_name
+ *   Bundle machine name.
+ *
+ * @return bool
+ *   Return true if bundle contains at least on field.
+ */
+function _enrd_taxonomies_check_content_type($entity_type, $bundle_name) {
+  $instances = field_info_instances($entity_type, $bundle_name);
+
+  foreach (_enrd_taxonomies_field_base_list() as $widgets) {
+    foreach ($widgets as $fields) {
+      if (!empty(array_intersect_key($fields, $instances))) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Instance the set into the entity bundle.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $bundle
+ *   Bundle machine name.
+ * @param bool $force
+ *   Force the operation even if bundle already contains a field instance.
+ *
+ * @return bool
+ *   TRUE if operation was executed.
+ */
+function _enrd_taxonomies_set_instance($entity_type, $bundle, $force = FALSE) {
+  if (!_enrd_taxonomies_check_content_type($entity_type, $bundle) || $force) {
+
+    $service_field = multisite_config_service('field');
+    $service_group = multisite_config_service('field_group');
+
+    $field_groups = _enrd_taxonomies_field_group_list();
+    $field_list = _enrd_taxonomies_field_base_list();
+
+    foreach ($field_list as $group_name => $widgets) {
+
+      $added_field = array();
+      foreach ($widgets as $widget_name => $fields) {
+        foreach ($fields as $field_name => $field_label) {
+          if (!field_info_instance($entity_type, $field_name, $bundle)) {
+            $service_field->createInstanceField($field_name, $entity_type, $bundle)
+              ->label($field_label)
+              ->widget($widget_name)
+              ->display('default', 'shs_default', 'hidden')
+              ->display('teaser', 'shs_default', 'hidden')
+              ->save();
+            $added_field[] = $field_name;
+          }
+        }
+      }
+
+      $service_group->createFieldGroup($field_groups[$group_name]['label'], $group_name, $entity_type, $bundle)
+        ->setChildren($added_field)
+        ->setType('tab')->setFormatter('closed')->setWeight(15)
+        ->setInstanceSetting('classes', "$group_name field-group-tab")
+        ->setInstanceSetting('required_fields', FALSE)
+        ->save();
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Helper function to import terms into ENRD Taxonomies vocabularies.
+ *
+ * @param mixed $vocabularies
+ *   An optional array of taxonomies machine names.
+ */
+function _enrd_taxonomies_import_taxonomies($vocabularies = NULL) {
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_taxonomies', 'data/enrd_taxonomies_taxonomies');
+
+  if (is_null($vocabularies) || !is_array($vocabularies)) {
+    $vocabularies = array(
+      'enrd_countries',
+      'enrd_evaluation',
+      'enrd_languages',
+      'enrd_origin',
+      'enrd_rural_development_policy',
+      'enrd_translation_status',
+      'enrd_transversal_topics',
+      'enrd_update_status',
+      'enrd_rdps',
+    );
+  }
+
+  foreach ($vocabularies as $machine_name) {
+    // Import data.
+    _enrd_taxonomies_save_taxo(_enrd_taxonomies_taxonomies($machine_name),
+      taxonomy_vocabulary_machine_name_load($machine_name));
+  }
+
+  $t = get_t();
+  drupal_set_message($t('ENRD Taxonomies vocabulary and terms created.'));
+}
+
+/**
+ * Saves terms respecting the hierarchy.
+ *
+ * @param array $array
+ *   The list of terms to import.
+ * @param mixed $vocabulary
+ *   Vocabulary object.
+ * @param int $parent
+ *   Parent term id.
+ * @param bool $pathauto
+ *   Set or not pathauto when creating term.
+ * @param string $lang
+ *   The term language. Defaults to LANGUAGE_NONE.
+ */
+function _enrd_taxonomies_save_taxo(array $array, $vocabulary, $parent = 0, $pathauto = FALSE, $lang = LANGUAGE_NONE) {
+
+  // Check the vocabulary.
+  if ($vocabulary === FALSE) {
+    watchdog('enrd_taxonomies', 'Import of taxonomy terms failed.', array(), WATCHDOG_ALERT);
+    return;
+  }
+
+  foreach ($array as $index => $term) {
+    if (!is_array($term)) {
+      $t = (object) array(
+        'vid' => $vocabulary->vid,
+        'parent' => $parent,
+        'name' => $term,
+        'weight' => $index,
+        'path' => array(
+          'pathauto' => $pathauto,
+        ),
+        'language' => $lang,
+      );
+      taxonomy_term_save($t);
+      $tid = $t->tid;
+    }
+    else {
+      _enrd_taxonomies_save_taxo($term, $vocabulary, $tid, $pathauto, $lang);
+    }
+  }
+}
+
+/**
+ * Helper function to fill RDPs' fields and OG Groups once it's installed.
+ */
+function _enrd_taxonomies_save_rdp() {
+
+  module_load_include('php', 'enrd_taxonomies', 'data/enrd_taxonomies_taxonomies');
+
+  $machine_name = 'enrd_rdps';
+  $terms = _enrd_taxonomies_taxonomies($machine_name);
+  $isos = _enrd_taxonomies_get_ms_code();
+
+  foreach ($terms as $term => $child) {
+    foreach ($isos as $country => $iso) {
+      if ($country == $term) {
+        $data = taxonomy_get_term_by_name($country, 'enrd_rdps');
+        $term_obj = array_shift($data);
+        $term_wrapper = entity_metadata_wrapper('taxonomy_term', $term_obj);
+        $term_wrapper->field_enrd_rdps_ms->set($iso);
+        $term_wrapper->save();
+      }
+    }
+  }
+
+  $t = get_t();
+  drupal_set_message($t('Updated RDP Taxonomy terms with MS code.'));
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build().
+ */
+function enrd_taxonomies_apachesolr_index_document_build(ApacheSolrDocument $document, $parent_entity, $entity_type, $env_id) {
+
+  list(, , $parent_entity_bundle) = entity_extract_ids($entity_type, $parent_entity);
+
+  // Proceed with combining attachment content to entity document only if the
+  // parent entity is flagged for indexing attachments with parent entity.
+  if (variable_get('apachesolr_attachments_entity_bundle_indexing_' . $parent_entity_bundle, 'seperate') == 'parent') {
+    $file_field_names = array();
+    $fields = field_info_field_by_ids();
+    if (is_array($fields)) {
+      foreach ($fields as $field_info) {
+        if ($field_info['type'] == 'file') {
+          foreach ($field_info['bundles'] as $entity_type => $bundles) {
+            if (in_array($parent_entity_bundle, $bundles)) {
+              $file_field_names[$field_info['field_name']] = $field_info['field_name'];
+            }
+          }
+        }
+      }
+    }
+    foreach ($file_field_names as $file_field) {
+      if (isset($parent_entity->$file_field)) {
+        $parent_entity_file_fields = $parent_entity->$file_field;
+        foreach ($parent_entity_file_fields as $files) {
+          foreach ($files as $file) {
+
+            $file = (object) $file;
+
+            $status = ($file->status == 1 ? 1 : 0);
+            $is_file = ($file->type == 'document');
+            if ($status || $is_file) {
+              field_apachesolr_index_document_build($document, $file, 'file', $env_id);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_node().
+ *
+ * @see apachesolr_multilingual_entityreference_indexing_callback_implementation
+ */
+function enrd_taxonomies_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
+
+  // Merge Apache document language fields.
+  $content_langs = $document->getField('sm_vid_ENRD_Language');
+  if ($content_langs) {
+    foreach ($content_langs['value'] as $content_lang) {
+      $document->addField('sm_enrd_eu_languages', $content_lang);
+    }
+  }
+  // File languages.
+  $file_langs = $document->getField('sm_field_enrd_taxonomies_file_la');
+  if ($file_langs) {
+    // Add the values to be indexed as term names.
+    foreach ($file_langs['value'] as $file_lang) {
+      // Default callback for entityreference set values as "taxonomy_term:tid".
+      $lang_term = taxonomy_term_load(drupal_substr($file_lang, 14));
+      $lang_name = $lang_term->name;
+      $document->addField('sm_enrd_eu_languages', $lang_name);
+    }
+  }
+
+  // Index only EU countries, even from their children.
+  if (isset($entity->field_tax_country[LANGUAGE_NONE])) {
+    $countries = $entity->field_tax_country[LANGUAGE_NONE];
+
+    foreach ($countries as $country) {
+      $terms_tree = taxonomy_get_parents_all($country['tid']);
+      $terms_tree_assoc = array_map('get_object_vars', $terms_tree);
+      $parent_terms_names = array_column($terms_tree_assoc, 'name');
+
+      // Check if it's a EU country/region.
+      if (!empty($parent_terms_names) && !empty($eu = array_search(ENRD_TAXONOMIES_COUNTRY_EU, $parent_terms_names))) {
+        $current_term = $terms_tree[$eu - 1];
+        // Index only the EU country.
+        $document->addField('sm_enrd_eu_countries', $current_term->name);
+      }
+    }
+  }
+
+}
+
+/**
+ * Implements hook_facetapi_facet_info().
+ */
+function enrd_taxonomies_facetapi_facet_info(array $searcher_info) {
+  $facets = array();
+
+  if (isset($searcher_info['types']['node'])) {
+    // Adds a facet to show the languages of content and/or attached file.
+    $facets['sm_enrd_eu_languages'] = array(
+      'label' => t('Language'),
+      'description' => t('Custom filter exposing Languages from content/file.'),
+      'field' => 'sm_enrd_eu_languages',
+    );
+
+    // Custom European Union countries facet.
+    $facets['sm_enrd_eu_countries'] = array(
+      'label' => t('Countries'),
+      'description' => t('Custom filter that exposes the European Union Countries.'),
+      'field' => 'sm_enrd_eu_countries',
+    );
+
+    // Create custom facets for the Publications search page.
+    $facets = array_merge($facets, apachesolr_entity_field_facets('node'));
+  }
+
+  return $facets;
+}
+
+/**
+ * Implements hook_COMPONENT_alter().
+ */
+function enrd_taxonomies_facetapi_default_facet_settings_alter(&$facets) {
+  // Alters the config. of the field_tags facet block exported by solr_config.
+  if (isset($facets['apachesolr@solr:block:im_field_tags'])) {
+    $facets['apachesolr@solr:block:im_field_tags']->settings = array(
+      'empty_text' => array('format' => 'full_html'),
+      'facet_fewer_text' => 'Show fewer',
+      'facet_more_text' => 'Show more',
+      'filters' => array(
+        'show_if_minimum_items' => array(
+          'status' => 1,
+        ),
+      ),
+      'show_minimum_items' => 1,
+      'soft_limit' => 5,
+      'sort_order' => array(
+        'active' => 3,
+        'count' => 3,
+        'display' => 4,
+        'indexed' => 4,
+        'natural' => 4,
+      ),
+    ) + (array) $facets['apachesolr@solr:block:im_field_tags']->settings;
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function enrd_taxonomies_views_pre_render(&$view) {
+  // Checks on "ENRD Content Feed" view.
+  $is_custom_view_page = $view->name == 'enrd_custom_rss_feed' && $view->current_display == 'page';
+  $isset_feed_display = isset($view->display['feed']->display_options['path']);
+  // Alter "ENRD Content Feed" view page display.
+  if ($is_custom_view_page && $isset_feed_display) {
+    // Check that filters are set.
+    if (!empty($view->filter['term_node_tid_depth_i18n']->value) || !empty($view->filter['term_node_tid_depth_i18n_1']->value)) {
+      // In case the view returns results.
+      if (!empty($view->result)) {
+        // Remove results from rendering.
+        $view->result = [];
+
+        if (!empty($view->query->pager)) {
+          // Remove pager from rendering.
+          unset($view->query->pager);
+        }
+      }
+      // In case the view returns no results.
+      elseif (empty($view->result)) {
+        // Render no results msg at the end of the page.
+        $view->attachment_after = _enrd_taxonomies_render_no_results_message();
+      }
+
+      // Render instructions msg at the end of the page.
+      $view->attachment_after .= _enrd_taxonomies_render_subscribe_message();
+
+      // Render RSS Link at the end of the page.
+      $view->attachment_after .= _enrd_taxonomies_render_rss_link($view);
+    }
+  }
+}
+
+/**
+ * Callback function to render no results message.
+ *
+ * @return mixed
+ *   The rendered element.
+ */
+function _enrd_taxonomies_render_no_results_message() {
+  // Prepend no results message.
+  $no_results_message = [
+    '#theme' => 'html_tag',
+    '#tag' => 'span',
+    '#attributes' => [
+      'class' => 'feed-sub-noresults',
+    ],
+    '#value' => t("At the moment, there isn't any content matching the selected criteria."),
+  ];
+
+  return render($no_results_message);
+}
+
+/**
+ * Callback function to render subscribe message.
+ *
+ * @return mixed
+ *   The rendered element.
+ */
+function _enrd_taxonomies_render_subscribe_message() {
+  // Set Subscribe instructions msg if filters are selected.
+  $subscribe_message = [
+    '#theme' => 'html_tag',
+    '#tag' => 'span',
+    '#attributes' => [
+      'class' => 'feed-sub',
+    ],
+    '#value' => t('Subscribe to the RSS Feed to stay up to date:'),
+  ];
+
+  return render($subscribe_message);
+}
+
+/**
+ * Callback function to render RSS link.
+ *
+ * @param object $view
+ *   The view object about to be processed.
+ *
+ * @return mixed
+ *   The rendered element.
+ */
+function _enrd_taxonomies_render_rss_link($view) {
+  // Create RSS Link.
+  $url_options = [
+    'attributes' => [
+      'class' => [
+        'btn',
+        'btn-default',
+      ],
+      'target' => '_blank',
+    ],
+    'absolute' => TRUE,
+    'html' => TRUE,
+    'query' => $view->get_exposed_input(),
+  ];
+
+  $path = $view->display['feed']->display_options['path'];
+
+  $rss_feed_link = [
+    '#theme' => 'link',
+    '#text' => '<span class="btn btn-default icon-rss"></span>' . t('Get RSS Link'),
+    '#path' => $view->get_url(NULL, $path),
+    '#options' => $url_options,
+  ];
+
+  return render($rss_feed_link);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_taxonomies_form_views_exposed_form_alter(&$form, &$form_state) {
+  // Customize "Content Feed" view.
+  if ($form['#id'] == 'views-exposed-form-enrd-custom-rss-feed-page') {
+    // Add "and" to "Topics" exposed filter.
+    if (!empty($form['topics'])) {
+      $form['topics']['#field_suffix'] = t('and');
+
+      // Add validation to "Topics" filter.
+      $form['topics']['#element_validate'] = array('_enrd_taxonomies_topics_filter_required');
+    }
+  }
+}
+
+/**
+ * Validate "Content Feed" view: "Topics" filter.
+ *
+ * @param mixed $element
+ *   A form element of type select.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ */
+function _enrd_taxonomies_topics_filter_required($element, &$form_state) {
+  if (isset($form_state['triggering_element']['#id'])) {
+    // Apply validation when applying filters.
+    if ($form_state['triggering_element']['#id'] == 'edit-submit-enrd-custom-rss-feed') {
+      // Check that "Countries" has values but "Topics" doesn't.
+      if (empty($element['#value']) && !empty($form_state['values']['countries'])) {
+        form_error($element, t('!name field is required.', ['!name' => drupal_ucfirst($element['#name'])]));
+      }
+    }
+    else {
+      // Avoid validating when hitting "Reset".
+      $form_state['triggering_element']['#limit_validation_errors'];
+    }
+  }
+}
+
+/**
+ * Alters the commands used on the views AJAX requests.
+ *
+ * @param array $commands
+ *   An array of ajax commands.
+ * @param object $view
+ *   The view which is requested.
+ */
+function enrd_taxonomies_views_ajax_data_alter(&$commands, $view) {
+  // Enabled status messages on Ajax req. on "Content Feed" view filters.
+  if ($view->name == 'enrd_custom_rss_feed' && $view->current_display == 'page') {
+    $commands[] = ajax_command_prepend($commands[0]['selector'], theme('status_messages'));
+  }
+}
+
+/**
+ * Preprocess "Content Feed" RSS feed.
+ */
+function enrd_taxonomies_preprocess_views_view_rss(&$vars) {
+  $view = &$vars['view'];
+
+  // Customize "Content Feed" title.
+  if ($view->name == 'enrd_custom_rss_feed' && $view->current_display == 'feed') {
+    // Check that either "Topics" and/or "Countries" filter(s) are/is set.
+    if (!empty($view->exposed_input['topics']) || !empty($view->exposed_input['countries'])) {
+      $topics = isset($view->exposed_input['topics']) ? $view->exposed_input['topics'] : [];
+      $countries = isset($view->exposed_input['countries']) ? $view->exposed_input['countries'] : [];
+      // Merge "Topics" and "Countries".
+      $all_feed_filters = array_merge($topics, $countries);
+      $all_filter_terms = taxonomy_term_load_multiple($all_feed_filters);
+      $term_names = [];
+
+      if (!empty($all_filter_terms)) {
+        // String to be appended to title.
+        foreach ($all_filter_terms as $tid => $term) {
+          $term_name = $all_filter_terms[$tid]->name;
+          array_push($term_names, $term_name);
+        }
+
+        // Create filter names string.
+        $filter_term_names = implode(', ', $term_names);
+        // Create title by appending selected filters.
+        $vars['title'] .= ': ' . check_plain($filter_term_names);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ */
+function enrd_taxonomies_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+  // Content Tagging View: customize vbo options and field tabs.
+  if ($form['#form_id'] == 'views_form_taxonomy_node_tagging_page' && isset($vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'])) {
+    $fields = field_info_fields();
+
+    if (!empty($fields)) {
+      $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'] = [];
+
+      foreach ($fields as $name => $field) {
+        // Fetch all taxonomy fields referencing nodes.
+        if ($field['type'] == 'taxonomy_term_reference' && !empty($field['bundles']['node'])) {
+
+          // If "Type" filter is set, only provide fields for those types.
+          if (!empty($vbo->view->exposed_input['type'])) {
+            $types = $vbo->view->exposed_input['type'];
+
+            foreach ($types as $type) {
+              $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'][$type . '::' . $name] = $type . '::' . $name;
+            }
+          }
+          else {
+            // If no filter is set, show fields for all bundles.
+            foreach ($field['bundles']['node'] as $bundle) {
+              $vbo->options['vbo_operations']['action::views_bulk_operations_modify_action']['settings']['display_values'][$bundle . '::' . $name] = $bundle . '::' . $name;
+            }
+          }
+
+        }
+      }
+    }
+
+    // Arrange all fields in vertical tabs.
+    foreach (element_children($form) as $child) {
+      if (preg_match('#^bundle_#', $child) === 1) {
+        if (!empty($form[$child]['#fieldgroups'])) {
+          foreach ($form[$child]['#fieldgroups'] as $fieldgroup) {
+            $fieldgroup->format_type = 'tab';
+          }
+        }
+      }
+    }
+
+  }
+}

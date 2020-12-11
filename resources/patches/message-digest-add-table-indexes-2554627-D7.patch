@@ -1,0 +1,28 @@
+Index: message_digest.install
+<+>UTF-8
+===================================================================
+--- message_digest.install
++++ message_digest.install
+@@ -57,6 +57,22 @@
+       ),
+     ),
+     'primary key' => array('id'),
++    'indexes' => array(
++      'idx_digest_status' => array('gid', 'sent', 'timestamp'),
++    ),
+   );
+   return $schema;
+ }
++
++/**
++ * Add index on gid, sent and timestamp fields.
++ */
++function message_digest_update_7001() {
++  if (db_table_exists('message_digest')) {
++    db_add_index('message_digest', 'idx_digest_status', [
++      'gid',
++      'sent',
++      'timestamp',
++    ]);
++  }
++}

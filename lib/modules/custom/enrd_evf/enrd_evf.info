@@ -1,0 +1,6 @@
+name = ERND email verify field
+description = Defines an email field type with validation by token.
+package = ENRD
+core = 7.x
+php = 7.3
+multisite_version = 2.6

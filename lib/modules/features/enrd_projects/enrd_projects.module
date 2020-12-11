@@ -1,0 +1,246 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Projects feature.
+ */
+
+include_once 'enrd_projects.features.inc';
+
+define('ENRD_PROJECTS_COUNTRY_TAXONOMY', 'enrd_countries');
+define('ENRD_PROJECTS_PRIORITY_TAXONOMY', 'enrd_rural_development_policy');
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function enrd_projects_field_widget_form_alter(array &$element, array &$form_state, array $context) {
+  if (isset($element['#bundle']) && $element['#bundle'] == 'project') {
+    // Limit field "Country" to show only "European Union" countries.
+    if (isset($element['#field_name']) && $element['#field_name'] == 'field_tax_country') {
+      $terms = taxonomy_get_term_by_name('European Union', ENRD_PROJECTS_COUNTRY_TAXONOMY);
+
+      if (!empty($terms)) {
+        $valid_options = array('_none' => t('- Select a value -'));
+        foreach ($terms as $term) {
+          $tree = taxonomy_get_tree($term->vid, $term->tid, 1);
+          foreach ($tree as $term_obj) {
+            $valid_options[$term_obj->tid] = $term_obj->name;
+          }
+        }
+        $element['#options'] = $valid_options;
+      }
+    }
+
+    // Limit field "Priority" to show only terms under "Priorities".
+    if (isset($element['#field_name']) && $element['#field_name'] == 'field_tax_rural_dev_policy') {
+      $terms = taxonomy_get_term_by_name('Priorities', ENRD_PROJECTS_PRIORITY_TAXONOMY);
+      $term = reset($terms);
+
+      if ($term) {
+        $tree = taxonomy_get_tree($term->vid, $term->tid, 1);
+
+        $valid_options = array('_none' => t('- Select a value -'));
+        foreach ($tree as $term_obj) {
+          $valid_options[$term_obj->tid] = $term_obj->name;
+        }
+
+        $element['#options'] = $valid_options;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_projects_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['#search_page']['page_id'] == 'projects_database') {
+    $form['#after_build'][] = '_enrd_projects_change_apachesolr_freetext_placeholder';
+  }
+}
+
+/**
+ * After build function to change Apache Solr free-text placeholder.
+ *
+ * @param mixed $form
+ *   The form which contains the search form attributes.
+ * @param mixed $form_state
+ *   Values added in form array.
+ *
+ * @return array
+ *   Returns the modified $form array.
+ */
+function _enrd_projects_change_apachesolr_freetext_placeholder($form, &$form_state) {
+  if ($form['#search_page']['page_id'] == 'projects_database') {
+    $form['basic']['keys']['#attributes']['placeholder'] = t("Free-text search in the Projects Database");
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_apachesolr_query_prepare().
+ */
+function enrd_projects_apachesolr_query_prepare(DrupalSolrQueryInterface $query) {
+
+  $context = $query->getContext();
+  $router_item = menu_get_item();
+
+  // Custom Date sort when landing on the results list & when facet is selected.
+  if ($context['page_id'] == 'projects_database') {
+    if (empty($router_item['page_arguments'][1])) {
+      $query->addParams(array(
+        'sort' => array(
+          'ds_created desc',
+        ),
+      ));
+    }
+  }
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function enrd_projects_date_formats() {
+  return array(
+    // Creates a new custom format type.
+    array(
+      'type' => 'enrd_project_data_export',
+      'format' => 'Y',
+      'locales' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function enrd_projects_date_format_types() {
+  return array(
+    'enrd_project_data_export' => t('ENRD project data export'),
+  );
+}
+
+/**
+ * Helper function that saves terms respecting the hierarchy.
+ *
+ * @param array $array
+ *   The list of terms to import.
+ * @param mixed $vocabulary
+ *   Vocabulary object.
+ * @param int $parent
+ *   Parent term id.
+ */
+function _enrd_projects_save_taxo(array $array, $vocabulary, $parent = 0) {
+
+  // Check the vocabulary.
+  if ($vocabulary === FALSE) {
+    watchdog('enrd_projects', 'Import of taxonomy terms failed.', array(), WATCHDOG_ALERT);
+    return;
+  }
+
+  foreach ($array as $index => $term) {
+    if (!is_array($term)) {
+      $t = (object) array(
+        'vid' => $vocabulary->vid,
+        'parent' => $parent,
+        'name' => $term,
+        'weight' => $index,
+      );
+      $t->field_absolute_id[LANGUAGE_NONE][0]['value'] = $index;
+      taxonomy_term_save($t);
+      $tid = $t->tid;
+    }
+    else {
+      _enrd_projects_save_taxo($term, $vocabulary, $tid);
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_search_page_alter().
+ */
+function enrd_projects_apachesolr_search_page_alter(&$build, $search_page) {
+  if ((isset($search_page['page_id']) && $search_page['page_id'] == 'projects_database')
+    && !empty($build['search_results']['search_results'])) {
+    // Add wrapper to set "media-list" class around the Project search results.
+    $build['#theme_wrappers'][] = 'container';
+    $build['#attributes']['class'] = 'media-list';
+  }
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function enrd_projects_page_alter(&$page) {
+  if (isset($page['content']['system_main']['search_form'])) {
+    if ($page['content']['system_main']['search_form']['#search_page']['page_id'] == 'projects_database') {
+      // Create "Advanced search" wrapper around advanced filters.
+      $advanced_container = array(
+        'blocks' => array(
+          // "Focus Area" facet block.
+          'facetapi_ck9cOfyhGL4KwbTGZlGvzhkwus0CTTjr',
+          // "Measure" facet block.
+          'facetapi_Yv0tO38XomOUjQ8DPgsO3t0NgyveMs2s',
+        ),
+      );
+
+      $fieldset = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced search'),
+        '#attributes' => array(
+          'class' => array(
+            'facet-advanced-projects-facets',
+            'collapse-text-fieldset',
+            'collapsible',
+            'collapsed',
+          ),
+        ),
+        'container' => array(
+          '#type' => 'container',
+          '#attributes' => array(
+            'class' => array(
+              'collapse-text-text',
+            ),
+          ),
+        ),
+      );
+
+      if (isset($page['sidebar_right'])) {
+        $advanced_container['blocks'] = array_intersect($advanced_container['blocks'], array_keys($page['sidebar_right']));
+        foreach ($advanced_container['blocks'] as $index => $delta) {
+          $fieldset['container'][$delta] = $page['sidebar_right'][$delta];
+          $fieldset['container'][$delta]['#weight'] = $index;
+          unset($page['sidebar_right'][$delta]);
+        }
+
+        $page['sidebar_right']["facet-container-" . drupal_html_class($fieldset['#title'])] = $fieldset;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_projects_menu_alter(&$items) {
+  // Set menu items for the Projects Database Search page.
+  if (isset($items['projects-practice'])) {
+    $items['projects-practice']['type'] = MENU_NORMAL_ITEM;
+    $items['projects-practice']['menu_name'] = 'main-menu';
+    $items['projects-practice']['weight'] = -46;
+    $items['projects-practice/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_projects_permission() {
+  return array(
+    'manage enrd projects export' => array(
+      'title' => t('Manage ENRD Projects export'),
+      'description' => t('Allow users with this permission to view the list, filter and export ENRD Projects'),
+    ),
+  );
+}

@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Installs the "ENRD NRN Profiles invitation" features.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_nrnp_invite_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD NRN Profiles invitation is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_nrnp_invite_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD NRN Profiles invitation has been deactivated on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_nrnp_invite_uninstall() {
+  variable_del('enrd_nrnp_invite_mail_subject');
+  variable_del('enrd_nrnp_invite_mail_body');
+  variable_del('enrd_nrnp_invite_mail_renew_subject');
+  variable_del('enrd_nrnp_invite_mail_renew_body');
+  variable_del('enrd_nrnp_invite_mail_confirm_editor_subject');
+  variable_del('enrd_nrnp_invite_mail_confirm_editor_body');
+  variable_del('enrd_nrnp_invite_mail_confirm_cp_subject');
+  variable_del('enrd_nrnp_invite_mail_confirm_cp_body');
+}
+
+/**
+ * ENRDPORTAL-542.
+ */
+function enrd_nrnp_invite_update_7201() {
+  // Update Invite mail bodies.
+  variable_del('enrd_nrnp_invite_mail_body');
+  variable_del('enrd_nrnp_invite_mail_renew_body');
+  variable_del('enrd_nrnp_invite_mail_confirm_editor_body');
+}

@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * ENRD Notifications install file.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_notifications_enable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Notifications is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_notifications_disable() {
+  $t = get_t();
+
+  drupal_set_message($t('ENRD Notifications is now disabled on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_notifications_uninstall() {
+  variable_del('enrd_notifications_digest_from');
+  variable_del('enrd_notifications_panel_limit');
+  variable_del('enrd_notifications_reminder_last_run');
+  variable_del('enrd_notifications_reminder_scheduled_day');
+  variable_del('enrd_notifications_send_reminder_on_cron');
+}
+
+/**
+ * Clear Message Subscribe queue items.
+ */
+function enrd_notifications_update_7001() {
+
+  // First get message_subscribe queue items.
+  $query = db_select('queue', 'q');
+  $query->fields('q', array('item_id', 'data'))
+    ->condition('q.name', 'message_subscribe', '=');
+  $result = $query->execute()->fetchAllAssoc('item_id', PDO::FETCH_ASSOC);
+
+  // Search for non existing entities in active queue items.
+  foreach ($result as $queue_item) {
+    $data = unserialize($queue_item['data']);
+    // If queue item is active for a non-existing entity, clear the item.
+    if (!entity_load_single($data['entity_type'], $data['entity_id'])) {
+      db_delete('queue')
+        ->condition('name', 'message_subscribe', '=')
+        ->condition('item_id', $queue_item['item_id'], '=')
+        ->execute();
+    }
+  }
+}

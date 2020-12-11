@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * ENRD LAG Dashboard install file.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_lag_dashboard_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD LAG Dashboard is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_lag_dashboard_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD LAG Dashboard has been deactivated on your site.'));
+}

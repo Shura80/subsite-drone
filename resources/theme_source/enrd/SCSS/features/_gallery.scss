@@ -1,0 +1,124 @@
+/* Gallery pictures */
+
+/* Gallery nodes & Embedded Media Gallery Display */
+.node-type-gallery .ds-main-wrapper div.gallery-pictures-container,
+.node-gallery.embedded-media-gallery {
+    transition: width 0.3s ease;
+
+    .field-items {
+        display: -ms-flexbox; /* IE10 */
+        display: flex;
+        -ms-flex-wrap: wrap; /* IE10 */
+        flex-wrap: wrap;
+        overflow-x: hidden; // Fix horizontal scrolling in Chrome 75.0.
+
+        .field-item {
+            // Mobile device.
+            -ms-flex: 50%; /* IE10 */
+            flex: 50%;
+            max-width: 50%;
+            padding: 5px;
+
+            img, video {
+                vertical-align: middle;
+                width: 100%;
+
+                &:hover {
+                    opacity: 0.5;
+                    transition: 0.9s;
+                }
+            }
+        }
+    }
+}
+
+/* Gallery nodes */
+.node-type-gallery {
+    .ds-headline {
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .ds-main-wrapper div.gallery-pictures-container .field-items .field-item {
+        // Tablet & Smaller Laptops.
+        @media only screen and (min-width: 600px) {
+            -ms-flex: calc(100% / 3); /* IE10 */
+            flex: calc(100% / 3);
+            max-width: calc(100% / 3);
+        }
+        // Desktop.
+        @media only screen and (min-width: 1200px) {
+            -ms-flex: 25%; /* IE10 */
+            flex: 25%;
+            max-width: 25%;
+        }
+    }
+
+    .field-name-field-caption {
+        margin: 3px 0 3px 0;
+    }
+    // Fix :hover Desc behavior.
+    div#colorbox div#cboxLoadedContent {
+        video, iframe.media-vimeo-player {
+            padding-bottom: 1em;
+        }
+    }
+}
+/* Gallery node add & edit */
+.node-type-gallery.page-node-edit,
+.page-node-add-gallery {
+        .field-name-field-enrd-gallery-media div.preview {
+            // Fix default Square Thumbnail behavior forced for File preview.
+            img, video {
+                height: 180px;
+                width: 240px;
+            }
+        }
+}
+
+/* Embedded Media Gallery Display */
+.node-gallery.embedded-media-gallery {
+    & > h2 {
+        display: none;
+    }
+
+    .field-items .field-item {
+        // Tablet, Smaller Laptops and Desktop.
+        @media only screen and (min-width: 600px) {
+            -ms-flex: 25%; /* IE10 */
+            flex: 25%;
+            max-width: 25%;
+        }
+    }
+
+    .see-more {
+        margin-left: 5px;
+    }
+}
+
+/* Embedded Media Gallery NE Token CKEditor Dialog */
+.enrd-gallery-dialog-container {
+    .view-enrd-embed-gallery-media {
+        table {
+            width: 100%;
+
+            th > a, th {
+                color: #333;
+                font-weight: bold;
+            }
+        }
+        .views-field-nexteuropa-token-ckeditor-widget-selection .token-ckeditor-selection {
+            color: #0074bd;
+        }
+        .token-ckeditor-input {
+            border: 1px solid #ccc;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 11px;
+            padding: 2px 4px;
+            margin-left: 3px;
+            width: 100px;
+            text-align: center;
+        }
+    }
+}

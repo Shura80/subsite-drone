@@ -1,0 +1,193 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Country Pages feature.
+ */
+
+include_once 'enrd_country_pages.features.inc';
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function enrd_country_pages_field_widget_form_alter(array &$element, array &$form_state, array $context) {
+  // Limit field "Country" to show only "European Union" countries.
+  if (isset($element['#bundle']) && $element['#bundle'] == 'rdp_information') {
+    if (isset($element['#field_name']) && $element['#field_name'] == 'field_enrd_rdp_info_country') {
+      $terms = taxonomy_get_term_by_name('European Union', 'enrd_countries');
+
+      if (!empty($terms)) {
+        $valid_options = array('_none' => t('- Select a value -'));
+        foreach ($terms as $term) {
+          $tree = taxonomy_get_tree($term->vid, $term->tid, 1);
+          foreach ($tree as $term_obj) {
+            $valid_options[$term_obj->tid] = $term_obj->name;
+          }
+        }
+        $element['#options'] = $valid_options;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function enrd_country_pages_node_presave($node) {
+  if ($node->type == 'rdp_information') {
+    if (isset($node->field_enrd_rdp_info_country[LANGUAGE_NONE][0]['tid'])) {
+      // Get the term from the "Country" field of the Country Information node.
+      $rdp_info_country = taxonomy_term_load($node->field_enrd_rdp_info_country[LANGUAGE_NONE][0]['tid']);
+
+      if (!empty($rdp_info_country) && isset($rdp_info_country->field_enrd_countries_iso_2[LANGUAGE_NONE][0]['value'])) {
+        $iso = $rdp_info_country->field_enrd_countries_iso_2[LANGUAGE_NONE][0]['value'];
+        // Little workaround to solve the mismatch between MS and iso2 code.
+        if ($iso == 'GB') {
+          $iso = 'UK';
+        }
+
+        $query = new EntityFieldQuery();
+
+        $result = $query->entityCondition('entity_type', 'taxonomy_term')
+          ->entityCondition('bundle', 'enrd_rdps')
+          ->fieldCondition('field_enrd_rdps_ms', 'value', $iso, '=')
+          ->execute();
+
+        if (!empty($result['taxonomy_term'])) {
+          $enrd_rdps_term = reset($result['taxonomy_term']);
+          // Assign the value of RDP term to the "RDP" field.
+          $node->field_enrd_rdp_info_rdp[LANGUAGE_NONE][0]['tid'] = $enrd_rdps_term->tid;
+        }
+      }
+    }
+    else {
+      unset($node->field_enrd_rdp_info_rdp[LANGUAGE_NONE][0]['tid']);
+    }
+  }
+
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function enrd_country_pages_node_view($node, $view_mode, $langcode) {
+  // Conditions to apply active trail.
+  $set_active_trail = $node->type == 'rdp_information' && $view_mode == 'full';
+
+  // Set default menu active trail on Country information nodes.
+  if ($set_active_trail) {
+    $active_trail = 'contact/country-data';
+    menu_tree_set_path('main-menu', drupal_lookup_path('source', $active_trail));
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_country_pages_form_rdp_information_node_form_alter(&$form, &$form_state, $form_id) {
+  // Hide the field "RDP" from Country Information form edit.
+  if (isset($form['field_enrd_rdp_info_rdp'])) {
+    hide($form['field_enrd_rdp_info_rdp']);
+  }
+}
+
+/**
+ * Implements hook_shs_FIELDNAME_js_settings_alter().
+ */
+function enrd_country_pages_shs_field_enrd_rdp_info_region_name_js_settings_alter(&$settings_js, $field_name, $vocabulary_identifier) {
+
+  if ($field_name = 'field_enrd_rdp_info_region_name') {
+    // European Union.
+    $eu_countries = taxonomy_get_term_by_name('European Union', 'enrd_countries');
+    $term_eu = reset($eu_countries);
+
+    // Retrive all parents of EU.
+    $tids = array();
+    if ($term_eu) {
+      foreach (taxonomy_get_parents_all($term_eu->tid) as $parent) {
+        $tids[] = $parent->tid;
+      }
+    }
+
+    foreach ($settings_js['shs'] as &$container) {
+      foreach ($container as &$settings) {
+        if ($term_eu) {
+          // Set first parent used in
+          // enrd_country_pages_shs_json_term_get_children function.
+          $settings['settings']['first_parent'] = $term_eu->tid;
+
+          // Remove all ancestors from shs settings parents array.
+          foreach ($settings['parents'] as $term) {
+            if (in_array($term['tid'], $tids)) {
+              array_shift($settings['parents']);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_shs_json_callbacks_alter().
+ */
+function enrd_country_pages_shs_json_callbacks_alter(&$callbacks) {
+  // Use our custom json callback for the first parent mechanism.
+  $callbacks['shs_json_term_get_children']['callback'] = 'enrd_country_pages_shs_json_term_get_children';
+}
+
+/**
+ * JSON callback to get the list of children of a term.
+ *
+ * @param int $vid
+ *   ID of vocabulary the term is associated to.
+ * @param array|null $parent
+ *   List of parent terms.
+ * @param array|null $settings
+ *   Additional settings (for example "display node count").
+ * @param string $field
+ *   Name of field requesting the term list (DOM element name).
+ *
+ * @return array
+ *   Associative list of child terms.
+ *
+ * @see shs_json_term_get_children()
+ */
+function enrd_country_pages_shs_json_term_get_children($vid, $parent = array(), $settings = array(), $field = NULL) {
+  // Force first level to our first parent (EU).
+  if (isset($settings['first_parent'])) {
+    if ($parent[0] == 0) {
+      $parent[0] = $settings['first_parent'];
+    }
+  }
+  // Results from original shs JSON callback.
+  return shs_json_term_get_children($vid, $parent, $settings, $field);
+}
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function enrd_country_pages_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  if ((isset($context['bundle']) && $context['bundle'] == 'rdp_information') ||
+    (isset($context['bundle']) && $context['bundle'] == 'field_enrd_rdp_info_region')) {
+    if (isset($context['view_mode']) && $context['view_mode'] == 'full') {
+      if ((isset($layout_render_array['rdp_documents']) && !empty($layout_render_array['rdp_documents'])) ||
+        (isset($layout_render_array['partnership_agreement_docs']) && !empty($layout_render_array['partnership_agreement_docs'])) ||
+        (isset($layout_render_array['nrn_image']) && !empty($layout_render_array['nrn_image'])) ||
+        (isset($layout_render_array['nrn_information']) && !empty($layout_render_array['nrn_information'])) ||
+        (isset($layout_render_array['managing_authority']) && !empty($layout_render_array['managing_authority'])) ||
+        (isset($layout_render_array['paying_agency']) && !empty($layout_render_array['paying_agency']))) {
+        $vars['rdp_information_label'] = t('Country Information');
+      }
+
+      if ((isset($layout_render_array['nrn_image']) && !empty($layout_render_array['nrn_image'])) ||
+        (isset($layout_render_array['nrn_information']) && !empty($layout_render_array['nrn_information']))) {
+        $vars['national_rural_network_label'] = t('National Rural Network');
+      }
+
+      if (isset($context['entity']->field_enrd_rdp_info_region_name) && !empty($context['entity']->field_enrd_rdp_info_region_name)) {
+        $vars['region_id'] = $context['entity']->field_enrd_rdp_info_region_name[LANGUAGE_NONE][0]['tid'];
+      }
+    }
+  }
+}

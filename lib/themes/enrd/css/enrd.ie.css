@@ -1,0 +1,13 @@
+form select.form-select {
+  padding: 0;
+  background-image: none;
+}
+
+form select.form-select:focus {
+  background-image: none;
+  outline: none;
+}
+
+form select.form-select option {
+  padding: 0;
+}

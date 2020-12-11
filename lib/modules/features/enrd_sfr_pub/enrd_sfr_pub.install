@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD Publication Subscriptions forms.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_sfr_pub_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Publication Subscriptions forms is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_sfr_pub_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Publication Subscriptions forms is now disabled on your site.'));
+}
+
+/**
+ * Implements hook_install().
+ */
+function enrd_sfr_pub_install() {
+  // Enable "Type of publication name" view modes for field collection item.
+  $settings = field_bundle_settings('field_collection_item', 'field_enrd_sfr_pub_subcp_type');
+  $settings['view_modes']['type_of_publication_name']['custom_settings'] = TRUE;
+  field_bundle_settings('field_collection_item', 'field_enrd_sfr_pub_subcp_type', $settings);
+}
+
+/**
+ * ENRDPORTAL-369, ENRDPORTAL-377, ENRDPORTAL-402.
+ */
+function enrd_sfr_pub_update_7201() {
+  features_revert(array(
+    'enrd_sfr_pub' => array(
+      'field_base',
+      'field_instance',
+      'menu_custom',
+      'context',
+      'rules_config',
+      'views_view',
+      // Make sure role exists.
+      'user_role',
+      'user_permission',
+    ),
+    // Revert admin perms for the EHD Subs manager.
+    'enrd_mastermind' => array(
+      'user_permission',
+    ),
+  ));
+
+  // Delete "Title" CP Subscribe textfield (replaced with select).
+  if ($instance = field_info_instance('enrd_sfr', 'field_enrd_sfr_pub_subcp_title', 'enrd_sfr_pub_subscribe_cp')) {
+    field_delete_instance($instance, TRUE);
+    field_purge_batch(1);
+  }
+
+  // Pre populate menu "ENRD Subscribe" with its links.
+  _enrd_sfr_pub_enrd_sfr_pub_subscribe_menu_prepopulate();
+}
+
+/**
+ * ENRDPORTAL-423.
+ */
+function enrd_sfr_pub_update_7202() {
+  features_revert(array('enrd_sfr_pub' => array('views_view')));
+}
+
+/**
+ * ENRDPORTAL-469.
+ */
+function enrd_sfr_pub_update_7203() {
+  features_revert(array('enrd_sfr_pub' => array('views_view')));
+}
+
+/**
+ * ENRDPORTAL-505.
+ */
+function enrd_sfr_pub_update_7204() {
+  features_revert(array('enrd_sfr_pub' => array('user_permission')));
+}

@@ -1,0 +1,621 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD NRN Profiles invitation feature.
+ */
+
+include_once 'enrd_nrnp_invite.features.inc';
+
+/**
+ * @file
+ * Code for the "ENRD NRN Profiles invitation" feature.
+ */
+
+define('ENRD_NRNP_INVITE_MAIL_SUBJECT', 'Join the ENRD NRN Profiles’ Database');
+define('ENRD_NRNP_INVITE_MAIL_BODY', <<<TEXT
+Dear [invite:field-enrd-nrnp-invite-name],
+
+The ENRD Contact Point team is happy to invite you to join the NRN Profiles database.
+
+The ENRD NRN Profiles database will allow you to update the information of your rural network.
+
+Your Rural Network already has its own web profile page [invite:field-enrd-nrnp-invite-page:url], which contains your NRN’s contact information. You can update this profile to include more information on your NRN’s activities.
+
+To accept this invitation, please click on this one-time use link, valid for 30 days:
+[invite:eu-login-invite-accept-link]
+
+After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your NRN profile where you can update the majority of the available fields. Find out how to do all this here: [site:base-url]/[site:public-folder-path]/
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
+Best Regards,
+
+The ENRD Contact Point team
+TEXT
+);
+
+define('ENRD_NRNP_INVITE_MAIL_RENEW_SUBJECT', 'Join the ENRD NRN Profiles’ Database');
+define('ENRD_NRNP_INVITE_MAIL_RENEW_BODY', <<<TEXT
+Dear [invite:field-enrd-nrnp-invite-name],
+
+The ENRD Contact Point team is happy to invite you to join the NRN Profiles database.
+
+The ENRD NRN Profiles database will allow you to update the information of your rural network.
+
+Your Rural Network already has its own web profile page [invite:field-enrd-nrnp-invite-page:url], which contains your NRN’s contact information. You can update this profile to include more information on your NRN’s activities.
+
+To accept this invitation, please click on this one-time use link, valid for 30 days:
+[invite:eu-login-invite-accept-link]
+
+After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your NRN profile where you can update the majority of the available fields. Find out how to do all this here: [site:base-url]/[site:public-folder-path]/
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
+Best Regards,
+
+The ENRD Contact Point team
+TEXT
+);
+
+define('ENRD_NRNP_INVITE_MAIL_CONFIRM_EDITOR_SUBJECT', 'Thank you for joining the "[node:title_field]" NRN Profile!');
+define('ENRD_NRNP_INVITE_MAIL_CONFIRM_EDITOR_BODY', <<<TEXT
+Dear [user:name],
+
+You can now manage the NRN Profile: "[node:title_field]" located at: [node:url].
+Please click this link: [site:login-url] to log in and proceed with setting up your account and updating your NRN Profile.
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
+Best Regards,
+The ENRD Contact Point team.
+TEXT
+);
+
+define('ENRD_NRNP_INVITE_MAIL_CONFIRM_CP_SUBJECT', 'ENRD NRN Profiles - [user:name] joined [node:title_field]');
+define('ENRD_NRNP_INVITE_MAIL_CONFIRM_CP_BODY', <<<TEXT
+Dear ENRD CP,
+
+[user:name] is now an NRN editor of [node:title_field] located at: [node:url].
+
+Best regards,
+The ENRD Contact Point team.
+TEXT
+);
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_nrnp_invite_menu() {
+  $items = array();
+
+  $items['admin/config/nrn-profiles/invite'] = array(
+    'title' => 'NRN Profiles invites',
+    'description' => 'Modify NRN Profiles invitation settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_nrnp_invite_invite_settings_form'),
+    'access arguments' => array('administer nrn profiles'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+    'file' => 'enrd_nrnp_invite.admin.inc',
+  );
+
+  $items['admin/enrd/nrn-profiles/editors/add'] = array(
+    'title' => 'Invite/add a user',
+    'description' => 'Enable existing users or invite new users to manage an NRN Profile.',
+    'type' => MENU_LOCAL_ACTION | MENU_NORMAL_ITEM,
+    'page callback' => 'invite_add',
+    'page arguments' => array('enrd_nrnp_invite'),
+    'access arguments' => array('administer nrn profiles'),
+    'file' => 'includes/invite.admin.inc',
+    'file path' => drupal_get_path('module', 'invite'),
+    'weight' => 5,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_nrnp_invite_form_invite_form_alter(&$form, &$form_state, $form_id) {
+  $invite = $form['#entity'];
+
+  $search_description = t('Search for an existing ENRD website user by full name, email or username.');
+  $admin_msg = $search_description . ' ' . t('Note: adding a blocked user implicates its activation.');
+  $standard_msg = $search_description . ' ' . t('Note: blocked users cannot be added. Please contact the webmaster to request activation.');
+
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_nrnp_invite'])) {
+
+    $form['use_invite'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('The user does not have an account yet.'),
+      '#weight' => -99,
+    );
+
+    $form['username'] = array(
+      '#type' => 'textfield',
+      '#title' => t('User'),
+      '#description' => user_access('activate enrd users') ? $admin_msg : $standard_msg,
+      '#maxlength' => 60,
+      '#autocomplete_path' => 'enrd/user/autocomplete/all',
+      '#required' => TRUE,
+      '#element_validate' => array('_enrd_nrnp_invite_user_validate'),
+      '#weight' => -98,
+    );
+
+    $form['actions']['add'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add user'),
+      '#submit' => array('enrd_nrnp_invite_form_invite_add_user_submit'),
+    );
+    $form['actions']['submit']['#value'] = t('Send invitation');
+
+    $status = array(':input[name=use_invite]' => array('checked' => FALSE));
+    $form['username']['#states']['required'] = $status;
+    $form['username']['#states']['visible'] = $status;
+    $form['actions']['add']['#states']['visible'] = $status;
+
+    $status = array(':input[name=use_invite]' => array('checked' => TRUE));
+    $form['field_enrd_nrnp_invite_email']['#states']['required'] = $status;
+    $form['field_enrd_nrnp_invite_email']['#states']['visible'] = $status;
+    $form['field_enrd_nrnp_invite_name']['#states']['required'] = $status;
+    $form['field_enrd_nrnp_invite_name']['#states']['visible'] = $status;
+    $form['username']['#states']['disabled'] = $status;
+    $form['actions']['submit']['#states']['visible'] = $status;
+
+    $form['actions']['submit']['#submit'][] = 'enrd_nrnp_invite_form_invite_submit';
+
+    $form['#validate'][] = 'enrd_nrnp_invite_form_invite_form_validate';
+    $form['#after_build'][] = 'enrd_nrnp_invite_form_invite_add_user_after_build';
+  }
+}
+
+/**
+ * Implements hook_field_access().
+ */
+function enrd_nrnp_invite_field_access($op, $field, $entity_type, $entity, $account) {
+  if ($field['field_name'] == 'field_enrd_nrnp_invite_resend' && $op == 'edit') {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function enrd_nrnp_invite_action_info() {
+  return array(
+    'enrd_nrnp_invite_renew_invite' => array(
+      'type' => 'invite',
+      'label' => t('NRN Profile - Renew invite'),
+      'configurable' => FALSE,
+      'vbo_configurable' => FALSE,
+      'triggers' => array('any'),
+      'permissions' => array('administer nrn profiles'),
+    ),
+  );
+}
+
+/**
+ * After Build function to manage selection invite/add action.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @return array
+ *   The modified form array
+ *
+ * @see enrd_nrnp_invite_form_invite_form_alter()
+ */
+function enrd_nrnp_invite_form_invite_add_user_after_build($form, &$form_state) {
+  $use_invite = (isset($form_state['values']['use_invite'])) ? $form_state['values']['use_invite'] : FALSE;
+
+  $form['field_enrd_nrnp_invite_email'][LANGUAGE_NONE][0]['email']['#required'] = $use_invite;
+  $form['field_enrd_nrnp_invite_name'][LANGUAGE_NONE][0]['value']['#required'] = $use_invite;
+  $form['username']['#required'] = !$use_invite;
+
+  return $form;
+}
+
+/**
+ * Form validate.
+ */
+function enrd_nrnp_invite_form_invite_form_validate($form, &$form_state) {
+  if ($form_state['triggering_element']['#value'] == 'Delete') {
+    return FALSE;
+  }
+
+  // Validation of the field user search.
+  if ($form_state['values']['use_invite'] == 0) {
+    if (!empty($form_state['values']['username'])) {
+      if (user_load_by_name($form_state['values']['username']) === FALSE) {
+        form_set_error('username', t('%user is not a valid ENRD website user.', array('%user' => $form_state['values']['username'])));
+      }
+    }
+  }
+  // Invite method.
+  else {
+    $mail_address = $form_state['values']['field_enrd_nrnp_invite_email'][LANGUAGE_NONE][0]['email'];
+    $nrn_profile_nid = $form_state['values']['field_enrd_nrnp_invite_page'][LANGUAGE_NONE][0]['target_id'];
+
+    if (!empty($mail_address)) {
+      // Validate is email address valid.
+      if (!valid_email_address($mail_address)) {
+        form_set_error('field_enrd_nrnp_invite_email', t('Email address %email is not valid.', array('%email' => $mail_address)));
+      }
+
+      $user = user_load_by_mail($mail_address);
+
+      if (!empty($user)) {
+        form_set_error('field_enrd_nrnp_invite_email', t('User already has an account, try to add it directly without sending an invite.'));
+      }
+
+      // Check if there is an old invite.
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'invite')
+        ->entityCondition('bundle', 'enrd_nrnp_invite')
+        ->propertyCondition('status', INVITE_VALID)
+        ->fieldCondition('field_enrd_nrnp_invite_email', 'email', $mail_address, '=')
+        ->fieldCondition('field_enrd_nrnp_invite_page', 'target_id', $nrn_profile_nid)
+        ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+      $result = $query->execute();
+
+      if (isset($result['invite']) && ($invite = invite_load(key($result['invite']))) && invite_validate($invite)) {
+        form_set_error('field_enrd_nrnp_invite_email', t('User has already been invited. Wait for invitation acceptance.'));
+      }
+    }
+
+  }
+
+}
+
+/**
+ * Submit function attached to the default invite entity form submit.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @see enrd_nrnp_invite_form_invite_form_alter();
+ */
+function enrd_nrnp_invite_form_invite_submit($form, &$form_state) {
+  unset($form_state['redirect']);
+}
+
+/**
+ * Custom submit function for the add action button.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @see enrd_nrnp_invite_form_invite_form_alter();
+ */
+function enrd_nrnp_invite_form_invite_add_user_submit($form, &$form_state) {
+  $user_invitee = user_load_by_name($form_state['values']['username']);
+  $nrn_profile_node = node_load($form_state['values']['field_enrd_nrnp_invite_page'][LANGUAGE_NONE][0]['target_id']);
+
+  $user_added = enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $user_invitee->mail, $user_invitee->realname);
+
+  if ($user_added) {
+    drupal_set_message(t('User !name is now an editor of %nrn_profile. A notification email was sent to the user.', array(
+      '!name' => theme('username', array(
+        'account' => $user_invitee,
+        'nolink' => TRUE,
+      )),
+      '%nrn_profile' => $nrn_profile_node->title,
+    )));
+  }
+
+  unset($form_state['redirect']);
+}
+
+/**
+ * Renew an invite to NRN editor.
+ *
+ * @param object $invite
+ *   The invite object.
+ */
+function enrd_nrnp_invite_renew_invite(&$invite) {
+
+  $invite->status = INVITE_VALID;
+  $invite->expiry = REQUEST_TIME + (variable_get('invite_default_expiry_time', 30) * 60 * 60 * 24);
+  $invite->field_enrd_nrnp_invite_resend[LANGUAGE_NONE][]['value'] = REQUEST_TIME;
+  invite_save($invite);
+
+  $invite->sendInvite();
+}
+
+/**
+ * Invite or register a user as editor of the NRN Profile page.
+ *
+ * @param mixed $nrn_profile_node
+ *   The node of the NRN Profile.
+ * @param string $email
+ *   Invitee email.
+ * @param string $name
+ *   Invitee full name.
+ *
+ * @return bool
+ *   Return TRUE if user has been activated.
+ */
+function enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $email, $name) {
+
+  // Node validity check.
+  if (!isset($nrn_profile_node->nid)) {
+    watchdog('enrd_nrnp_invite', 'Invalid NRN Profile invitation to "%user" (%mail).', array(
+      '%mail' => $email,
+      '%user' => $name,
+    ), WATCHDOG_NOTICE);
+    return FALSE;
+  }
+
+  // Email validity check.
+  if (valid_email_address($email) === FALSE) {
+    watchdog('enrd_nrnp_invite', 'Invalid email invitation "%mail" to "%user".', array(
+      '%mail' => $email,
+      '%user' => $name,
+    ), WATCHDOG_NOTICE);
+    return FALSE;
+  }
+
+  if ($user = user_load_by_mail($email)) {
+    // Check if user is blocked & current user can validate.
+    if (user_is_blocked($user->name) !== FALSE && user_access('activate enrd users')) {
+      // Activate user.
+      user_user_operations_unblock([$user->uid]);
+    }
+
+    // Perform actions on active user.
+    if (user_is_blocked($user->name) === FALSE) {
+      // Assign "NRN Editor" role.
+      $role = user_role_load_by_name(ENRD_NRN_PROFILES_NRN_EDITOR_ROLE_NAME);
+      user_save($user, ['roles' => $user->roles + [$role->rid => $role->name]]);
+
+      // Add entity reference to edit a NRN Profile page.
+      $user_wrapper = entity_metadata_wrapper('user', $user);
+      $user_wrapper->field_enrd_nrnp_access_node->set(array($nrn_profile_node->nid));
+      $user_wrapper->save();
+
+      // Send confirmation e-mail.
+      enrd_nrnp_invite_send_confirmation($user, $nrn_profile_node);
+
+      return TRUE;
+    }
+  }
+  else {
+
+    // Check if there is an old invite.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'invite')
+      ->entityCondition('bundle', 'enrd_nrnp_invite')
+      ->fieldCondition('field_enrd_nrnp_invite_email', 'email', $email, '=')
+      ->fieldCondition('field_enrd_nrnp_invite_page', 'target_id', $nrn_profile_node->nid)
+      ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+    $result = $query->execute();
+
+    if (isset($result['invite']) && ($invite = invite_load(key($result['invite'])))) {
+      // Extend the invite and resend the mail.
+      if (invite_validate($invite) != INVITE_USED) {
+        enrd_nrnp_invite_renew_invite($invite);
+      }
+    }
+    else {
+      // Create a new invite.
+      $invite = entity_create('invite', array('type' => 'enrd_nrnp_invite'));
+      $entity = entity_metadata_wrapper('invite', $invite);
+      $entity->expiry->set(REQUEST_TIME + (variable_get('invite_default_expiry_time', 30) * 60 * 60 * 24));
+      $entity->field_enrd_nrnp_invite_page->set($nrn_profile_node->nid);
+      $entity->field_enrd_nrnp_invite_email->set($email);
+      $entity->field_enrd_nrnp_invite_name->set($name);
+      $entity->save();
+    }
+
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_invite_sending_controller().
+ */
+function enrd_nrnp_invite_invite_sending_controller() {
+  return array(
+    'label' => t('ENRD NRN Profiles'),
+  );
+}
+
+/**
+ * Implements hook_invite_send().
+ */
+function enrd_nrnp_invite_invite_send($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_nrnp_invite'])) {
+    enrd_nrnp_invite_send_invitation($invite);
+  }
+}
+
+/**
+ * Implements sending_controller_send_invitation function.
+ *
+ * The invitation email is sent to the invitee.
+ *
+ * @param object $invite
+ *   Invite object.
+ *
+ * @return bool
+ *   TRUE, if sending was successful; FALSE otherwise.
+ */
+function enrd_nrnp_invite_send_invitation($invite) {
+  global $language;
+
+  $entity = entity_metadata_wrapper('invite', $invite);
+  $is_renew = !empty($invite->field_enrd_nrnp_invite_resend[LANGUAGE_NONE]);
+
+  // Use different mail templates for first invite and renew invite.
+  if ($is_renew) {
+    $subject_template = variable_get('enrd_nrnp_invite_mail_renew_subject', ENRD_NRNP_INVITE_MAIL_RENEW_SUBJECT);
+    $body_template = variable_get('enrd_nrnp_invite_mail_renew_body', ENRD_NRNP_INVITE_MAIL_RENEW_BODY);
+  }
+  else {
+    $subject_template = variable_get('enrd_nrnp_invite_mail_subject', ENRD_NRNP_INVITE_MAIL_SUBJECT);
+    $body_template = variable_get('enrd_nrnp_invite_mail_body', ENRD_NRNP_INVITE_MAIL_BODY);
+  }
+
+  $params = array(
+    'entities' => array(
+      'invite' => $invite->iid,
+    ),
+    'subject' => $subject_template,
+    'body' => $body_template,
+    'confirm_email' => FALSE,
+  );
+
+  // Send e-mail.
+  $result = drupal_mail('enrd_nrnp_invite', 'invite', $entity->field_enrd_nrnp_invite_email->value(), $language, $params);
+  return $result['result'];
+}
+
+/**
+ * Implements sending_controller_send_confirmation function.
+ *
+ * @param int $user
+ *   The user id that accepted the invitation.
+ * @param int $nrn_profile_node
+ *   The node id of the NRN Profile page.
+ */
+function enrd_nrnp_invite_send_confirmation($user, $nrn_profile_node) {
+  global $language;
+
+  $actors = array(
+    'cp' => ENRD_NRN_PROFILES_EMAIL_ADDRESS,
+    'editor' => $user->mail,
+  );
+
+  foreach ($actors as $actor => $email_address) {
+    $subject_var = 'enrd_nrnp_invite_mail_confirm_' . $actor . '_subject';
+    $body_var = 'enrd_nrnp_invite_mail_confirm_' . $actor . '_body';
+    $subject_template = variable_get($subject_var, constant(drupal_strtoupper($subject_var)));
+    $body_template = variable_get($body_var, constant(drupal_strtoupper($body_var)));
+
+    $to = $email_address;
+
+    $params = array(
+      'entities' => array(
+        'user' => $user->uid,
+        'node' => $nrn_profile_node->nid,
+      ),
+      'subject' => $subject_template,
+      'body' => $body_template,
+      'confirm_email' => TRUE,
+    );
+
+    // Send e-mail.
+    drupal_mail('enrd_nrnp_invite', 'invite', $to, $language, $params);
+  }
+
+}
+
+/**
+ * Implements hook_mail().
+ */
+function enrd_nrnp_invite_mail($key, &$message, $params) {
+
+  $options = array();
+  $subject_template = $params['subject'];
+  $body_template = $params['body'];
+
+  foreach ($params['entities'] as $type => $id) {
+    $entity = entity_load($type, array($id));
+    $options[$type] = reset($entity);
+  }
+
+  $subject = token_replace($subject_template, $options);
+  $email_body = token_replace($body_template, $options);
+
+  $message['subject'] = str_replace(array("\r", "\n"), '', trim($subject));
+  $message['body'][] = $email_body;
+}
+
+/**
+ * Implements hook_invite_accept().
+ */
+function enrd_nrnp_invite_invite_accept($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_nrnp_invite'])) {
+    $invitee = user_load($invite->invitee);
+
+    $entity = entity_metadata_wrapper('invite', $invite);
+    $nrn_profile_node = $entity->field_enrd_nrnp_invite_page->value();
+
+    enrd_nrnp_invite_invite_by_mail($nrn_profile_node, $invitee->mail, $invitee->realname);
+    _enrd_nrnp_invite_redirect($nrn_profile_node);
+  }
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function enrd_nrnp_invite_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  if ($type == 'invite' && !empty($data['invite'])) {
+    foreach ($tokens as $name => $original) {
+      if ($name == 'nrn-profile-name') {
+        try {
+          $entity = entity_metadata_wrapper('invite', $data['invite']);
+          $nrn_profile_node = $entity->field_enrd_nrnp_invite_page->value();
+          $replacements[$original] = check_plain($nrn_profile_node->title);
+        }
+        catch (Exception $e) {
+        }
+      }
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Redirect after accept invitation.
+ *
+ * @param object $nrn_profile_node
+ *   Node object.
+ */
+function _enrd_nrnp_invite_redirect($nrn_profile_node) {
+  if (!isset($GLOBALS['destination'])) {
+    $GLOBALS['destination'] = 'node/' . $nrn_profile_node->nid;
+  }
+}
+
+/**
+ * Validate function for the "User" field.
+ *
+ * @param array $element
+ *   Drupal form element array.
+ * @param array $form_state
+ *   Drupal form_state array.
+ */
+function _enrd_nrnp_invite_user_validate(array $element, array &$form_state) {
+  // Check that field is not empty.
+  if (!empty($form_state['values']['username'])) {
+    $user = user_load_by_name($form_state['values']['username']);
+    $user_is_blocked = !empty($user) && user_is_blocked($user->name) !== FALSE;
+
+    // Check if user is blocked & current user can't activate.
+    if ($user_is_blocked && !user_access('activate enrd users')) {
+      form_error($element, t('User !name (@username) is blocked. Please contact the webmaster to request activation.', [
+        '!name' => theme('username', array(
+          'account' => $user,
+          'nolink' => TRUE,
+        )),
+        '@username' => $user->name,
+      ]));
+    }
+  }
+}

@@ -1,0 +1,276 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD Publications feature.
+ */
+
+include_once 'enrd_publications.features.inc';
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function enrd_publications_preprocess_field(&$variables, $hook) {
+  // Add prefix to "EU Bookshop" link Title of "Link to the EU Bookshop" field.
+  if (isset($variables['element']['#bundle']) && $variables['element']['#bundle'] == 'publication') {
+    if (isset($variables['element']['#field_name'])) {
+      switch ($variables['element']['#field_name']) {
+        case 'field_enrd_publications_rel_docs':
+        case 'field_enrd_publication_file':
+          foreach ($variables['items'] as &$item) {
+            $item['#file']->options['attributes']['target'] = '_blank';
+          }
+          break;
+
+        case 'field_enrd_publication_link_book':
+          $variables['items'][0]['#prefix'] = '<span>' . t('Order a paper copy via the') . '</span> ';
+          break;
+
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_publications_menu_link_alter(&$item) {
+  if (isset($item['menu_name']) && $item['menu_name'] == 'main-menu') {
+
+    switch ($item['link_path']) {
+      case 'evaluation/publications':
+        // Set right position of Evaluation eLibrary.
+        if (!isset($item['customized'])) {
+          if ($path = drupal_lookup_path('source', 'evaluation')) {
+            $item['plid'] = (int) db_select('menu_links')
+              ->fields('menu_links', array('mlid'))
+              ->condition('menu_name', 'main-menu')
+              ->condition('link_path', $path)
+              ->execute()
+              ->fetchField();
+          };
+        }
+        break;
+
+      case 'publications/evaluation-helpdesk-publications':
+      case 'publications/search':
+        // Set right position of Evaluation and CP eLibrary menu items.
+        if (!isset($item['customized'])) {
+          if ($path = drupal_lookup_path('source', 'publications')) {
+            $item['plid'] = (int) db_select('menu_links')
+              ->fields('menu_links', array('mlid'))
+              ->condition('menu_name', 'main-menu')
+              ->condition('link_path', $path)
+              ->execute()
+              ->fetchField();
+          };
+        }
+        break;
+
+    }
+
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_publications_menu() {
+  $items = array();
+
+  $items['publications/evaluation-helpdesk-publications'] = array(
+    'title' => 'Evaluation Helpdesk Publications',
+    'page callback' => 'drupal_goto',
+    'page arguments' => array(
+      'evaluation/publications',
+      array(),
+      '301',
+    ),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'main-menu',
+    'weight' => 10,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build().
+ */
+function enrd_publications_apachesolr_index_document_build(ApacheSolrDocument $document, $entity, $entity_type, $env_id) {
+  switch ($entity->type) {
+    case 'publication_ehd':
+      // Build docs before sending them to Solr and add EHD Publ. date as sort.
+      if (isset($entity->field_enrd_publ_ehd_public_date[LANGUAGE_NONE]['0']['value'])) {
+        $document->setField('ds_sort_enrd_publ_ehd_public_da', apachesolr_date_iso($entity->field_enrd_publ_ehd_public_date[LANGUAGE_NONE][0]['value']));
+      }
+      break;
+
+    case 'publication':
+      // Build docs before sending them to Solr and add Publ. date as sort.
+      if (isset($entity->field_enrd_publication_date[LANGUAGE_NONE][0]['value'])) {
+        $document->setField('ds_sort_enrd_publication_date', apachesolr_date_iso($entity->field_enrd_publication_date[LANGUAGE_NONE][0]['value']));
+      }
+      if (isset($entity->field_enrd_publication_date[LANGUAGE_NONE][0]['value'])) {
+        $document->setField('ss_field_enrd_publication_date', date("Y", $entity->field_enrd_publication_date[LANGUAGE_NONE][0]['value']));
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_apachesolr_query_alter().
+ */
+function enrd_publications_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
+
+  $context = $query->getContext();
+  $router_item = menu_get_item();
+
+  // Set Sticky at top, Publication date and Last Changed date as query params
+  // if free-text query is not applied, else sort by Sticky and then Relevancy.
+  switch ($context['page_id']) {
+
+    case 'evaluation_publications_elibrary':
+      if (empty($router_item['page_arguments'][1])) {
+        // If free-text search is not applied.
+        $query->addParams(array(
+          'sort' => array(
+            'bs_sticky desc',
+            'ds_sort_enrd_publ_ehd_public_da desc',
+            'ds_changed desc',
+          ),
+        ));
+      }
+      else {
+        // If free-text search applied, show pinned on top & then most relevant.
+        $query->addParams(array(
+          'sort' => array(
+            'bs_sticky desc',
+            'score desc',
+          ),
+        ));
+      }
+      break;
+
+    case 'publications_elibrary':
+      if (empty($router_item['page_arguments'][1])) {
+        // If free-text search is not applied.
+        $query->addParams(array(
+          'sort' => array(
+            'bs_sticky desc',
+            'ds_sort_enrd_publication_date desc',
+            'ds_changed desc',
+          ),
+        ));
+      }
+      else {
+        // If free-text search applied, show pinned on top & then most relevant.
+        $query->addParams(array(
+          'sort' => array(
+            'bs_sticky desc',
+            'score desc',
+          ),
+        ));
+      }
+      break;
+
+  }
+
+}
+
+/**
+ * Implements hook_facetapi_facet_info().
+ */
+function enrd_publications_facetapi_facet_info($searcher_info) {
+  $facets = array();
+
+  if (isset($searcher_info['types']['node'])) {
+    $facets['ss_field_enrd_publication_date'] = array(
+      'label' => t('Publication year'),
+      'description' => t('Filter by the year value from field_enrd_publication_date.'),
+      'field' => 'ss_field_enrd_publication_date',
+      'field alias' => 'publication_year',
+    );
+
+    $facets = array_merge($facets, apachesolr_entity_field_facets('node'));
+  }
+
+  return $facets;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_publications_menu_alter(&$items) {
+  $items['evaluation/publications']['type'] = MENU_NORMAL_ITEM;
+  // Specified name to prevent Evaluation eLibrary being placed in Navigation.
+  $items['evaluation/publications']['menu_name'] = 'main-menu';
+  $items['evaluation/publications']['weight'] = -44;
+  // "Publications" search visible in breadcrumb & active trail.
+  $items['publications/search']['type'] = MENU_NORMAL_ITEM;
+  $items['publications/search']['menu_name'] = 'main-menu';
+  $items['publications/search/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_publications_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form['#search_page']['page_id']) {
+
+    case 'evaluation_publications_elibrary':
+    case 'publications_elibrary':
+      $form['#after_build'][] = '_enrd_publications_change_apachesolr_freetext_placeholder';
+      break;
+
+  }
+}
+
+/**
+ * After build function to change Apache Solr free-text placeholder.
+ *
+ * @param mixed $form
+ *   The form which contains the search form attributes.
+ * @param mixed $form_state
+ *   Values added in form array.
+ *
+ * @return array
+ *   Returns the modified $form array.
+ */
+function _enrd_publications_change_apachesolr_freetext_placeholder($form, &$form_state) {
+  switch ($form['#search_page']['page_id']) {
+    case 'evaluation_publications_elibrary':
+      $form['basic']['keys']['#attributes']['placeholder'] = t("Search in the Evaluation Helpdesk's eLibrary");
+      break;
+
+    case 'publications_elibrary':
+      $form['basic']['keys']['#attributes']['placeholder'] = t("Free-text search in the Publications eLibrary");
+      break;
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function enrd_publications_date_formats() {
+  return array(
+    // Creates a new custom format type.
+    array(
+      'type' => 'enrd_publication_d_m_y',
+      'format' => 'j F Y - g:ia',
+      'locales' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function enrd_publications_date_format_types() {
+  return array(
+    'enrd_publication_d_m_y' => t('ENRD Publication'),
+  );
+}

@@ -1,0 +1,77 @@
+default:
+  suites:
+    subsite:
+      paths:
+        - '{{ behat.dir }}/features/CustomFeatures'
+      contexts:
+        - FeatureContext
+        - Drupal\enrd\Context\DrupalContext
+        - Drupal\enrd\Context\GeneralContext
+        - Drupal\enrd\Context\EmailNotificationsContext
+        - Drupal\enrd\Context\TaxonomiesContext
+        - Drupal\enrd\Context\CommunityContext
+        - Drupal\enrd\Context\SolrContext
+        - Drupal\enrd\Context\EntityContext
+        - Drupal\enrd\Context\FieldCollectionContext
+        - Drupal\enrd\Context\InviteContext
+        - Drupal\enrd\Context\MediaContext
+        - Drupal\enrd\Context\FormContext
+        - Drupal\nexteuropa\Context\MultilingualContext
+        - Drupal\nexteuropa\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
+        - Drupal\DrupalExtension\Context\MarkupContext
+        - Drupal\DrupalExtension\Context\BatchContext
+      filters:
+        tags: "{{ behat.tags }}"
+  extensions:
+    Behat\MinkExtension:
+      browser_name: '{{ behat.browser.name }}'
+      goutte: ~
+      selenium2:
+        wd_host: '{{ behat.wd_host.url }}'
+        capabilities:
+          browser: '{{ behat.browser.name }}'
+          extra_capabilities:
+            chromeOptions:
+              w3c: false
+              args:
+                - "--headless"
+                - "--disable-gpu"
+                - "--window-size=1280,800"
+      javascript_session: 'selenium2'
+      base-url: '{{ behat.base_url }}'
+      files_path: '{{ behat.dir }}/resources'
+    Drupal\DrupalExtension:
+      api_driver: '{{ behat.api.driver }}'
+      blackbox: ~
+      drupal:
+        drupal_root: '{{ build.platform.dir }}'
+      region_map:
+        title: "#page-title"
+        content: ".region-content"
+        right content: ".region-content-right"
+        bottom content: ".region-content-bottom"
+        featured: ".region-featured"
+        tools: ".region-tools"
+        tools buttons: "#main.container .region-tools-buttons"
+        og contextual links: "#block-multisite-og-button-og-contextual-links"
+        left sidebar: ".region-sidebar-left"
+        right sidebar: ".region-sidebar-right"
+        top header: ".region-header-top"
+        right header: ".region-header-right"
+        footer: ".region-footer"
+        footer top: ".region-footer-top"
+      selectors:
+        message_selector: '.messages'
+        error_message_selector: '.messages.error'
+        success_message_selector: '.messages.status'
+      drush:
+        alias: '{{ behat.drush.alias }}'
+        binary: '{{ toolkit.dir.bin.drush }}'
+      subcontexts:
+        paths:
+          - '{{ behat.subcontexts.path }}'
+          - '{{ build.platform.dir }}'
+  formatters:
+    {{ behat.formatter.name }}: ~

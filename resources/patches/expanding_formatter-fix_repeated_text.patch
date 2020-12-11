@@ -1,0 +1,243 @@
+Index: expanding_formatter.module
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- expanding_formatter.module	(date 1390969314000)
++++ expanding_formatter.module	(date 1564990239000)
+@@ -119,6 +119,9 @@
+     $element['trim_length'] = array(
+       '#type' => 'textfield',
+       '#title' => t('Trim length'),
++      '#description' => t('If @break appears in the text, then it gets priority over the trim length.', array(
++        '@break' => '<!--break-->')
++      ),
+       '#size' => 10,
+       '#default_value' => $settings['trim_length'],
+       '#element_validate' => array('element_validate_integer_positive'),
+@@ -228,106 +231,108 @@
+  * Implements hook_field_formatter_view().
+  */
+ function expanding_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
++  $element = array();
+   if ($display['type'] === 'expanding_formatter_text_trimmed' || $display['type'] === 'expanding_formatter_text_summary_or_trimmed') {
+-    // Get the settings and extend default ones that don't exist.
+-    $settings = $display['settings'];
+-    $settings += expanding_formatter_default_settings();
++
++    foreach ($items as $delta => $item) {
++
++      // If summary is set, sanitize it.
++      if (!empty($item['summary'])) {
++        $summary = _text_sanitize($instance, $langcode, $item, 'summary');
++      }
++      else {
++
++        // Find where the delimiter is in the body.
++        // If there is no delimiter, the entire body is the
++        // summary.
++        $original = $item['value'];
++        if (strpos($original, '<!--break-->') === FALSE) {
++          $trim_length = $display['settings']['trim_length'];
++        }
++        else {
++          $trim_length = drupal_strlen($original);
++        }
++
++        $summary = expanding_formatter_text_summary($original, $instance['settings']['text_processing'] ? $item['format'] : NULL, $trim_length);
++      }
++
++      // If summary is not included in the value.
++      if (drupal_strlen($summary) != drupal_strlen($original)) {
++        // Remove the summary from the original text.
++        $original = str_replace($summary, '', $original);
++
++        // Get the settings and extend default ones that don't exist.
++        $settings = $display['settings'];
++        $settings += expanding_formatter_default_settings();
+ 
+-    // Attach the necessary resources.
+-    $module_path = drupal_get_path('module', 'expanding_formatter');
+-    $element = array(
+-      '#attached' => array(
+-        'css' => array($module_path . '/css/expanding_formatter.css'),
+-        'js' => array($module_path . '/js/expanding_formatter.js'),
+-      ),
+-    );
++        // Attach the necessary resources.
++        $attributes = array();
++        $attributes['class'] = array('expanding-formatter');
++        if (!empty($settings['inline'])) {
++          $attributes['data-inline'] = $settings['inline'];
++        }
++        if (!empty($settings['css3'])) {
++          $attributes['data-css3'] = $settings['css3'];
++        }
++        if (!empty($settings['effect'])) {
++          $attributes['data-effect'] = $settings['effect'];
++        }
++        if (!empty($settings['trigger_collapsed_label'])) {
++          $attributes['data-expanded-label'] = $settings['trigger_expanded_label'];
++          $attributes['data-collapsed-label'] = $settings['trigger_collapsed_label'];
++        }
++        if (empty($settings['css3'])) {
++          $attributes['data-js-duration'] = $settings['js_duration'];
++        }
++
++        $element[$delta] = array(
++          '#theme_wrappers' => array('container'),
++          '#expanding_formatter' => TRUE,
++          '#attributes' => $attributes,
++        );
++
++        $module_path = drupal_get_path('module', 'expanding_formatter');
++        $element[$delta]['#attached'] = array(
++          'css' => array($module_path . '/css/expanding_formatter.css'),
++          'js' => array($module_path . '/js/expanding_formatter.js'),
++        );
+ 
+-    // Create a link for the toggle.
+-    $trigger_classes = array();
+-    if (!empty($settings['trigger_classes'])) {
+-      $trigger_classes = array_unique(array_merge($trigger_classes, explode(' ', $settings['trigger_classes'])));
+-    }
+-    $trigger = array(
+-      '#theme_wrappers' => array('container'),
+-      '#attributes' => array(
+-        'class' => array(
+-          'expanding-formatter-trigger',
+-        ),
+-      ),
+-      'link' => array(
+-        '#theme' => 'link',
+-        '#text' => $settings['trigger_expanded_label'],
+-        '#path' => 'javascript:void(0)',
+-        '#options' => array(
+-          'external' => TRUE,
+-          'html' => FALSE,
+-          'attributes' => array(
+-            'class' => $trigger_classes,
+-          ),
+-        ),
+-      ),
+-    );
++        // Create a link for the toggle.
++        $trigger_classes = array();
++        if (!empty($settings['trigger_classes'])) {
++          $trigger_classes = array_unique(array_merge($trigger_classes, explode(' ', $settings['trigger_classes'])));
++        }
++        $trigger = array(
++          '#theme_wrappers' => array('container'),
++          '#attributes' => array(
++            'class' => array(
++              'expanding-formatter-trigger',
++            ),
++          ),
++          'link' => array(
++            '#theme' => 'link',
++            '#text' => $settings['trigger_expanded_label'],
++            '#path' => 'javascript:void(0)',
++            '#options' => array(
++              'external' => TRUE,
++              'html' => FALSE,
++              'attributes' => array(
++                'class' => $trigger_classes,
++              ),
++            ),
++          ),
++        );
+ 
+-    // Iterate through each item in the field, for unlimited values.
+-    $attributes = array();
+-    $attributes['class'] = array('expanding-formatter');
+-    if (!empty($settings['inline'])) {
+-      $attributes['data-inline'] = $settings['inline'];
+-    }
+-    if (!empty($settings['css3'])) {
+-      $attributes['data-css3'] = $settings['css3'];
+-    }
+-    if (!empty($settings['effect'])) {
+-      $attributes['data-effect'] = $settings['effect'];
+-    }
+-    if (!empty($settings['trigger_collapsed_label'])) {
+-      $attributes['data-expanded-label'] = $settings['trigger_expanded_label'];
+-      $attributes['data-collapsed-label'] = $settings['trigger_collapsed_label'];
+-    }
+-    if (empty($settings['css3'])) {
+-      $attributes['data-js-duration'] = $settings['js_duration'];
+-    }
+-    foreach ($items as $delta => $item) {
+-      $element[$delta] = array(
+-        '#theme_wrappers' => array('container'),
+-        '#expanding_formatter' => TRUE,
+-        '#attributes' => $attributes,
+-      );
+-      $original = _text_sanitize($instance, $langcode, $item, 'value');
+-      if ($display['type'] === 'expanding_formatter_text_summary_or_trimmed' && !empty($item['summary'])) {
+-        $element[$delta]['summary'] = array(
+-          '#theme_wrappers' => array('container'),
+-          '#attributes' => array(
+-            'class' => array('expanding-formatter-summary'),
+-          ),
+-          'value' => array(
+-            '#markup' => _text_sanitize($instance, $langcode, $item, 'summary'),
+-          ),
+-        );
+-      }
+-      else {
+         $element[$delta]['summary'] = array(
+           '#theme_wrappers' => array('container'),
+           '#attributes' => array(
+             'class' => array('expanding-formatter-summary'),
+           ),
+           'value' => array(
+-            '#markup' => expanding_formatter_text_summary($original, $instance['settings']['text_processing'] ? $item['format'] : NULL, $settings['trim_length']),
++            '#markup' => $summary,
+           ),
+         );
+-      }
+-      if ($instance['settings']['text_processing']) {
+-        $filters = filter_list_format($item['format']);
+-      }
+-      // Strip tags if HTML corrector filter is used.
+-      if (!empty($filters['filter_htmlcorrector']->status)) {
+-        $content = str_replace(strip_tags($element[$delta]['summary']['value']['#markup']), '', $original);
+-      }
+-      else {
+-        $content = str_replace($element[$delta]['summary']['value']['#markup'], '', $original);
+-      }
+-      // Render expandable content.
+-      if (!empty($content)) {
++        // If ellipsis is set.
+         if ($settings['trim_ellipsis']) {
+           $element[$delta]['ellipsis'] = array(
+             '#theme' => 'expanding_formatter_ellipsis',
+@@ -343,15 +348,14 @@
+             'class' => array('expanding-formatter-content'),
+           ),
+           'value' => array(
+-            '#markup' => $content,
++            '#markup' => $original,
+           ),
+         );
+         $element[$delta]['trigger'] = $trigger;
+       }
+-      // Content is short enough, render entire original output.
+       else {
+         $element[$delta] = array(
+-          '#markup' => $original,
++          '#markup' => _text_sanitize($instance, $langcode, $item, 'value'),
+         );
+       }
+     }
+@@ -484,10 +488,5 @@
+     }
+   }
+ 
+-  // If the htmlcorrector filter is present, apply it to the generated summary.
+-  if (!empty($filters['filter_htmlcorrector']->status)) {
+-    $summary = _filter_htmlcorrector($summary);
+-  }
+-
+   return $summary;
+ }

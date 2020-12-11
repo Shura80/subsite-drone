@@ -1,0 +1,144 @@
+<?php
+
+/**
+ * @file
+ * Installs the ENRD projects taxonomy terms.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_projects_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Projects feature is now enabled on your site.'));
+};
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_projects_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Projects feature is now disabled on your site.'));
+}
+
+/**
+ * Implements hook_install().
+ */
+function enrd_projects_install() {
+  $t = get_t();
+
+  // Includes the terms definitions.
+  module_load_include('php', 'enrd_projects', 'data/enrd_projects_taxonomies');
+
+  // Revert taxonomies and other components after terms import.
+  features_revert_module('enrd_projects');
+
+  // Import Project keywords terms.
+  _enrd_projects_save_taxo(_enrd_project_keywords(),
+    taxonomy_vocabulary_machine_name_load('project_key_words'));
+
+  // Import Measures terms.
+  _enrd_projects_save_taxo(_enrd_project_measures(),
+    taxonomy_vocabulary_machine_name_load('measures'));
+
+  // Import Focus Areas terms.
+  _enrd_projects_save_taxo(_enrd_project_focus_areas(),
+    taxonomy_vocabulary_machine_name_load('focus_areas'));
+
+  // Import MFF Programmes terms.
+  _enrd_projects_save_taxo(_enrd_projects_mff_programmes(),
+    taxonomy_vocabulary_machine_name_load('programme_name'));
+
+  // Import Budget broad areas terms.
+  _enrd_projects_save_taxo(_enrd_projects_broad_areas(),
+    taxonomy_vocabulary_machine_name_load('budget_broad_areas'));
+
+  // Import The EC’s 10 priorities terms.
+  _enrd_projects_save_taxo(_enrd_projects_ec_priorities(),
+    taxonomy_vocabulary_machine_name_load('ec_priorities'));
+
+  // Import EU Budget MFF terms.
+  _enrd_projects_save_taxo(_enrd_projects_eu_budget_mff_headings(),
+    taxonomy_vocabulary_machine_name_load('eu_budget_mff_headings'));
+
+  drupal_set_message($t('ENRD Projects feature is now installed on your site.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function enrd_projects_uninstall() {
+  $t = get_t();
+
+  // Deletes the taxonomy term.
+  $vocabularies = array(
+    'budget_broad_areas',
+    'ec_priorities',
+    'programme_name',
+    'eu_budget_mff_headings',
+    'project_key_words',
+    'measures',
+    'focus_areas',
+  );
+
+  foreach ($vocabularies as $machine_name) {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+    if ($vocabulary) {
+      $vid = $vocabulary->vid;
+      taxonomy_vocabulary_delete($vid);
+    }
+  }
+
+  node_type_delete('project');
+
+  drupal_set_message($t('ENRD Projects feature is now uninstalled from your site.'));
+}
+
+/**
+ * Delete fields "field_enrd_prj_duration" and "field_enrd_prj_headline".
+ */
+function enrd_projects_update_7201() {
+  // Remove fields of Project content type with an old configuration.
+  $field_instance = field_info_instances('node', 'project');
+
+  if (isset($field_instance['field_enrd_prj_duration'])) {
+    $field_enrd_prj_duration = $field_instance['field_enrd_prj_duration'];
+    field_delete_instance($field_enrd_prj_duration, TRUE);
+  }
+
+  if (isset($field_instance['field_enrd_prj_headline'])) {
+    $field_enrd_prj_headline = $field_instance['field_enrd_prj_headline'];
+    field_delete_instance($field_enrd_prj_headline, TRUE);
+  }
+}
+
+/**
+ * Update field "field_data_field_enrd_prj_funding".
+ */
+function enrd_projects_update_7202() {
+  // Update field "Funding" applied to nodes without text format setting.
+  db_update('field_data_field_enrd_prj_funding')
+    ->fields(array('field_enrd_prj_funding_format' => 'plain_text'))
+    ->condition('bundle', 'project')
+    ->condition('field_enrd_prj_funding_format', NULL, 'IS NULL')
+    ->execute();
+
+  // Update "Funding" revision table.
+  db_update('field_revision_field_enrd_prj_funding')
+    ->fields(array('field_enrd_prj_funding_format' => 'plain_text'))
+    ->condition('bundle', 'project')
+    ->condition('field_enrd_prj_funding_format', NULL, 'IS NULL')
+    ->execute();
+}
+
+/**
+ * ENRDPORTAL-295.
+ */
+function enrd_projects_update_7203() {
+  features_revert(array(
+    'enrd_projects' => array(
+      'user_permission',
+      'views_view',
+    ),
+  ));
+}

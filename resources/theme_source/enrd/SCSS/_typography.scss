@@ -1,0 +1,144 @@
+@font-face {
+  font-family: 'ECSquareSansPro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('ECSquareSansPro'), local('ECSquareSansPro'), url(../fonts/ECSquareSansPro/ECSquareSansPro-Regular.woff) format('woff');
+
+}
+
+#main, #top-page + .container, #layout-header{
+	font-family:'Open Sans', Arial, sans-serif;
+}
+
+.region-content{
+    font-size: 14px;
+    line-height: 25px;
+}
+
+a{color: $lblue;}
+
+a:hover, a:focus{color: $dblue;}
+
+/* titles */
+h1,h2,h3{
+	color:#555;
+	font-weight:bold;
+	margin:30px 0 15px;
+}
+
+h1{font-size:24px;}
+
+h2{font-size:18px;}
+
+h3{font-size:16px;}
+
+h4,h5,h6{color:$lblack;font-weight:bold;font-size:14px; line-height: 20px;}
+
+a h1, a h2, a h3{color:$lblue;}
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {color:$lblue;}
+
+/* SHS hide list style */
+li[class*="taxonomy-term-reference-"] {
+	list-style-type: none;
+}
+
+/* Lists in region-content or custom list for ENRD */
+
+.region-content .content,
+.region-content-right .content,
+.enrd-list {
+
+	ul {
+		li {
+			display:block;
+			&:before{
+				content: "\e080";
+				font-size:12px;
+				font-style:normal;
+				margin-top:7px;
+				font-family: 'Glyphicons Halflings';
+				line-height: 1;
+				-webkit-font-smoothing: antialiased;
+				color:$lblue;
+				position:relative;
+				left:-5px;
+			}
+
+          > a {
+            display: inline;
+          }
+		}
+
+		// Exclude specific cases.
+		&.pager > li,
+		&.media-list > li,
+		&.vertical-tabs-list > li,
+		&.links.inline li,
+		&.contextual-links li,
+		&.vertical-tabs-list li {
+
+			display:inline-block;
+			font-style:normal;
+			margin-left:0;
+
+			&:before{content:'';}
+
+		}
+
+		&.links li {
+			padding-left:0px;
+			margin:0px;
+			ul.shs-hierarchy li:before, &:before {
+				content:'';
+			}
+		}
+
+		&.vertical-tabs-list > li,
+		&.vertical-tabs-list > li a {
+			display:block;
+		}
+	}
+
+	// Exclude specific cases.
+	section#block-menu-menu-enrd-nrn-static-pages,
+	div.field-name-field-enrd-rdp-info-country,
+	div#autocomplete,
+	div.chosen-container,
+	div.dropdown,
+	div.social-links {
+		ul {
+			li:before {
+				content: '';
+			}
+		}
+	}
+
+	ol{
+		counter-reset: item;
+		padding:0;
+
+		li{
+			margin-left:35px;
+
+			&::marker {
+				font-weight: bold;
+				color:$lblue;
+			}
+
+			&>*{
+				color: $lblack;
+			}
+
+		}
+	}
+
+}
+
+// Set the margin between inline labels and fields in front-end.
+.field-label-inline .field-label, .field-label-inline .field-items {
+	margin-right: 5px;
+}
+
+
+@import "enrd-icons/enrd-icons.scss";

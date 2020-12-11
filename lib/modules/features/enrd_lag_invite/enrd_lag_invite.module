@@ -1,0 +1,768 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD LAG Invite feature.
+ */
+
+include_once 'enrd_lag_invite.features.inc';
+
+define('ENRD_LAG_INVITE_SEND_INVITATION_ON_LAG_CREATE_DEFAULT', FALSE);
+
+define('ENRD_LAG_INVITE_MAIL_SUBJECT', 'Join the ENRD LAG Database and connect with Local Action Groups');
+define('ENRD_LAG_INVITE_MAIL_BODY', <<<TEXT
+Dear [invite:field-lag-invitation-name],
+
+The ENRD Contact Point team is happy to invite you to join the LAG database as [invite:field-lag-invitation-role] of [invite:lag-name].
+
+The ENRD LAG database will allow you to network and cooperate with thousands of Local Action Groups from across Europe. Browse through the LAG database here: [site:base-url]/leader-clld/lag-database_en
+
+Your LAG already has its own web profile page [invite:og-lag-group-ref:url], which contains your LAG's contact information. You can update this profile to include more information on your LAG and your interests in future cooperation activities.
+
+You can also create cooperation offers for your LAG and find project partners throughout Europe. Search for existing cooperation offers here: [site:base-url]/leader-clld/clld-partner-search_en.
+
+To accept this invitation, please click on this one-time use link, valid for 30 days:
+[invite:eu-login-invite-accept-link]
+
+After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your LAG profile where you can update it and create cooperation offers. Find out how to do all this here: [site:base-url]/leader-clld/lag-database/guide-lags_en
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
+Best Regards,
+
+The ENRD Contact Point team
+TEXT
+);
+
+define('ENRD_LAG_INVITE_MAIL_RENEW_SUBJECT', 'Reminder: Join the ENRD LAG database and connect with Local Action Groups');
+define('ENRD_LAG_INVITE_MAIL_RENEW_BODY', <<<TEXT
+Dear [invite:field-lag-invitation-name],
+
+The ENRD Contact Point team is happy to invite you to join the LAG database as [invite:field-lag-invitation-role] of [invite:lag-name].
+
+The ENRD LAG database will allow you to network and cooperate with thousands of Local Action Groups from across Europe.
+
+Your LAG already has its own web profile page, which contains your LAG's contact information. You can update this profile to include more information on your LAG and your interests in future cooperation activities.
+
+You can also create cooperation offers for your LAG and find project partners throughout Europe. 
+
+To accept this invitation, please click on this one-time use link, valid for 30 days:
+[invite:eu-login-invite-accept-link]
+
+After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your LAG profile where you can update it and create cooperation offers.
+
+Find out how to do all this here: [site:base-url]/leader-clld/lag-database/guide-lags_en
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
+Best Regards,
+The ENRD Contact Point team
+TEXT
+);
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_lag_invite_menu() {
+  $items['lag-dashboard/users/invite'] = array(
+    'title' => 'Invite/add a user',
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'invite_add',
+    'page arguments' => array('enrd_lag_invite'),
+    'access callback' => '_enrd_lag_dashboard_check_esi_fund_perm',
+    'access arguments' => array(
+      'create lag invite',
+      'create lag invite',
+      '',
+    ),
+    'file' => 'includes/invite.admin.inc',
+    'file path' => drupal_get_path('module', 'invite'),
+  );
+
+  $items['my-lags/%/manage/contacts/add']
+    = $items['my-lags/%/manage/contacts/pending-invites/invite'] = array(
+      'title' => 'Invite/add a user',
+      'type' => MENU_LOCAL_ACTION,
+      'page callback' => 'invite_add',
+      'page arguments' => array('enrd_lag_invite'),
+      'access callback' => '_enrd_lag_dashboard_check_access',
+      'access arguments' => array(
+        1,
+        'create lag invite',
+        'create lag invite',
+      ),
+      'file' => 'includes/invite.admin.inc',
+      'file path' => drupal_get_path('module', 'invite'),
+    );
+
+  $items['admin/config/lag-database/invite'] = array(
+    'title' => 'LAG Database invites email',
+    'description' => 'Modify invitation by mail settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('enrd_lag_invite_settings_form'),
+    'access arguments' => array('administer lag invites'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+    'file' => 'enrd_lag_invite.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_lag_invite_menu_alter(&$items) {
+  $default_callbacks = array(
+    'user/%/invites',
+    'user/%/invites/accepted',
+    'user/%/invites/pending',
+    'user/%/invites/expired',
+  );
+
+  // Disable the standard user's invite views.
+  foreach ($default_callbacks as $path) {
+    if (isset($items[$path])) {
+      $items[$path]['access callback'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_lag_invite_module_implements_alter(&$implementations, $hook) {
+  // Make some hook implementations
+  // are called after all other modules.
+  switch ($hook) {
+    case 'menu_alter':
+    case 'node_insert':
+    case 'node_update':
+      $temp = $implementations['enrd_lag_invite'];
+      unset($implementations['enrd_lag_invite']);
+      $implementations['enrd_lag_invite'] = $temp;
+      break;
+  }
+
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_lag_invite_permission() {
+  return array(
+    'administer lag invites' => array(
+      'title' => t('Administer LAG invites'),
+      'description' => t('Allow users with this permission to access LAG Dashboards.'),
+    ),
+    'create lag invite' => array(
+      'title' => t('create lag invite'),
+      'description' => t('Allow users with this permission to access LAG Dashboards.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_og_permission().
+ */
+function enrd_lag_invite_og_permission() {
+  $perms = array();
+
+  $perms['create lag invite'] = array(
+    'title' => t('create lag invite (OG)'),
+    'description' => t('Allow users to invite user to a LAG.'),
+    'roles' => array(OG_AUTHENTICATED_ROLE),
+    'default role' => array(),
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements hook_field_access().
+ */
+function enrd_lag_invite_field_access($op, $field, $entity_type, $entity, $account) {
+  if ($field['field_name'] == 'field_enrd_lag_invitation_resend' && $op == 'edit') {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function enrd_lag_invite_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  if ($type == 'invite' && !empty($data['invite'])) {
+    foreach ($tokens as $name => $original) {
+      if ($name == 'lag-name') {
+        try {
+          $entity = entity_metadata_wrapper('invite', $data['invite']);
+          $lag_node = $entity->og_lag_group_ref->value();
+          $replacements[$original] = check_plain($lag_node->title);
+        }
+        catch (Exception $e) {
+        }
+      }
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function enrd_lag_invite_form_lag_node_form_alter(&$form, &$form_state, $form_id) {
+  $form['field_enrd_lag_manager_email']['invite'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send an invitation to the user'),
+    '#default_value' => !isset($form['#node']->nid),
+  );
+}
+
+/**
+ * Implements hook_node_submit().
+ */
+function enrd_lag_invite_node_submit($node, $form, &$form_state) {
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    $node->invite_lag_manager = (bool) $form_state['values']['field_enrd_lag_manager_email']['invite'];
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function enrd_lag_invite_node_update($node) {
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    if (isset($node->invite_lag_manager) && $node->invite_lag_manager == TRUE) {
+      $email = $node->field_enrd_lag_manager_email[LANGUAGE_NONE][0]['email'];
+      $name = $node->field_enrd_lag_manager_name[LANGUAGE_NONE][0]['value'];
+
+      enrd_lag_invite_invite_by_mail($node, $email, $name, ENRD_LAG_DATABASE_USER_MANAGER_ROLE);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function enrd_lag_invite_node_delete($node) {
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'invite')
+      ->entityCondition('bundle', 'enrd_lag_invite')
+      ->propertyCondition('status', INVITE_VALID)
+      ->fieldCondition('og_lag_group_ref', 'target_id', $node->nid)
+      ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+    $result = $query->execute();
+
+    // Withdrawn all valid invites.
+    if (!empty($result['invite'])) {
+      db_update('invite')
+        ->fields(array(
+          'canceled' => 1,
+          'status' => INVITE_WITHDRAWN,
+        ))
+        ->condition('iid', array_keys($result['invite']), 'IN')
+        ->condition('status', INVITE_VALID, '=')
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function enrd_lag_invite_node_insert($node) {
+  if ($node->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE) {
+    if (isset($node->invite_lag_manager) ? $node->invite_lag_manager : variable_get('enrd_lag_invite_send_invitation_on_lag_create', ENRD_LAG_INVITE_SEND_INVITATION_ON_LAG_CREATE_DEFAULT)) {
+      $email = isset($node->field_enrd_lag_manager_email[LANGUAGE_NONE][0]['email']) ? $node->field_enrd_lag_manager_email[LANGUAGE_NONE][0]['email'] : '';
+      $name = isset($node->field_enrd_lag_manager_name[LANGUAGE_NONE][0]['value']) ? $node->field_enrd_lag_manager_name[LANGUAGE_NONE][0]['value'] : '';
+
+      enrd_lag_invite_invite_by_mail($node, $email, $name, ENRD_LAG_DATABASE_USER_MANAGER_ROLE);
+    }
+  }
+}
+
+/**
+ * Invite or register a user in a LAG.
+ *
+ * @param mixed $lag_node
+ *   The node of the LAG.
+ * @param string $email
+ *   Invitee email.
+ * @param string $name
+ *   Invitee full name.
+ * @param string $og_role
+ *   OG role to assign.
+ *
+ * @return bool
+ *   Return TRUE if user has been activated.
+ */
+function enrd_lag_invite_invite_by_mail($lag_node, $email, $name, $og_role = ENRD_LAG_DATABASE_USER_CONTACT_ROLE) {
+
+  if (!isset($lag_node->nid)) {
+    watchdog('enrd_lag_invite', 'Invalid LAG invitation to to "%user" (%mail).', array(
+      '%mail' => $email,
+      '%user' => $name,
+    ), WATCHDOG_NOTICE);
+    return FALSE;
+  }
+
+  $email = trim($email);
+  if (valid_email_address($email) === FALSE) {
+    try {
+      $lag_wrapper = entity_metadata_wrapper('node', $lag_node);
+      $lag_code = $lag_wrapper->field_enrd_lag_code->value();
+    }
+    catch (Exception $exception) {
+      $lag_code = '';
+    }
+
+    watchdog('enrd_lag_invite', 'Invalid email invitation "%mail" to "%user" for LAG "%code".', array(
+      '%mail' => $email,
+      '%user' => $name,
+      '%code' => $lag_code,
+    ), WATCHDOG_NOTICE, l(t('LAG profile'), 'node/' . $lag_node->nid, array('alias' => TRUE)));
+    return FALSE;
+  }
+
+  if ($user_loaded = user_load_by_mail($email)) {
+    // Check if user is blocked.
+    if (user_is_blocked($user_loaded->name) !== FALSE) {
+      // Check if current user can activate.
+      if (user_access('activate enrd users')) {
+        // Activate user.
+        user_user_operations_unblock([$user_loaded->uid]);
+      }
+      else {
+        // Get "Contact Webmaster" path based on current user.
+        $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_node->nid);
+
+        drupal_set_message(t('User !name (@username) is blocked and could not be added. Please !contactform to request activation.', [
+          '!name' => theme('username', array(
+            'account' => $user_loaded,
+            'nolink' => TRUE,
+          )),
+          '@username' => $user_loaded->name,
+          '!contactform' => l(t('contact the LAG webmaster'), $path),
+        ]), 'error');
+      }
+    }
+
+    // Perform actions on active user.
+    if (user_is_blocked($user_loaded->name) === FALSE) {
+      // Add the user to the group.
+      og_group('node', $lag_node->nid, [
+        'entity type' => 'user',
+        'entity' => $user_loaded,
+        'membership type' => OG_MEMBERSHIP_TYPE_DEFAULT,
+      ]);
+
+      // Assign the role.
+      if ($role = multisite_config_service('og')->getOgRole('node', $lag_node->type, $og_role)) {
+        og_role_grant('node', $lag_node->nid, $user_loaded->uid, $role->rid);
+      }
+
+      return TRUE;
+    }
+  }
+  else {
+
+    // Check if there is an old invite.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'invite')
+      ->entityCondition('bundle', 'enrd_lag_invite')
+      ->fieldCondition('field_lag_invitation_email', 'email', $email, '=')
+      ->fieldCondition('field_lag_invitation_role', 'value', $og_role)
+      ->fieldCondition('og_lag_group_ref', 'target_id', $lag_node->nid)
+      ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+    $result = $query->execute();
+
+    if (isset($result['invite']) && ($invite = invite_load(key($result['invite'])))) {
+      // Extend the invite and resend the mail.
+      if (invite_validate($invite) != INVITE_USED) {
+        enrd_lag_invite_action_renew_invite($invite);
+      }
+    }
+    else {
+      // Create a new invite.
+      $invite = entity_create('invite', array('type' => 'enrd_lag_invite'));
+      $entity = entity_metadata_wrapper('invite', $invite);
+      $entity->expiry->set(REQUEST_TIME + (variable_get('invite_default_expiry_time', 30) * 60 * 60 * 24));
+      $entity->og_lag_group_ref->set($lag_node->nid);
+      $entity->field_lag_invitation_email->set($email);
+      $entity->field_lag_invitation_name->set($name);
+      $entity->field_lag_invitation_role->set($og_role);
+      $entity->save();
+    }
+
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function enrd_lag_invite_action_info() {
+  return array(
+    'enrd_lag_invite_action_invite_lag_manager' => array(
+      'type' => 'node',
+      'label' => t('Resend an invite to LAG Manager'),
+      'behavior' => array('creates_property'),
+      'configurable' => FALSE,
+      'vbo_configurable' => FALSE,
+      'triggers' => array('any'),
+      'permissions' => array('administer lag invites'),
+    ),
+    'enrd_lag_invite_action_renew_invite' => array(
+      'type' => 'invite',
+      'label' => t('Renew invite'),
+      'configurable' => FALSE,
+      'vbo_configurable' => FALSE,
+      'triggers' => array('any'),
+      'permissions' => array('administer lag invites'),
+    ),
+  );
+}
+
+/**
+ * VBO Action: invite a LAG Manager from a the LAG profile information.
+ *
+ * @param object $node
+ *   The LAG node object.
+ * @param mixed $context
+ *   Array with components.
+ *
+ * @ingroup actions
+ */
+function enrd_lag_invite_action_invite_lag_manager(&$node, $context) {
+  $email = (isset($node->field_enrd_lag_manager_email[LANGUAGE_NONE][0]['email'])) ? $node->field_enrd_lag_manager_email[LANGUAGE_NONE][0]['email'] : '';
+  $name = (isset($node->field_enrd_lag_manager_name[LANGUAGE_NONE][0]['value'])) ? $node->field_enrd_lag_manager_name[LANGUAGE_NONE][0]['value'] : '';
+
+  if (valid_email_address($email)) {
+    enrd_lag_invite_invite_by_mail($node, $email, $name, ENRD_LAG_DATABASE_USER_MANAGER_ROLE);
+  }
+  else {
+    drupal_set_message(t('Invalid email "%mail". Cannot send invitation to "%user" for the LAG !lag.', array(
+      '%mail' => $email,
+      '%user' => $name,
+      '!lag' => l($node->title, 'node/' . $node->nid, array('alias' => TRUE)),
+    )), 'warning');
+  }
+}
+
+/**
+ * VBO Action: renew an invite.
+ *
+ * @param object $invite
+ *   The LAG node object.
+ * @param mixed $context
+ *   Array with components.
+ *
+ * @ingroup actions
+ */
+function enrd_lag_invite_action_renew_invite(&$invite, $context) {
+
+  $invite->status = INVITE_VALID;
+  $invite->expiry = REQUEST_TIME + (variable_get('invite_default_expiry_time', 30) * 60 * 60 * 24);
+  $invite->field_enrd_lag_invitation_resend[LANGUAGE_NONE][]['value'] = REQUEST_TIME;
+  invite_save($invite);
+
+  $invite->sendInvite();
+}
+
+/**
+ * Implements hook_invite_accept().
+ */
+function enrd_lag_invite_invite_accept($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_lag_invite'])) {
+    $invitee = user_load($invite->invitee);
+
+    $entity = entity_metadata_wrapper('invite', $invite);
+    $lag_node = $entity->og_lag_group_ref->value();
+    $og_role = $entity->field_lag_invitation_role->value();
+
+    enrd_lag_invite_invite_by_mail($lag_node, $invitee->mail, $invitee->realname, $og_role);
+    _enrd_lag_dashboard_check_redirect_domains($invitee);
+  }
+}
+
+/**
+ * Invite Sending Controller.
+ *
+ * @return array
+ *   Return array with label.
+ */
+function enrd_lag_invite_invite_sending_controller() {
+  return array(
+    'label' => t('ENRD LAG Invite'),
+  );
+}
+
+/**
+ * Invite Send.
+ *
+ * @param object $invite
+ *   Invite.
+ */
+function enrd_lag_invite_invite_send($invite) {
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_lag_invite'])) {
+    enrd_lag_invite_send_invitation($invite);
+  }
+}
+
+/**
+ * Implements sending_controller_send_invitation function.
+ *
+ * The invitation email is sent to the invitee.
+ *
+ * @param object $invite
+ *   Invite object.
+ *
+ * @return bool
+ *   TRUE, if sending was successful; FALSE otherwise.
+ */
+function enrd_lag_invite_send_invitation($invite) {
+  global $language;
+
+  $entity = entity_metadata_wrapper('invite', $invite);
+  $params = array('invite' => $invite->iid);
+
+  // Send e-mail.
+  $result = drupal_mail('enrd_lag_invite', 'invite', $entity->field_lag_invitation_email->value(), $language, $params);
+  return $result['result'];
+}
+
+/**
+ * Implements hook_mail().
+ */
+function enrd_lag_invite_mail($key, &$message, $params) {
+  $invite = invite_load($params['invite'], TRUE);
+
+  $is_renew = !empty($invite->field_enrd_lag_invitation_resend[LANGUAGE_NONE]);
+
+  // Use different mail templates for first invite and renew invite.
+  if ($is_renew) {
+    $subject_template = variable_get('enrd_lag_invite_mail_renew_subject', ENRD_LAG_INVITE_MAIL_RENEW_SUBJECT);
+    $body_template = variable_get('enrd_lag_invite_mail_renew_body', ENRD_LAG_INVITE_MAIL_RENEW_BODY);
+  }
+  else {
+    $subject_template = variable_get('enrd_lag_invite_mail_subject', ENRD_LAG_INVITE_MAIL_SUBJECT);
+    $body_template = variable_get('enrd_lag_invite_mail_body', ENRD_LAG_INVITE_MAIL_BODY);
+  }
+
+  $subject = token_replace($subject_template, array('invite' => $invite));
+  $message['subject'] = str_replace(array("\r", "\n"), '', trim($subject));
+
+  $email_body = token_replace($body_template, array('invite' => $invite));
+  $message['body'][] = $email_body;
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ */
+function enrd_lag_invite_form_invite_form_alter(&$form, &$form_state, $form_id) {
+
+  $invite = $form['#entity'];
+
+  $search_description = t('Search for an existing ENRD website user by full name, email or username.');
+  $admin_msg = $search_description . ' ' . t('Note: adding a blocked user implicates its activation.');
+
+  // Get "Contact Webmaster" path based on current user.
+  $lag_id = isset($form['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']['#value']) ? $form['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']['#value'] : NULL;
+  $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_id);
+  $lag_user_msg = $search_description . ' ' . t('Note: blocked users cannot be added. Please !contactform to request activation.', [
+    '!contactform' => l(t('contact the LAG webmaster'), $path),
+  ]);
+
+  if (!empty($invite->type_details()->invite_sending_controller['enrd_lag_invite'])) {
+
+    $form['use_invite'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('The user does not have an account yet.'),
+    );
+
+    $form['username'] = array(
+      '#type' => 'textfield',
+      '#title' => t('User'),
+      '#description' => user_access('activate enrd users') ? $admin_msg : $lag_user_msg,
+      '#maxlength' => 60,
+      '#autocomplete_path' => 'enrd/user/autocomplete/all',
+      '#required' => TRUE,
+    );
+
+    $form['actions']['add'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add user'),
+      '#submit' => array('enrd_lag_invite_form_invite_add_user_submit'),
+    );
+    $form['actions']['submit']['#value'] = t('Send Invitation');
+
+    $status = array(':input[name=use_invite]' => array('checked' => FALSE));
+    $form['username']['#states']['required'] = $status;
+    $form['username']['#states']['visible'] = $status;
+    $form['actions']['add']['#states']['visible'] = $status;
+
+    $status = array(':input[name=use_invite]' => array('checked' => TRUE));
+    $form['field_lag_invitation_email']['#states']['required'] = $status;
+    $form['field_lag_invitation_email']['#states']['visible'] = $status;
+    $form['field_lag_invitation_name']['#states']['required'] = $status;
+    $form['field_lag_invitation_name']['#states']['visible'] = $status;
+    $form['username']['#states']['disabled'] = $status;
+    $form['actions']['submit']['#states']['visible'] = $status;
+
+    $form['actions']['submit']['#submit'][] = 'enrd_lag_invite_form_invite_submit';
+
+    $form['#validate'][] = 'enrd_lag_invite_form_invite_form_validate';
+    $form['#after_build'][] = 'enrd_lag_invite_form_invite_add_user_after_build';
+  }
+}
+
+/**
+ * After Build function to manage selection invite/add action.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @return array
+ *   The modified form array
+ *
+ * @see enrd_lag_invite_form_invite_form_alter()
+ */
+function enrd_lag_invite_form_invite_add_user_after_build($form, &$form_state) {
+  $use_invite = (isset($form_state['values']['use_invite'])) ? $form_state['values']['use_invite'] : FALSE;
+
+  $form['field_lag_invitation_email'][LANGUAGE_NONE][0]['email']['#required'] = $use_invite;
+  $form['field_lag_invitation_name'][LANGUAGE_NONE][0]['value']['#required'] = $use_invite;
+  $form['username']['#required'] = !$use_invite;
+
+  return $form;
+}
+
+/**
+ * Custom submit function for the add action button.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @see enrd_lag_invite_form_invite_form_alter();
+ */
+function enrd_lag_invite_form_invite_add_user_submit($form, &$form_state) {
+
+  $user_invitee = user_load_by_name($form_state['values']['username']);
+  $lag_node = node_load($form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']);
+  $role = $form_state['values']['field_lag_invitation_role'][LANGUAGE_NONE][0]['value'];
+
+  $user_added = enrd_lag_invite_invite_by_mail($lag_node, $user_invitee->mail, $user_invitee->realname, $role);
+
+  if ($user_added) {
+    drupal_set_message(t('User !name is now member of %lag as !role. A notification email was sent to the user.', array(
+      '!name' => theme('username', array(
+        'account' => $user_invitee,
+        'nolink' => TRUE,
+      )),
+      '%lag' => $lag_node->title,
+      '!role' => $role,
+    )));
+  }
+
+  unset($form_state['redirect']);
+}
+
+/**
+ * Submit function attached to the default invite entity form submit.
+ *
+ * @param mixed $form
+ *   Drupal form array.
+ * @param mixed $form_state
+ *   Drupal form state array.
+ *
+ * @see enrd_lag_invite_form_invite_form_alter();
+ */
+function enrd_lag_invite_form_invite_submit($form, &$form_state) {
+  unset($form_state['redirect']);
+}
+
+/**
+ * Form validate.
+ */
+function enrd_lag_invite_form_invite_form_validate($form, &$form_state) {
+  if ($form_state['triggering_element']['#value'] == 'Delete') {
+    return FALSE;
+  }
+
+  // Direct OG subscription.
+  if ($form_state['values']['use_invite'] == 0) {
+    if (!empty($form_state['values']['username'])) {
+      $user_loaded = user_load_by_name($form_state['values']['username']);
+
+      if ($user_loaded === FALSE) {
+        form_set_error('username', t('%user is not a valid ENRD website user.', array('%user' => $form_state['values']['username'])));
+      }
+
+      // Check if user is blocked.
+      $user_is_blocked = !empty($user_loaded->name) && user_is_blocked($user_loaded->name);
+      if ($user_is_blocked && !user_access('activate enrd users')) {
+
+        // Get "Contact Webmaster" path based on current user.
+        $lag_nid = isset($form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id']) ? $form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id'] : NULL;
+        $path = _enrd_lag_dashboard_get_contact_webmaster_form_path($lag_nid);
+
+        form_set_error('username', t('User !name (@username) is blocked. Please !contactform to request activation.', [
+          '!name' => theme('username', array(
+            'account' => $user_loaded,
+            'nolink' => TRUE,
+
+          )),
+          '@username' => $user_loaded->name,
+          '!contactform' => l(t('contact the LAG webmaster'), $path),
+        ]));
+      }
+    }
+  }
+  // Invite method.
+  else {
+    $mail_address = $form_state['values']['field_lag_invitation_email'][LANGUAGE_NONE][0]['email'];
+    $lag_nid = $form_state['values']['og_lag_group_ref'][LANGUAGE_NONE][0]['target_id'];
+    $og_role = $form_state['values']['field_lag_invitation_role'][LANGUAGE_NONE][0]['value'];
+
+    if (!empty($mail_address)) {
+      // Validate is email address valid.
+      if (!valid_email_address($mail_address)) {
+        form_set_error('field_lag_invitation_email', t('Email address %email is not valid.', array('%email' => $mail_address)));
+      }
+
+      $user = user_load_by_mail($mail_address);
+
+      if (!empty($user)) {
+        form_set_error('field_lag_invitation_email', t('User already has an account, try to add it directly without sending an invite.'));
+      }
+
+      // Check if there is an old invite.
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'invite')
+        ->entityCondition('bundle', 'enrd_lag_invite')
+        ->propertyCondition('status', INVITE_VALID)
+        ->fieldCondition('field_lag_invitation_email', 'email', $mail_address, '=')
+        ->fieldCondition('field_lag_invitation_role', 'value', $og_role)
+        ->fieldCondition('og_lag_group_ref', 'target_id', $lag_nid)
+        ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+      $result = $query->execute();
+
+      if (isset($result['invite']) && ($invite = invite_load(key($result['invite']))) && invite_validate($invite)) {
+        form_set_error('field_lag_invitation_email', t('User has already been invited. Wait for invitation acceptance.'));
+      }
+    }
+
+  }
+
+}

@@ -1,0 +1,420 @@
+<?php
+
+/**
+ * @file
+ * Module file for the enrd_evf module, which creates field type.
+ */
+
+include_once 'includes/enrd_evf.field.inc';
+include_once 'includes/enrd_evf.widget.inc';
+include_once 'includes/enrd_evf.formatter.inc';
+
+define('ENRD_EVF_MANAGEMENT_TABLE_NAME', 'enrd_evf_managed');
+define('ENRD_EVF_CONFIRM_PAGE_CALLBACK', 'confirm-email/');
+define('ENRD_EVF_STATUS_TO_CONFIRM', 0);
+define('ENRD_EVF_STATUS_CONFIRMED', 1);
+define('ENRD_EVF_STATUS_CONFIRM_BYPASS', 2);
+
+/**
+ * Implements hook_cron().
+ */
+function enrd_evf_cron() {
+  _enrd_evf_clean_expired_token();
+}
+
+/**
+ * Implements hook_permission().
+ */
+function enrd_evf_permission() {
+  return array(
+    'bypass email validation' => array(
+      'title' => t('Bypass email validation'),
+      'description' => t('Bypass email validation'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_evf_menu() {
+  $items = array();
+
+  $items[ENRD_EVF_CONFIRM_PAGE_CALLBACK . '%'] = array(
+    'title' => 'Email address validation',
+    'description' => 'Page to confirm the token received by e-mail',
+    // Any user has access to the email validation callback.
+    'access callback' => TRUE,
+    'page callback' => 'enrd_evf_confirm_callback',
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Callback to confirm the e-amil address through token.
+ *
+ * @param string $token
+ *   The token string.
+ *
+ * @return string
+ *   The content page.
+ */
+function enrd_evf_confirm_callback($token = '') {
+  if (empty($token)) {
+    drupal_access_denied();
+  }
+
+  $message = '';
+  $element = _enrd_evf_get_element_from_token($token);
+
+  // Validate token.
+  if (!empty($element) && _enrd_evf_token_time_validation($element)) {
+    _enrd_evf_email_confirm($element['item']);
+    drupal_goto('<front>');
+  }
+  else {
+    $message = t('The token is no longer valid.');
+  }
+
+  return $message;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function enrd_evf_token_info() {
+  $info = array();
+
+  $info['types']['enrd_evf'] = array(
+    'name' => t('ERND email verify field'),
+    'description' => t('Tokens related to the "ERND email verify field" module.'),
+  );
+
+  $info['tokens']['enrd_evf']['email'] = array(
+    'type' => 'text',
+    'name' => t('Email'),
+    'description' => t('The email address'),
+  );
+
+  $info['tokens']['enrd_evf']['token'] = array(
+    'type' => 'text',
+    'name' => t('Token'),
+    'description' => t('The token generated.'),
+  );
+
+  $info['tokens']['enrd_evf']['token_url'] = array(
+    'type' => 'text',
+    'name' => t('URL token'),
+    'description' => t('The absolute link with the token generated'),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function enrd_evf_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $return = array();
+  if ($type == 'enrd_evf' && !empty($data)) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        // Email address value.
+        case 'email':
+          $return[$original] = $data['field_item']['email'];
+          break;
+
+        // Token generated.
+        case 'token':
+          $return[$original] = $data['token'];
+          break;
+
+        // Absolute link with the token generated.
+        case 'token_url':
+          $url = ENRD_EVF_CONFIRM_PAGE_CALLBACK . $data['token'];
+          $text = t('Click here to confirm');
+          $return[$original] = l($text, $url, array(
+            'attributes' => array('target' => '_blank'),
+            'absolute' => TRUE,
+          ));
+      }
+    }
+  }
+
+  return $return;
+}
+
+/**
+ * Prepares the data for storage in manage table.
+ *
+ * @param string $entity_type
+ *   Type of entity.
+ * @param string $bundle
+ *   Bundle name.
+ * @param int $entity_id
+ *   Id of the entity.
+ * @param string $field_name
+ *   The name of the field.
+ * @param int $delta
+ *   The delta of the item.
+ * @param array $settings
+ *   The field settings.
+ *
+ * @return string
+ *   The token string.
+ */
+function _enrd_evf_management_token($entity_type, $bundle, $entity_id, $field_name, $delta, array $settings = array()) {
+
+  // Generate random key with length of 8 bytes.
+  $token = drupal_random_key(8);
+  $expiration_time = REQUEST_TIME + ($settings['expiration_time'] * 60 * 60 * 24);
+
+  $data = array(
+    'entity_type' => $entity_type,
+    'bundle' => $bundle,
+    'entity_id' => $entity_id,
+    'field_name' => $field_name,
+    'delta' => $delta,
+    'token' => $token,
+    'created' => REQUEST_TIME,
+    'expiration' => $expiration_time,
+  );
+
+  // Insert data in teh management table.
+  if (drupal_write_record(ENRD_EVF_MANAGEMENT_TABLE_NAME, $data) !== FALSE) {
+    return $token;
+  }
+
+}
+
+/**
+ * Function for deleting data in the management table.
+ *
+ * @param string $entity_type
+ *   Type of entity.
+ * @param string $bundle
+ *   Bundle name.
+ * @param int $entity_id
+ *   Id of the entity.
+ * @param string $field_name
+ *   The name of the field.
+ * @param int $delta
+ *   The delta of the item.
+ */
+function _enrd_evf_management_token_delete($entity_type, $bundle, $entity_id, $field_name, $delta) {
+  db_delete(ENRD_EVF_MANAGEMENT_TABLE_NAME)
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle', $bundle)
+    ->condition('entity_id', $entity_id)
+    ->condition('field_name', $field_name)
+    ->condition('delta', $delta)
+    ->execute();
+}
+
+/**
+ * Prepares the item attributes for storage.
+ *
+ * @param array $item
+ *   Single field value.
+ */
+function _enrd_evf_process(array &$item) {
+  if (!empty($item['email']) && !isset($item['status'])) {
+
+    // Trim whitespace from email.
+    $email = $item['email'];
+
+    $item = array(
+      'email' => $email,
+      'status' => _enrd_evf_init_status($item),
+    );
+  }
+}
+
+/**
+ * Manager for sending e-mail.
+ *
+ * @param array $item
+ *   Single field value.
+ * @param string $entity_type
+ *   The entity type.
+ * @param object $entity
+ *   The entity object.
+ * @param array $instance
+ *   The instance structure for $field on $entity's bundle.
+ * @param string $token
+ *   The token string.
+ *
+ * @return bool
+ *   TRUE, if sending was successful; FALSE otherwise.
+ */
+function _enrd_evf_send_confimation_email(array $item, $entity_type, $entity, array $instance, $token) {
+  global $language;
+
+  // Cast to stdClass. Fix fatal error during behat test.
+  $entity_obj = (object) get_object_vars($entity);
+
+  $from = $instance['settings']['template']['from'];
+  $to = $item['email'];
+  $param = array(
+    'context' => array(
+      'token' => $token,
+      'field_item' => $item,
+      $entity_type => $entity_obj,
+    ),
+    'subject' => $instance['settings']['template']['subject'],
+    'body' => $instance['settings']['template']['body'],
+  );
+
+  // Send e-mail.
+  $result = drupal_mail('enrd_evf', 'email_validation', $to, $language, $param, $from);
+  return $result['result'];
+}
+
+/**
+ * Implements hook_mail().
+ */
+function enrd_evf_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'email_validation':
+
+      $email_subject = token_replace($params['subject'], $params['context']);
+      $message['subject'] = $email_subject;
+
+      $email_body = token_replace($params['body'], $params['context']);
+      $message['body'][] = $email_body;
+
+      break;
+  }
+}
+
+/**
+ * Initialization of the "status" property.
+ *
+ * @param array $item
+ *   Single field value.
+ *
+ * @return int
+ *   Return the status id.
+ */
+function _enrd_evf_init_status(array $item) {
+
+  // Check if the user logged-in has same email of the value inserted.
+  $equal_email = FALSE;
+  if (user_is_logged_in()) {
+    global $user;
+    $equal_email = ($user->mail == $item['email']) ? TRUE : FALSE;
+  }
+
+  // Check if the user has permission to bypass the validation through email.
+  $bypass_perm = user_access('bypass email validation');
+
+  if ($equal_email || $bypass_perm) {
+    $status = ENRD_EVF_STATUS_CONFIRM_BYPASS;
+  }
+  else {
+    $status = ENRD_EVF_STATUS_TO_CONFIRM;
+  }
+
+  return $status;
+}
+
+/**
+ * Handler to set "status" confirmed.
+ *
+ * @param array $item
+ *   An array with the properties set in management table.
+ */
+function _enrd_evf_set_status(array $item) {
+
+  $entity = entity_load($item['entity_type'], array($item['entity_id']));
+  $entity = reset($entity);
+
+  $entity->{$item['field_name']}[LANGUAGE_NONE][$item['delta']]['status'] = ENRD_EVF_STATUS_CONFIRMED;
+
+  field_attach_presave($item['entity_type'], $entity);
+  field_attach_update($item['entity_type'], $entity);
+
+  // Clear the static loading cache.
+  entity_get_controller($item['entity_type'])->resetCache(array($item['entity_id']));
+}
+
+/**
+ * Validity controller of the token expiration date.
+ *
+ * @param array $field_element
+ *   The field structure and token management properties.
+ *
+ * @return bool
+ *   Return TRUE if the token is valid. FALSE otherwise.
+ */
+function _enrd_evf_token_time_validation(array $field_element) {
+  $expiration = $field_element['item']['expiration'];
+  return REQUEST_TIME < $expiration;
+}
+
+/**
+ * Retrieve the management properties and field structure from token string.
+ *
+ * @param string $token
+ *   The token string.
+ *
+ * @return array
+ *   The field structure and token management properties.
+ */
+function _enrd_evf_get_element_from_token($token = '') {
+  $return = array();
+
+  if (empty($token)) {
+    return $return;
+  }
+
+  // Retrieve the data from management table.
+  $query = db_select(ENRD_EVF_MANAGEMENT_TABLE_NAME, 'field_manage');
+  $query->fields('field_manage')
+    ->condition('token', $token, '=');
+  $result = $query->range(0, 1)->execute();
+
+  // Return the field, instance and property management.
+  foreach ($result as $row) {
+    $return = array(
+      'field_info' => field_info_field($row->field_name),
+      'field_instance' => field_info_instance($row->entity_type, $row->field_name, $row->bundle),
+      'item' => (array) $row,
+    );
+  }
+
+  return $return;
+}
+
+/**
+ * Handler to set field "status" to confirmed after token validation.
+ *
+ * @param array $item
+ *   An array with the properties set in management table.
+ */
+function _enrd_evf_email_confirm(array $item) {
+  // Edit "status" field properties.
+  _enrd_evf_set_status($item);
+
+  // Remove token data.
+  _enrd_evf_management_token_delete($item['entity_type'], $item['bundle'], $item['entity_id'], $item['field_name'], $item['delta']);
+
+  // Notify that the e-mail was confirmed using the link sent via email.
+  $entity = entity_load($item['entity_type'], array($item['entity_id']));
+  $entity = reset($entity);
+  module_invoke_all('enrd_evf_post_status_confirm', $item['entity_type'], $item['bundle'], $entity, $item['field_name'], TRUE);
+}
+
+/**
+ * Function to clean the old tokens expired.
+ */
+function _enrd_evf_clean_expired_token() {
+  // Clean the records with the "expiration" date older than 30 days.
+  db_delete(ENRD_EVF_MANAGEMENT_TABLE_NAME)
+    ->condition('expiration', REQUEST_TIME, '<')
+    ->execute();
+}

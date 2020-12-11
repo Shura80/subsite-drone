@@ -1,0 +1,618 @@
+<?php
+
+/**
+ * @file
+ * Code for the ENRD News feature.
+ */
+
+include_once 'enrd_news.features.inc';
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function enrd_news_module_implements_alter(&$module_list, $context) {
+  // Make sure enrd_news's hook implementations
+  // are called after all other modules.
+  if ($context === "views_default_views_alter" || $context === "menu_alter") {
+    $temp = $module_list['enrd_news'];
+    unset($module_list['enrd_news']);
+    $module_list['enrd_news'] = $temp;
+  }
+}
+
+/**
+ * Implements hook_views_default_views_alter().
+ */
+function enrd_news_views_default_views_alter(&$views) {
+  /*
+   * Adds missing information from default Multisite views
+   * once relative features have been enabled (news, events).
+   */
+
+  // Fix missing 'gid' relationship in calendar view.
+  if (array_key_exists('calendar', $views)) {
+    $view = $views['calendar'];
+    $handler = $view->display['month']->handler;
+    $handler->display->display_options['arguments']['gid']['relationship'] = 'og_membership_rel';
+  }
+
+  // Fix missing path in news view.
+  if (array_key_exists('news', $views)) {
+    $view = $views['news'];
+    $handler = $view->display['page']->handler;
+    $handler->display->display_options['path'] = 'news';
+  }
+}
+
+/**
+ * Implements hook_override_multisite_components().
+ */
+function enrd_news_override_multisite_components() {
+  // Override some fields and bundles.
+  _enrd_news_newsroom_overrides();
+
+  watchdog('enrd_news', 'Override multisite components');
+}
+
+/**
+ * Helper function to override news_core fields.
+ */
+function _enrd_news_newsroom_overrides() {
+
+  // News instances of body field.
+  $instances = field_read_instance('node', 'body', 'news');
+
+  if ($instances) {
+    $instances['display']['default'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(),
+      'type' => 'text_default',
+      'weight' => 2,
+    );
+
+    $instances['display']['full'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(),
+      'type' => 'text_default',
+      'weight' => 1,
+    );
+
+    $instances['display']['teaser'] = array(
+      'label' => 'hidden',
+      'module' => 'smart_trim',
+      'settings' => array(
+        'more_link' => 0,
+        'more_text' => 'Read more',
+        'summary_handler' => 'trim',
+        'trim_length' => 300,
+        'trim_link' => 0,
+        'trim_options' => array(
+          'text' => 'text',
+        ),
+        'trim_preserve_tags' => '',
+        'trim_suffix' => '...',
+        'trim_type' => 'chars',
+      ),
+      'type' => 'smart_trim_format',
+      'weight' => 0,
+    );
+
+    $instances['display']['newsroom'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(),
+      'type' => 'text_default',
+      'weight' => 5,
+    );
+
+    field_update_instance($instances);
+  }
+
+  // Event instance of body field.
+  $instances = field_read_instance('node', 'body', 'event');
+
+  if ($instances) {
+    $instances['display']['default'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(),
+      'type' => 'text_default',
+      'weight' => '0',
+    );
+
+    $instances['display']['full'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'type' => 'text_default',
+      'settings' => array(),
+      'weight' => 3,
+    );
+
+    $instances['display']['teaser'] = array(
+      'label' => 'hidden',
+      'module' => 'smart_trim',
+      'settings' => array(
+        'more_link' => 0,
+        'more_text' => 'Read more',
+        'summary_handler' => 'trim',
+        'trim_length' => 300,
+        'trim_link' => 0,
+        'trim_options' => array(
+          'text' => 'text',
+        ),
+        'trim_preserve_tags' => '',
+        'trim_suffix' => '...',
+        'trim_type' => 'chars',
+      ),
+      'type' => 'smart_trim_format',
+      'weight' => 0,
+    );
+
+    $instances['display']['eventlist'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(
+        'trim_length' => '600',
+      ),
+      'type' => 'text_summary_or_trimmed',
+      'weight' => '10',
+    );
+
+    $instances['display']['enrd_nrn_toolkit_resource'] = array(
+      'label' => 'hidden',
+      'module' => 'text',
+      'settings' => array(
+        'trim_length' => 300,
+      ),
+      'type' => 'text_summary_or_trimmed',
+      'weight' => 1,
+    );
+
+    field_update_instance($instances);
+  }
+
+  // News instance of field_news_publication_date field.
+  $instances = field_read_instance('node', 'field_news_publication_date', 'news');
+
+  if ($instances) {
+    $instances['display']['newsroom'] = array(
+      'label' => 'inline',
+      'module' => 'date',
+      'settings' => array(
+        'format_type' => 'enrd_newsroom_d_m_y',
+        'fromto' => 'both',
+        'multiple_from' => '',
+        'multiple_number' => '',
+        'multiple_to' => '',
+      ),
+      'type' => 'date_default',
+      'weight' => 3,
+    );
+    $instances['display']['full'] = array(
+      'label' => 'inline',
+      'module' => 'date',
+      'settings' => array(
+        'format_type' => 'enrd_newsroom_d_m_y',
+        'fromto' => 'both',
+        'multiple_from' => '',
+        'multiple_number' => '',
+        'multiple_to' => '',
+      ),
+      'type' => 'date_default',
+      'weight' => 0,
+    );
+
+    field_update_instance($instances);
+  }
+
+  // Event instance of field_event_date field.
+  $instances = field_read_instance('node', 'field_event_date', 'event');
+
+  if ($instances) {
+    $instances['display']['eventlist'] = array(
+      'label' => 'inline',
+      'module' => 'date',
+      'settings' => array(
+        'format_type' => 'enrd_newsroom_d_m_y',
+        'fromto' => 'both',
+        'multiple_from' => '',
+        'multiple_number' => '',
+        'multiple_to' => '',
+        'show_remaining_days' => 0,
+      ),
+      'type' => 'date_default',
+      'weight' => 2,
+    );
+    $instances['display']['full'] = array(
+      'label' => 'inline',
+      'module' => 'date',
+      'settings' => array(
+        'format_type' => 'short',
+        'fromto' => 'both',
+        'multiple_from' => '',
+        'multiple_number' => '',
+        'multiple_to' => '',
+      ),
+      'type' => 'date_default',
+      'weight' => 0,
+    );
+
+    field_update_instance($instances);
+  }
+
+  // Event instance of field_location field.
+  $instances = field_read_instance('node', 'field_location', 'event');
+
+  if ($instances) {
+    $instances['display']['full'] = array(
+      'label' => 'hidden',
+      'module' => 'link',
+      'settings' => array(),
+      'type' => 'link_default',
+      'weight' => 4,
+    );
+
+    field_update_instance($instances);
+  }
+
+  // Enable Full and Newsroom view modes for News nodes.
+  $settings = field_bundle_settings('node', 'news');
+  $settings['view_modes']['full']['custom_settings'] = TRUE;
+  $settings['view_modes']['newsroom']['custom_settings'] = TRUE;
+  field_bundle_settings('node', 'news', $settings);
+
+  // Enable Full, Eventlist and NRN Toolkit view modes for Event nodes.
+  $settings = field_bundle_settings('node', 'event');
+  $settings['view_modes']['full']['custom_settings'] = TRUE;
+  $settings['view_modes']['eventlist']['custom_settings'] = TRUE;
+  $settings['view_modes']['enrd_nrn_toolkit_resource']['custom_settings'] = TRUE;
+  field_bundle_settings('node', 'event', $settings);
+
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function enrd_news_date_formats() {
+  return array(
+    // Creates a new custom format type.
+    array(
+      'type' => 'enrd_newsroom_d_m_y',
+      'format' => 'd/m/Y',
+      'locales' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function enrd_news_date_format_types() {
+  return array(
+    'enrd_newsroom_d_m_y' => t('ENRD Newsroom short'),
+  );
+}
+
+/**
+ * Implements hook_field_group_info_alter().
+ */
+function enrd_news_field_group_info_alter(&$groups) {
+  if (!empty($groups['group_news_content|node|news|form'])) {
+    $groups['group_news_content|node|news|form']->data['children'][] = 'field_news_image';
+  }
+  if (!empty($groups['group_event_content|node|event|form'])) {
+    $groups['group_event_content|node|event|form']->data['children'][] = 'field_event_location';
+    $groups['group_event_content|node|event|form']->data['children'][] = 'field_event_type';
+    $groups['group_event_content|node|event|form']->data['children'][] = 'field_stakeholders_events';
+    $groups['group_event_content|node|event|form']->data['children'][] = 'field_enrd_event_online';
+  }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function enrd_news_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['newsroom'] = array(
+    'label' => t('Newsroom'),
+    'custom settings' => TRUE,
+  );
+
+  $entity_info['node']['view modes']['eventlist'] = array(
+    'label' => t('Event list'),
+    'custom settings' => TRUE,
+  );
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function enrd_news_node_view_alter(&$build) {
+  if ($build['#node']->type == 'event' && $build['#view_mode'] == 'eventlist') {
+    $node = $build['#node'];
+    $entity_wrapper = entity_metadata_wrapper('node', $node);
+    if ($entity_wrapper->field_stakeholders_events->value() == 1) {
+      $link = $entity_wrapper->field_location->value();
+      $title = $entity_wrapper->title->value(array('sanitize' => TRUE));
+      if (!empty($link)) {
+        $url = $link[0]['url'];
+        $link = l($title, $url, array(
+          'attributes' => array(
+            'rel' => 'nofollow',
+            'target' => '_blank',
+          ),
+        ));
+        $build['title'][0]['#markup'] = preg_replace('/<a .*>(.*?)<\/a>/', $link, $build['title'][0]['#markup']);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function enrd_news_menu_alter(&$items) {
+  // Disable standard news & events views callback.
+  $items['events_public']['access callback'] = FALSE;
+  $items['calendar']['access callback'] = FALSE;
+  $items['news_public']['access callback'] = FALSE;
+  $items['news']['access callback'] = FALSE;
+
+  // Force news-events to be Expanded.
+  $items['news-events']['expanded'] = 1;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function enrd_news_menu() {
+  $items['news-events/events'] = array(
+    'title' => 'Events',
+    'page arguments' => array('news-events/events/upcoming', array(), '301'),
+    // Access will be controlled by landing page after redirect.
+    'access callback' => TRUE,
+    'page callback' => 'drupal_goto',
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
+    'expanded' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function enrd_news_menu_link_alter(&$item) {
+  if (isset($item['menu_name']) && $item['menu_name'] == 'main-menu') {
+
+    switch ($item['link_path']) {
+      case 'news-events/events/past':
+      case 'news-events/events/upcoming':
+
+        $item['plid'] = (int) db_select('menu_links')
+          ->fields('menu_links', array('mlid'))
+          ->condition('menu_name', 'main-menu')
+          ->condition('link_path', 'news-events')
+          ->execute()
+          ->fetchField();
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_views_pre_build().
+ */
+function enrd_news_views_pre_build(&$view) {
+  if ($view->name == 'enrd_events_upcoming_past') {
+    $filters = $view->get_exposed_input();
+
+    // Display upcoming.
+    if (!empty($filters['between_date_filter']['value']['month'])) {
+      // Force the views granularity when month is setted.
+      $view->filter['between_date_filter']->format = 'Y-m';
+      $view->filter['between_date_filter']->options['granularity'] = 'month';
+
+      // Force the year when it is not set and the month it is.
+      if (empty($filters['between_date_filter']['value']['year'])) {
+        // Verify if month is in the future.
+        $sel_isfuture = ($filters['between_date_filter']['value']['month'] < date('m'));
+        $filters['between_date_filter']['value']['year'] = ($sel_isfuture) ? date('Y') + 1 : date('Y');
+        $view->set_exposed_input($filters);
+      }
+    }
+
+    // Display past.
+    if (!empty($filters['between_date_filter_1']['value']['month'])) {
+      // Force the views granularity when month is setted.
+      $view->filter['between_date_filter_1']->format = 'Y-m';
+      $view->filter['between_date_filter_1']->options['granularity'] = 'month';
+
+      // Force the year when it is not set and the month it is.
+      if (empty($filters['between_date_filter_1']['value']['year'])) {
+        // Verify if month is in the past.
+        $sel_ispast = ($filters['between_date_filter_1']['value']['month'] > date('m'));
+        $filters['between_date_filter_1']['value']['year'] = ($sel_ispast) ? date('Y') - 1 : date('Y');
+        $view->set_exposed_input($filters);
+      }
+    }
+  }
+
+  if ($view->name == 'enrd_news' && $view->current_display == 'newsroom') {
+    $filters = $view->get_exposed_input();
+    if (!empty($filters['field_news_publication_date_value']['value']['month'])) {
+      // Force the views granularity when month is setted.
+      $view->filter['field_news_publication_date_value']->format = 'Y-m';
+      $view->filter['field_news_publication_date_value']->options['granularity'] = 'month';
+
+      // Force the year when it is not set and the month it is.
+      if (empty($filters['field_news_publication_date_value']['value']['year'])) {
+        $filters['field_news_publication_date_value']['value']['year'] = date('Y');
+        $view->set_exposed_input($filters);
+      }
+    }
+
+  }
+}
+
+/**
+ * Implements hook_date_select_process_alter().
+ */
+function enrd_news_date_select_process_alter(&$element, &$form_state, $context) {
+
+  // Add month select in our filters.
+  if (isset($form_state['view'])) {
+    switch ($form_state['view']->name) {
+      case 'enrd_events_upcoming_past':
+        _enrd_news_date_select_add_fake_month('between_date_filter', $element);
+        _enrd_news_date_select_add_fake_month('between_date_filter_1', $element);
+        break;
+
+      case 'enrd_news':
+        _enrd_news_date_select_add_fake_month('field_news_publication_date_value', $element);
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function enrd_news_token_info() {
+  $info['types']['views'] = array(
+    'name' => t('Views'),
+    'description' => ('Tokens to embed views.'),
+  );
+  $info['tokens']['views']['embed'] = array(
+    'name' => t('Embed views'),
+    'description' => t('Embed views using tokens.'),
+    'dynamic' => TRUE,
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function enrd_news_tokens($type, $tokens, array $data = [], array $options = []) {
+  if ($type == 'views') {
+    $replacements = [];
+    foreach ($tokens as $name => $original) {
+      // Token used to embed the news rolling block (carousel) inside content.
+      if ($name == 'embed:enrd-news-rolling-block') {
+        // Embed specific display. Arguments are passed from contextual filter.
+        $replacements[$original] = views_embed_view('enrd_news_rolling_block', 'news_rolling_block');
+      }
+    }
+    return $replacements;
+  }
+}
+
+/**
+ * Heading function for display suite in views.
+ *
+ * Used into enrd_events_upcoming_past view.
+ *
+ * @param mixed $raw_data
+ *   Raw for the grouping field.
+ * @param mixed $view
+ *   View object.
+ *
+ * @return mixed
+ *   bool|string
+ */
+function enrd_news_group_data_views($raw_data, $view) {
+  return format_date($raw_data, 'custom', 'F Y');
+}
+
+/**
+ * Force the select of month into a date select form element.
+ *
+ * @param string $field_name
+ *   Field name.
+ * @param mixed $element
+ *   A form element of date_select type.
+ */
+function _enrd_news_date_select_add_fake_month($field_name, &$element) {
+
+  if ($element['#parents'][0] != $field_name) {
+    return;
+  }
+
+  // Construct a fake month element.
+  $date = NULL;
+  if (is_array($element['#default_value'])) {
+    $date = date_select_input_date($element, $element['#default_value']);
+  }
+  elseif (!empty($element['#default_value'])) {
+    $date = date_default_date($element);
+  }
+  $fake_elements = date_parts_element($element, $date, 'm');
+
+  // Replace the value month with the fake select.
+  $element['month'] = $fake_elements['month'];
+
+  // Place "Year" after fake "Month" select.
+  if (isset($element['year'])) {
+    $element['year']['#weight'] = $element['month']['#weight'] + 1;
+  }
+}
+
+/**
+ * Implements template_preprocess_page().
+ */
+function enrd_news_preprocess_page(&$variables) {
+  $nodes = isset($variables['page']['content']['system_main']['nodes']) ? $variables['page']['content']['system_main']['nodes'] : [];
+
+  if (!empty($nodes)) {
+    // Check if Event is on full display.
+    $node = reset($nodes);
+    $is_event = isset($node['#bundle']) && $node['#bundle'] == 'event';
+    $is_display_full = isset($node['#view_mode']) && $node['#view_mode'] == 'full';
+    $is_event_online = isset($variables['node']->field_enrd_event_online[LANGUAGE_NONE][0]['value']) && $variables['node']->field_enrd_event_online[LANGUAGE_NONE][0]['value'] == '1';
+
+    // Append "online" span to Event page title.
+    if ($is_event && $is_display_full && $is_event_online) {
+      $variables['title_suffix'] = _enrd_news_event_online_icon();
+    }
+  }
+}
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function enrd_news_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  // Show online events on "Eventlist" display.
+  if ($context['bundle'] == 'event' && $context['view_mode'] == 'eventlist') {
+    $is_online_event = isset($vars['field_enrd_event_online'][0]['value']) && $vars['field_enrd_event_online'][0]['value'] == '1';
+
+    // Check if it's an online event.
+    if ($is_online_event) {
+      if (!empty($layout_render_array['headline'])) {
+        // Add span "online" element inside title field.
+        foreach (element_children($layout_render_array['headline']) as $key) {
+          if ($layout_render_array['headline'][$key]['#field_name'] == 'title') {
+            $layout_render_array['headline'][$key][0]['#markup'] .= _enrd_news_event_online_icon();
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Custom function to create "Online" icon for events.
+ *
+ * @return string
+ *   The rendered HTML for the icon.
+ */
+function _enrd_news_event_online_icon() {
+  $element = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#attributes' => ['class' => ['online']],
+    '#value' => t('Online'),
+  ];
+
+  return drupal_render($element);
+}

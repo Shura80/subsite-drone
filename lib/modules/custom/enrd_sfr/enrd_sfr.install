@@ -1,0 +1,114 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for ENRD Subscription Form Requests.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_sfr_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Subscription Form Requests is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_sfr_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD Subscription Form Requests has been disabled from your site'));
+}
+
+/**
+ * Implements hook_schema().
+ */
+function enrd_sfr_schema() {
+  $schema = array();
+
+  $schema['enrd_sfr'] = array(
+    'description' => 'The base table for ENRD Sfr.',
+    'fields' => array(
+      'sfrid' => array(
+        'description' => 'The primary identifier for the ENRD Sfr.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The type (bundle) of this ENRD Sfr.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'uid' => array(
+        'description' => 'The {users}.uid that issued the request; either anonymous or authenticated.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the ENRD Sfr was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'finalized' => array(
+        'description' => 'The Unix timestamp when the ENRD Sfr was finalized.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'description' => 'ENRD Sfr status (Finalized/Not finalized).',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('sfrid'),
+    'indexes' => array(
+      'sfr_id' => array('sfrid'),
+    ),
+  );
+
+  $schema['enrd_sfr_type'] = array(
+    'description' => 'Stores information about all defined ENRD Sfr types.',
+    'fields' => array(
+      'sfrtid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ENRD sfr type ID.',
+      ),
+      'name' => array(
+        'description' => 'The machine-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'label' => array(
+        'description' => 'The human-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'A brief description of this type.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'medium',
+        'translatable' => TRUE,
+      ),
+    ) + entity_exportable_schema_fields(),
+    'primary key' => array('sfrtid'),
+    'unique keys' => array(
+      'sfr_type_id' => array('sfrtid'),
+      'mach_name' => array('name'),
+    ),
+  );
+
+  return $schema;
+}

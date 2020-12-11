@@ -1,0 +1,7 @@
+name = ENRD File Formatter
+description = Provides a configurable field formatter for the file entities.
+package = ENRD
+core = "7.x"
+php = 7.3
+dependencies[] = field
+multisite_version = 2.6

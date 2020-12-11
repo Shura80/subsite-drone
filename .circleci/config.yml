@@ -1,58 +1,64 @@
-# PHP CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-php/ for more details
-#
-version: 2
-jobs:
-  build:
-    docker:
-      # Specify the version you desire here
-      - image: circleci/php:7.1-node-browsers
+version: 2 # use CircleCI 2.0
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # Using the RAM variation mitigates I/O contention
-      # for database intensive operations.
-      # - image: circleci/mysql:5.7-ram
-      #
-      # - image: redis:2.8.19
+jobs: # a collection of steps
+  build: # runs not using Workflows must have a `build` job as entry point
+    docker: # run the steps with Docker
+      - image: fpfis/httpd-php:7.3 # ...with this image as the primary container; this is where all `steps` will run
+        name: web
+        environment:
+          DOCUMENT_ROOT: /test/toolkit/build
+          PORT: 8080
 
-    steps:
-      - checkout
+      - image: fpfis/mysql56
+        name: mysql
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_MAX_ALLOWED_PACKET: 128M
 
-      - run: sudo apt update # PHP CircleCI 2.0 Configuration File# PHP CircleCI 2.0 Configuration File sudo apt install zlib1g-dev libsqlite3-dev
-      - run: sudo docker-php-ext-install zip
+      - image: fpfis/solr5
+        name: solr
+        detach: true
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # "composer.lock" can be used if it is committed to the repo
-            - v1-dependencies-{{ checksum "composer.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - image: selenium/standalone-chrome:3.141.59-oxygen
+        name: selenium
+        environment:
+          HUB_PORT_4444_TCP_ADDR: selenium
+          HUB_PORT_4444_TCP_PORT: "4444"
+        detach: true
 
-      - run: composer install -n --prefer-dist
+    working_directory: /test/toolkit/build # directory where steps will run
+    steps: # a set of executable commands
+      - checkout # special step to check out source code to working directory
+      - run:
+          name: toolkit
+          image: fpfis/httpd-php-dev:7.3
+          command: |
+              - composer install
+              - rm -rf ./.tmp/ ./build
+              - ./toolkit/phing project-properties-validate
+      - run:
+          name: phpcs
+          image: fpfis/httpd-php-dev:7.3
+          command: ./toolkit/phing test-run-phpcs
+      - run:
+          name: phpcs 7
+          image: fpfis/httpd-php-dev:7.3
+          command: ./toolkit/phing test-run-phpcs-compatibility
+      - run:
+          name: build
+          image: fpfis/httpd-php-dev:7.3
+          command: ./toolkit/phing build-platform build-subsite-dev
+      - run:
+          name: install-clean
+          image: fpfis/httpd-php-dev:7.3
+          command: ./toolkit/phing install-clean
+      - run:
+          name: behat
+          image: fpfis/httpd-php-dev:7.3
+          command: ./toolkit/phing test-run-behat
 
-      - save_cache:
-          key: v1-dependencies-{{ checksum "composer.json" }}
-          paths:
-            - ./vendor
-      - restore_cache:
-          keys:
-            - node-v1-{{ checksum "package.json" }}
-            - node-v1-
-      - run: yarn install
-      - save_cache:
-          key: node-v1-{{ checksum "package.json" }}
-          paths:
-            - node_modules
-
-      # prepare the database
-      - run: touch storage/testing.sqlite
-      - run: php artisan migrate --env=testing --database=sqlite_testing --force
-
-      # run tests with phpunit or codecept
-      #- run: ./vendor/bin/phpunit
-      - run: ./vendor/bin/codecept build
-      - run: ./vendor/bin/codecept run
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - build

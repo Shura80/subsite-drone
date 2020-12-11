@@ -1,0 +1,8 @@
+name = ENRD Readmore
+description = Field formatter to expand and collapse text of a field.
+package = ENRD
+core = "7.x"
+php = 7.3
+dependencies[] = expanding_formatter
+dependencies[] = field
+multisite_version = 2.6

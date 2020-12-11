@@ -1,0 +1,144 @@
+<?php
+
+/**
+ * @file
+ * Install file of the enrd_news module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function enrd_news_install() {
+
+  // Revert News Core to insert field_news_image inside Content field group.
+  features_revert(array(
+    'news_core' => array(
+      'field_base',
+      'field_group',
+    ),
+    'enrd_news' => array(
+      'field_base',
+      'field_instance',
+    ),
+  ));
+
+  // Applies ENRD News overrides.
+  enrd_news_override_multisite_components();
+
+  _enrd_mastermind_overrides_strongarms();
+
+}
+
+/**
+ * Implements hook_enable().
+ */
+function enrd_news_enable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD News & Events is now active on your site.'));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function enrd_news_disable() {
+  $t = get_t();
+  drupal_set_message($t('ENRD News & Events has been deactivated on your site.'));
+}
+
+/**
+ * Fix alias, field and date-format for News and Events.
+ *
+ * Remove exclude-path for event/* to easy breadcrumb configuration.
+ * Delete old date-format.
+ * Add new date-format for news and events.
+ * Delete "field_event_category".
+ */
+function enrd_news_update_7201() {
+  // Pathauto.
+  $defaults_path = variable_get('easy_breadcrumb-excluded_paths', NULL);
+  unset($defaults_path['news-events/events/*'], $defaults_path['news-events/events/all/*']);
+  variable_set('easy_breadcrumb-excluded_paths', $defaults_path);
+
+  // Delete old date-format.
+  $old_date_formats = array(
+    'enrd_newsroom_d_m_y',
+    'enrd_newsroom_d_f_y',
+  );
+
+  foreach ($old_date_formats as $value) {
+    $date_format = system_get_date_types($value);
+    if ($date_format != FALSE) {
+      system_date_format_type_delete($value);
+      variable_del('date_format_' . $value);
+    }
+  }
+
+  variable_set('date_format_enrd_newsroom_d_m_y', 'd/m/Y');
+
+  // Delete field_event_category.
+  $field_instance = field_info_instance('node', 'field_event_category', 'event');
+  if (!empty($field_instance)) {
+    field_delete_field('field_event_category');
+  }
+
+  // Delete vocabulary event_categories.
+  $vocab_obj = taxonomy_vocabulary_machine_name_load('event_categories');
+  if ($vocab_obj) {
+    taxonomy_vocabulary_delete($vocab_obj->vid);
+  }
+
+  _enrd_news_newsroom_overrides();
+
+}
+
+/**
+ * Delete field "field_event_location".
+ */
+function enrd_news_update_7202() {
+  // Remove field of Event content type with an old configuration.
+  $instance = field_info_instance('node', 'field_event_location', 'event');
+  if (!empty($instance) && isset($instance)) {
+    field_delete_instance($instance, TRUE);
+  }
+}
+
+/**
+ * Disable and uninstall Service Link.
+ */
+function enrd_news_update_7203() {
+  $modules = array(
+    'service_links',
+    'general_services',
+  );
+  module_disable($modules);
+  drupal_uninstall_modules($modules);
+}
+
+/**
+ * Delete field_tax_networking instances.
+ */
+function enrd_news_update_7204() {
+  $instance = field_info_instance('node', 'field_tax_networking', 'news');
+  if (!empty($instance) && isset($instance)) {
+    field_delete_instance($instance, TRUE);
+  }
+}
+
+/**
+ * ENRDPORTAL-398.
+ */
+function enrd_news_update_7205() {
+  features_revert(array('enrd_news' => array('views_view')));
+}
+
+/**
+ * ENRDPORTAL-512.
+ */
+function enrd_news_update_7206() {
+  features_revert([
+    'enrd_news' => [
+      'field_base',
+      'field_instance',
+    ],
+  ]);
+}

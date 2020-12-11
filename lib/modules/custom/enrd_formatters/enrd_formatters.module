@@ -1,0 +1,272 @@
+<?php
+/**
+ * @file
+ * ENRD Formatters.
+ */
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function enrd_formatters_field_formatter_info() {
+  return [
+    // Show custom formatted lists.
+    'enrd_list' => [
+      'label' => t("ENRD List"),
+      'field types' => [
+        'list_text',
+      ],
+      'settings' => [
+        'enrd_type' => 'comma',
+        'enrd_comma_override' => 0,
+        'enrd_separator_custom' => '',
+      ],
+    ],
+    // Show summary of uploaded/linked resources.
+    'enrd_count_summary' => [
+      'label' => t('ENRD Count summary'),
+      'field types' => [
+        'file',
+        'link_field',
+      ],
+      'settings' => [
+        'enrd_count_text' => '@count item(s)',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_field_formatter_Settings_form().
+ */
+function enrd_formatters_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $form = [];
+
+  if ($display['type'] == 'enrd_list') {
+    $form['enrd_type'] = [
+      '#title' => t('List type'),
+      '#type' => 'select',
+      '#options' => [
+        'comma' => t('Comma separated list'),
+        'ul' => t('Unordered HTML list'),
+        'ol' => t('Ordered HTML list'),
+      ],
+      '#default_value' => $settings['enrd_type'],
+      '#required' => TRUE,
+    ];
+
+    $form['enrd_comma_override'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Override comma separator'),
+      '#description' => t('Override the default comma separator with a custom separator string.'),
+      '#default_value' => $settings['enrd_comma_override'],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][enrd_type]"]' => ['value' => 'comma'],
+        ],
+      ],
+    ];
+    $form['enrd_separator_custom'] = [
+      '#type' => 'textfield',
+      '#title' => t('Custom separator'),
+      '#description' => t('Override default comma separator with a custom separator string.'),
+      '#size' => 40,
+      '#default_value' => $settings['enrd_separator_custom'],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][enrd_comma_override]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+  }
+
+  if ($display['type'] == 'enrd_count_summary') {
+    $form['enrd_count_text'] = [
+      '#type' => 'textfield',
+      '#title' => t('Replacement text'),
+      '#description' => t('The text surrounding the items count. Place your custom label around "count" placeholder.'),
+      '#size' => 40,
+      '#default_value' => $settings['enrd_count_text'],
+      '#required' => TRUE,
+    ];
+  }
+
+  $context = [
+    'field' => $field,
+    'instance' => $instance,
+    'view_mode' => $view_mode,
+  ];
+
+  drupal_alter('enrd_formatters_field_formatter_settings_form', $form, $form_state, $context);
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function enrd_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
+
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $summary = [];
+
+  if ($display['type'] == 'enrd_list') {
+    switch ($settings['enrd_type']) {
+      case 'comma':
+        $summary[] = t('Comma separated list');
+        break;
+
+      case 'ul':
+        $summary[] = t('Unordered HTML list');
+        break;
+
+      case 'ol':
+        $summary[] = t('Ordered HTML list');
+        break;
+
+    }
+
+    if ($settings['enrd_comma_override']) {
+      $summary[] = t('Comma separator overridden');
+    }
+    $summary = theme('item_list', ['type' => 'ul', 'items' => $summary]);
+  }
+
+  if ($display['type'] == 'enrd_count_summary') {
+    if ($settings['enrd_count_text']) {
+      $summary[] = t('Custom text: @custom_placeholder', ['@custom_placeholder' => $settings['enrd_count_text']]);
+    }
+
+    $summary = theme('item_list', ['type' => 'ul', 'items' => $summary]);
+  }
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function enrd_formatters_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+
+  if ($display['type'] == 'enrd_list') {
+    $settings = $display['settings'];
+    $element = $list_items = [];
+
+    // Build a list to be rendered later as HTML list or delimited string.
+    if (!empty($items)) {
+      foreach ($items as $delta => $item) {
+        $list_items[$delta] = check_plain($item['value']);
+      }
+    }
+    else {
+      return;
+    }
+
+    switch ($settings['enrd_type']) {
+      case 'comma':
+        // Render elements as comma separated list.
+        $element[0] = [
+          '#theme' => 'enrd_formatters_comma',
+          '#items' => $list_items,
+          '#settings' => $settings,
+        ];
+        break;
+
+      case 'ul':
+      case 'ol':
+        // Render elements as HTML item list.
+        $element[0] = [
+          '#theme' => 'item_list',
+          '#type' => $settings['enrd_type'],
+          '#items' => $list_items,
+        ];
+        break;
+
+    }
+  }
+
+  if ($display['type'] == 'enrd_count_summary') {
+    if (!empty($items)) {
+      $settings = $display['settings'];
+      $element = [];
+      $element[0] = [
+        '#theme' => 'enrd_formatters_count_submitted',
+        '#count' => count($items),
+        '#label' => check_plain($settings['enrd_count_text']),
+        '#settings' => $settings,
+      ];
+    }
+    else {
+      return;
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function enrd_formatters_theme($existing, $type, $theme, $path) {
+  return [
+    'enrd_formatters_comma' => [
+      'variables' => [
+        'items' => NULL,
+        'settings' => NULL,
+      ],
+    ],
+    'enrd_formatters_count_submitted' => [
+      'variables' => [
+        'count' => NULL,
+        'label' => NULL,
+        'settings' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Theme function to render comma separated lists.
+ *
+ * @param array $variables
+ *   A list of theme variables.
+ *
+ * @return string
+ *   Returns a separator delimited string.
+ */
+function theme_enrd_formatters_comma($variables) {
+  $items = $variables['items'];
+  $settings = $variables['settings'];
+
+  // Default separator.
+  $separator = ', ';
+
+  // Override if we need to.
+  if ($settings['enrd_comma_override']) {
+    $separator = check_plain($settings['enrd_separator_custom']);
+  }
+
+  // Generate a comma-separated list.
+  return implode($separator, $items);
+}
+
+/**
+ * Returns a string customised for the field with the number of items.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - count: The number of submitted items.
+ *   - label: The field label.
+ *
+ * @return string
+ *   Returns a string with labels and item count.
+ */
+function theme_enrd_formatters_count_submitted($variables) {
+  $t = get_t();
+  return $t($variables['label'], [
+    '@count' => $variables['count'],
+  ]);
+}
