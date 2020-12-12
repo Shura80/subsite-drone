@@ -39,7 +39,7 @@ jobs: # a collection of steps
           name: phpcs
           command: ./toolkit/phing test-run-phpcs
       - run:
-          name: phpcs 7
+          name: phpcs-compatibility
           command: ./toolkit/phing test-run-phpcs-compatibility
       - run:
           name: build
@@ -53,6 +53,6 @@ jobs: # a collection of steps
 
 workflows:
   version: 2
-  workflow:
+  install-clean:
     jobs:
       - build
