@@ -33,7 +33,7 @@ projects[entityreference_view_widget][version] = "2.1"
 
 projects[expanding_formatter][subdir] = "contrib"
 projects[expanding_formatter][version] = "1.0"
-projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
+;projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
 
 projects[feeds_tamper_string2id][subdir] = "contrib"
 projects[feeds_tamper_string2id][version] = "1.1"

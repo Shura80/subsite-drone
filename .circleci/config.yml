@@ -38,9 +38,9 @@ jobs: # a collection of steps
       - run:
           name: phpcs
           command: ./toolkit/phing test-run-phpcs
-#      - run:
-#          name: phpcs 7
-#          command: ./toolkit/phing test-run-phpcs-compatibility
+      - run:
+          name: phpcs 7
+          command: ./toolkit/phing test-run-phpcs-compatibility
       - run:
           name: build
           command: ./toolkit/phing build-platform build-subsite-dev
