@@ -56,7 +56,7 @@ function enrd_lag_database_apachesolr_search_default_searchers() {
   $searcher->label = 'CLLD Partner Search Active';
   $searcher->description = 'CLLD Partner Search Active';
   $searcher->search_path = 'leader-clld/clld-partner-search/active';
-  $searcher->page_title = 'CLLD Partner Search';
+  $searcher->page_title = 'Active offers';
   $searcher->env_id = 'solr';
   $searcher->settings = array(
     'fq' => array(
@@ -95,7 +95,7 @@ function enrd_lag_database_apachesolr_search_default_searchers() {
   $searcher->label = 'CLLD Partner Search Expired';
   $searcher->description = 'CLLD Partner Search';
   $searcher->search_path = 'leader-clld/clld-partner-search/expired';
-  $searcher->page_title = 'CLLD Partner Search';
+  $searcher->page_title = 'Expired offers';
   $searcher->env_id = 'solr';
   $searcher->settings = array(
     'fq' => array(

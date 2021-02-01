@@ -508,17 +508,6 @@ function enrd_mastermind_user_default_permissions() {
     'module' => 'better_formats',
   );
 
-  // Exported permission: 'skip CAPTCHA'.
-  $permissions['skip CAPTCHA'] = array(
-    'name' => 'skip CAPTCHA',
-    'roles' => array(
-      'administrator' => 'administrator',
-      'authenticated user' => 'authenticated user',
-      'webmaster' => 'webmaster',
-    ),
-    'module' => 'captcha',
-  );
-
   // Exported permission: 'use text format enrd_safe_html'.
   $permissions['use text format enrd_safe_html'] = array(
     'name' => 'use text format enrd_safe_html',

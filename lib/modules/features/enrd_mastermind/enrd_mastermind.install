@@ -167,9 +167,6 @@ function enrd_mastermind_install() {
     ),
   ));
 
-  // Set default CAPTCHA skipped forms and default fonts.
-  _enrd_mastermind_default_captcha_settings();
-
   // Override all Multisite components.
   _enrd_mastermind_overrides_all();
 
@@ -1714,18 +1711,18 @@ function enrd_mastermind_update_7233() {
 }
 
 /**
- * ENRDPORTAL-535, ENRDPORTAL-543.
+ * ENRDPORTAL-535, ENRDPORTAL-543, PHP 7 compatibility.
  */
 function enrd_mastermind_update_7234() {
 
-  features_revert(array(
-    'enrd_mastermind' => array(
+  features_revert([
+    'enrd_mastermind' => [
       'menu_custom',
       'context',
       'variable',
       'filter',
-    ),
-  ));
+    ],
+  ]);
 
   // List of menu links to be moved to Portals menu.
   $menu_links = [
@@ -1748,14 +1745,13 @@ function enrd_mastermind_update_7234() {
     $weight += 5;
   }
 
+  // Fix sitemap menu link.
+  _enrd_mastermind_reset_menu_items('menu-service-tools', ['sitemap']);
+
   // Clear menu after links have been moved.
   menu_cache_clear_all();
-}
 
-/**
- * Update wrapper module for XLSX export library and disable old module.
- */
-function enrd_mastermind_update_7235() {
+  // Disable and uninstall unused and old php excel library wrapper modules.
   module_disable([
     'special_menu_items',
     'views_data_export_phpexcel',
@@ -1764,5 +1760,45 @@ function enrd_mastermind_update_7235() {
     'special_menu_items',
     'views_data_export_phpexcel',
   ]);
+
+  // Clear cache to avoid conflict with old modules registered function names.
+  drupal_flush_all_caches();
+
+  // Enable new php excel library wrapper module.
   module_enable(['views_data_export_phpspreadsheet']);
+}
+
+/**
+ * ENRDPORTAL-542.
+ */
+function enrd_mastermind_update_7235() {
+  // Update Workbench Email templates.
+  _enrd_mastermind_overrides_workbench_email();
+}
+
+/**
+ * Delete old webtools variables.
+ */
+function enrd_mastermind_update_7236() {
+
+  features_revert([
+    'enrd_lag_dashboard' => [
+      'uuid_node',
+    ],
+    'enrd_lag_database' => [
+      'feeds_importer',
+      'feeds_tamper',
+      'uuid_node',
+    ],
+    'enrd_mastermind' => [
+      'variable',
+      'wysiwyg',
+    ],
+  ]);
+
+  variable_del('nexteuropa_laco_smartloader_prurl');
+  variable_del('nexteuropa_piwik_smartloader_prurl');
+  variable_del('nexteuropa_globan_smartloader_prurl');
+  variable_del('nexteuropa_webtools_smartloader_prurl');
+
 }

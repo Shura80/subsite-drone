@@ -24,6 +24,9 @@ Content "[node:title_field]" needs to be reviewed.
 Please follow this link: [node:url]
 Login page: [site:login-url]
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Please do not reply to this automated message.',
     ),
 
@@ -37,6 +40,9 @@ Please do not reply to this automated message.',
 Content "[node:title_field]" has not been approved and needs to be reviewed.
 Please follow this link: [node:url]
 Login page: [site:login-url]
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
 
 Please do not reply to this automated message.',
     ),
@@ -52,6 +58,9 @@ Content "[node:title_field]" has been moved in "Validated" status and is ready f
 Please follow this link: [node:url]
 Login page: [site:login-url]
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Please do not reply to this automated message.',
     ),
 
@@ -65,6 +74,9 @@ Please do not reply to this automated message.',
 Content "[node:title_field]" has been published.
 Please follow this link: [node:url]
 Login page: [site:login-url]
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
 
 Please do not reply to this automated message.',
     ),
@@ -80,6 +92,9 @@ Content "[node:title_field]" has been published.
 Please follow this link: [node:url]
 Login page: [site:login-url]
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Please do not reply to this automated message.',
     ),
 
@@ -94,6 +109,9 @@ Content "[node:title_field]" has been archived.
 Please follow this link: [node:url]
 Login page: [site:login-url]
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Please do not reply to this automated message.',
     ),
 
@@ -107,6 +125,9 @@ Please do not reply to this automated message.',
 Content "[node:title_field]" has been archived.
 Please follow this link: [node:url]
 Login page: [site:login-url]
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
 
 Please do not reply to this automated message.',
     ),

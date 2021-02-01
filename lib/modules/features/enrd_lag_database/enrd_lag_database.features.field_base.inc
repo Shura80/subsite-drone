@@ -144,7 +144,11 @@ function enrd_lag_database_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_enrd_coop_expiry_date',
-    'indexes' => array(),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
     'locked' => 1,
     'module' => 'date',
     'settings' => array(

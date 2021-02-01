@@ -1,7 +1,7 @@
 name = ENRD NRN Profiles invitation
 description = ENRD NRN Profile invitation management.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = ctools
 dependencies[] = email
@@ -22,4 +22,4 @@ features[field_instance][] = invite-enrd_nrnp_invite-field_enrd_nrnp_invite_page
 features[field_instance][] = invite-enrd_nrnp_invite-field_enrd_nrnp_invite_resend
 features[invite_type][] = enrd_nrnp_invite
 features[views_view][] = enrd_nrnp_invite_manage_invites
-multisite_version = 2.5
+multisite_version = 2.6

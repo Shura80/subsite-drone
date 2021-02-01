@@ -119,7 +119,7 @@ function enrd_lag_invite_views_default_views() {
   $handler->display->display_options['fields']['expiry']['label'] = 'Invite expiry date';
   $handler->display->display_options['fields']['expiry']['date_format'] = 'enrd_lag_database_d_m_y';
   $handler->display->display_options['fields']['expiry']['second_date_format'] = 'enrd_lag_database_d_m_y';
-  /* Contextual filter: Field: LAG (og_lag_group_ref) */
+  /* Contextual filter: Field: Offering LAG (og_lag_group_ref) */
   $handler->display->display_options['arguments']['og_lag_group_ref_target_id']['id'] = 'og_lag_group_ref_target_id';
   $handler->display->display_options['arguments']['og_lag_group_ref_target_id']['table'] = 'og_membership';
   $handler->display->display_options['arguments']['og_lag_group_ref_target_id']['field'] = 'og_lag_group_ref_target_id';

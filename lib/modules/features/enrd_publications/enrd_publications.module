@@ -208,7 +208,6 @@ function enrd_publications_menu_alter(&$items) {
   $items['evaluation/publications']['menu_name'] = 'main-menu';
   $items['evaluation/publications']['weight'] = -44;
   // "Publications" search visible in breadcrumb & active trail.
-  $items['publications/search']['title'] = 'Search Publications';
   $items['publications/search']['type'] = MENU_NORMAL_ITEM;
   $items['publications/search']['menu_name'] = 'main-menu';
   $items['publications/search/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;

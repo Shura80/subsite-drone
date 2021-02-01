@@ -38,8 +38,10 @@ function enrd_mastermind_menu_default_menu_custom() {
   // Translatables
   // Included for use with string extractors like potx.
   t('ENRD Join Us menu');
+  t('ENRD Portals menu');
   t('ENRD Tools menu');
   t('Join Us');
+  t('Portals');
   t('Tools');
 
   return $menus;

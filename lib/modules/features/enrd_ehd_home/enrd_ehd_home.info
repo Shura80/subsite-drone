@@ -1,7 +1,7 @@
 name = ENRD Evaluation home
 description = ENRD Evaluation home page and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = bean
 dependencies[] = context
@@ -19,4 +19,4 @@ features[views_view][] = enrd_evaluation_landing_page
 features[views_view][] = enrd_evaluation_rss_feed
 features[views_view][] = enrd_evaluation_updates_landing_page
 features_exclude[dependencies][ctools] = ctools
-multisite_version = 2.5
+multisite_version = 2.6

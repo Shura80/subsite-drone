@@ -1,0 +1,53 @@
+Index: views_data_export_phpexcel.views.inc
+<+>UTF-8
+===================================================================
+--- a/views_data_export_phpexcel.views.inc
++++ b/views_data_export_phpexcel.views.inc
+@@ -22,8 +22,8 @@
+         'export feed file' => '%view.xlsx',
+         'export feed icon' => drupal_get_path('module', 'views_data_export_phpexcel') . '/images/xlsx.png',
+         'additional themes' => array(
+-          'views_data_export_xlsx_header' => 'style',
+-          'views_data_export_xlsx_body' => 'style',
++          'views_data_export_phpexcel_xlsx_header' => 'style',
++          'views_data_export_phpexcel_xlsx_body' => 'style',
+         ),
+         'additional themes base' => 'views_data_export_xlsx',
+         'path' => $path . '/plugins',
+Index: views_data_export_phpexcel.module
+<+>UTF-8
+===================================================================
+--- a/views_data_export_phpexcel.module
++++ b/views_data_export_phpexcel.module
+@@ -43,7 +43,7 @@
+  */
+ function views_data_export_phpexcel_theme() {
+   // PHPExcel XLSX theme.
+-  $hooks['views_data_export_xlsx_body'] = array(
++  $hooks['views_data_export_phpexcel_xlsx_body'] = array(
+     'variables' => array(
+       'view' => NULL,
+       'options' => NULL,
+Index: views_data_export_phpexcel.theme.inc
+<+>UTF-8
+===================================================================
+--- a/views_data_export_phpexcel.theme.inc
++++ b/views_data_export_phpexcel.theme.inc
+@@ -8,7 +8,7 @@
+ /**
+  * Theme function for header row of XLSX file using PHPExcel.
+  */
+-function theme_views_data_export_xlsx_header(&$vars) {
++function theme_views_data_export_phpexcel_xlsx_header(&$vars) {
+   _views_data_export_header_shared_preprocess($vars);
+   $rows = array($vars['header']);
+   $vars['view']->style_plugin->appendRows($rows);
+@@ -17,7 +17,7 @@
+ /**
+  * Theme function for data rows XLSX file using PHPExcel.
+  */
+-function theme_views_data_export_xlsx_body(&$vars) {
++function theme_views_data_export_phpexcel_xlsx_body(&$vars) {
+   _views_data_export_body_shared_preprocess($vars);
+   $rows = $vars['themed_rows'];
+   $vars['view']->style_plugin->appendRows($rows);

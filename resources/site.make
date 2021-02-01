@@ -13,8 +13,20 @@ projects[admin_views][subdir] = "contrib"
 ; https://www.drupal.org/sa-contrib-2019-076
 projects[admin_views][version] = "1.7"
 
-projects[captcha][subdir] = "contrib"
-projects[captcha][version] = "1.7"
+projects[apachesolr][subdir] = "contrib"
+projects[apachesolr][version] = "1.12"
+; Issue #1649158 : Date Facets (without a time) can show in Multiple Months.
+; https://drupal.org/node/1649158
+; https://webgate.ec.europa.eu/CITnet/jira/browse/MULTISITE-4335
+projects[apachesolr][patch][] = https://www.drupal.org/files/apachesolr-multiple-dates-hack-1649158-15.patch
+; Issue #2657666 : Notice: Undefined property: stdClass::$status_message
+; https://www.drupal.org/node/2657666
+; https://webgate.ec.europa.eu/CITnet/jira/browse/NEXTEUROPA-7651
+projects[apachesolr][patch][] = https://www.drupal.org/files/issues/apachesolr-undefined-property-2657666-4-D7.patch
+; Delay removing entities from the index.
+; https://www.drupal.org/node/2764637
+; https://webgate.ec.europa.eu/CITnet/jira/browse/NEXTEUROPA-11582
+projects[apachesolr][patch][] = https://www.drupal.org/files/issues/2020-01-28/apachesolr-delay-entity-removal-2764637-4.patch
 
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/b5d7Eg
 projects[double_field][subdir] = "contrib"
@@ -33,7 +45,7 @@ projects[entityreference_view_widget][version] = "2.1"
 
 projects[expanding_formatter][subdir] = "contrib"
 projects[expanding_formatter][version] = "1.0"
-;projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
+projects[expanding_formatter][patch][] = patches/expanding_formatter-fix_repeated_text.patch
 
 projects[feeds_tamper_string2id][subdir] = "contrib"
 projects[feeds_tamper_string2id][version] = "1.1"
@@ -47,10 +59,6 @@ projects[field_collection][patch][] = patches/field_collection-entity_field_quer
 projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-11-23/field_collection-php72-beta11-2936874-20.patch
 projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-11-30/field_collection_migrate_notice_php_71-3009729-6.patch
 projects[field_collection][patch][] = https://www.drupal.org/files/issues/2018-12-13/field_collection-beta12-php72-countable-2992575-25.txt
-
-; Temporary local downgrade of File Entity for the Solr issues (NEMA-2381).
-projects[file_entity][subdir] = "contrib"
-projects[file_entity][version] = "2.10"
 
 projects[geocoder][subdir] = "contrib"
 projects[geocoder][version] = "1.3"
@@ -97,10 +105,6 @@ projects[postal_code_validation][version] = "1.7"
 projects[queue_mail][subdir] = "contrib"
 projects[queue_mail][version] = "1.6"
 
-projects[redirect][subdir] = "contrib"
-projects[redirect][version] = "1.0-rc3"
-projects[redirect][patch][] = https://www.drupal.org/files/issues/2018-11-28/redirect-func_get_args-3016519-2.patch
-
 projects[shs][subdir] = "contrib"
 projects[shs][version] = "1.8"
 
@@ -121,15 +125,12 @@ projects[uuid_features][version] = "1.0-rc1"
 projects[views_between_dates_filter][subdir] = "contrib"
 projects[views_between_dates_filter][version] = "1.0"
 
-; https://webgate.ec.europa.eu/fpfis/wikis/x/cR_CE
-projects[views_data_export_phpexcel][subdir] = "contrib"
-projects[views_data_export_phpexcel][version] = "1.0"
-projects[views_data_export_phpexcel][patch][] = https://www.drupal.org/files/issues/support_batch-2644866-11.patch
-
+; https://webgate.ec.europa.eu/fpfis/wikis/x/kYjvIg
 projects[views_data_export_phpspreadsheet][download][type] = "git"
 projects[views_data_export_phpspreadsheet][download][url] = "https://git.drupalcode.org/project/views_data_export_phpspreadsheet.git"
 projects[views_data_export_phpspreadsheet][download][revision] = "2c285de339ba30fa9f0f8303f2d41fd3971bed97"
 projects[views_data_export_phpspreadsheet][subdir] = "contrib"
+projects[views_data_export_phpspreadsheet][patch][] = patches/views_data_export_phpspreadsheet-fix_library_version_detection.patch
 
 ; https://webgate.ec.europa.eu/fpfis/wikis/x/1YDBEg
 projects[views_flag_refresh][subdir] = "contrib"

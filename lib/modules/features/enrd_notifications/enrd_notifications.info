@@ -1,7 +1,7 @@
 name = ENRD Notifications
 description = Configuration for Message Stack based ENRD Notification system.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = better_exposed_filters
 dependencies[] = field_group
@@ -114,4 +114,4 @@ features_exclude[dependencies][views_bulk_operations] = views_bulk_operations
 features_exclude[dependencies][context] = context
 features_exclude[dependencies][flag] = flag
 features_exclude[dependencies][message] = message
-multisite_version = 2.5
+multisite_version = 2.6

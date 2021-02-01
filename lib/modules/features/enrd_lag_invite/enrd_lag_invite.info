@@ -1,7 +1,7 @@
 name = ENRD LAG Invite
 description = ENRD LAG Database invite system
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = better_formats
 dependencies[] = date
@@ -45,4 +45,4 @@ features[views_view][] = enrd_lag_invite_dashboard
 features_exclude[og_features_role][node:esi_funds_og:National manager] = node:esi_funds_og:National manager
 features_exclude[og_features_role][node:lag:LAG Contact] = node:lag:LAG Contact
 features_exclude[og_features_role][node:lag:LAG Manager] = node:lag:LAG Manager
-multisite_version = 2.5
+multisite_version = 2.6

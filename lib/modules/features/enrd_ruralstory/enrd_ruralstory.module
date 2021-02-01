@@ -356,11 +356,19 @@ function enrd_ruralstory_preprocess_flag(&$variables) {
         $variables['flag_before'] = $flagging_data->{ENRD_RURALSTORY_STATUS_FIELD}[LANGUAGE_NONE][0]['value'];
         $variables['flag_before_class'] = str_replace(' ', '-', drupal_strtolower($variables['flag_before']));
         $variables['flag_wrapper_classes_array'][] = $variables['flag_before_class'];
-        // Get the user who flagged the submission.
-        $flag_user_obj = user_load($flagging_data->field_enrd_ruralstory_flag_user[LANGUAGE_NONE][0]['target_id']);
-        $flag_username = $flag_user_obj->realname ? $flag_user_obj->realname : $flag_user_obj->name;
-        $variables['flag_username_prefix'] = t('Set by');
-        $variables['flag_username'] = $flag_username;
+
+        // Set the user who flagged the submission.
+        if (!empty($flagging_data->field_enrd_ruralstory_flag_user[LANGUAGE_NONE][0]['target_id'])) {
+          $variables['flag_username'] = '';
+          $flag_user_obj = user_load($flagging_data->field_enrd_ruralstory_flag_user[LANGUAGE_NONE][0]['target_id']);
+
+          if (!empty($flag_user_obj)) {
+            $flag_username = $flag_user_obj->realname ? $flag_user_obj->realname : $flag_user_obj->name;
+            $variables['flag_username_prefix'] = t('Set by');
+            $variables['flag_username'] = $flag_username;
+          }
+        }
+
       }
     }
     else {

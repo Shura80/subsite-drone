@@ -139,6 +139,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subcp_name']['id'] = 'field_enrd_sfr_pub_subcp_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subcp_name']['table'] = 'field_data_field_enrd_sfr_pub_subcp_name';
@@ -443,6 +444,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subcp_name']['id'] = 'field_enrd_sfr_pub_subcp_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subcp_name']['table'] = 'field_data_field_enrd_sfr_pub_subcp_name';
@@ -1069,6 +1071,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contcp_name']['id'] = 'field_enrd_sfr_pub_contcp_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contcp_name']['table'] = 'field_data_field_enrd_sfr_pub_contcp_name';
@@ -1268,6 +1271,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contcp_name']['id'] = 'field_enrd_sfr_pub_contcp_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contcp_name']['table'] = 'field_data_field_enrd_sfr_pub_contcp_name';
@@ -1584,6 +1588,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['id'] = 'field_enrd_sfr_pub_subehd_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['table'] = 'field_data_field_enrd_sfr_pub_subehd_name';
@@ -1660,6 +1665,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['id'] = 'field_enrd_sfr_pub_subehd_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['table'] = 'field_data_field_enrd_sfr_pub_subehd_name';
@@ -1816,6 +1822,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['id'] = 'field_enrd_sfr_pub_subehd_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_subehd_name']['table'] = 'field_data_field_enrd_sfr_pub_subehd_name';
@@ -2098,6 +2105,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contehd_name']['id'] = 'field_enrd_sfr_pub_contehd_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contehd_name']['table'] = 'field_data_field_enrd_sfr_pub_contehd_name';
@@ -2274,6 +2282,7 @@ function enrd_sfr_pub_views_default_views() {
   $handler->display->display_options['fields']['sfrid']['table'] = 'enrd_sfr';
   $handler->display->display_options['fields']['sfrid']['field'] = 'sfrid';
   $handler->display->display_options['fields']['sfrid']['label'] = 'Request id';
+  $handler->display->display_options['fields']['sfrid']['separator'] = '';
   /* Field: ENRD Subscription Form Request: Name */
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contehd_name']['id'] = 'field_enrd_sfr_pub_contehd_name';
   $handler->display->display_options['fields']['field_enrd_sfr_pub_contehd_name']['table'] = 'field_data_field_enrd_sfr_pub_contehd_name';

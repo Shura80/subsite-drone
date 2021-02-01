@@ -18,7 +18,6 @@ project.admin.email = ${project.admin.username}@example.com
 # Platform configuration.
 # -----------------------
 profile = multisite_drupal_communities
-# platform.package.version = 2.5
 platform.package.version = 2.6
 
 # The location of the .htaccess file in the Drupal root folder.
@@ -30,8 +29,5 @@ build.platform.htaccess.append.text =  ${line.separator}# Legacy prefix substitu
 # Configuration to append to the robots.txt
 build.platform.robots.append.text = ${line.separator}# ENRD Specific directives${line.separator}User-agent: *${line.separator}Disallow: /enrd-static/${line.separator}
 
+behat.tags = ~@wip&&~@online
 behat.formatter.name = progress
-
-# SCSS compiled directory
-resources.dir.bin = ${resources.dir}/vendor/bin
-sass.compiled.dir = ${lib.dir.themes}/${project.id}/css

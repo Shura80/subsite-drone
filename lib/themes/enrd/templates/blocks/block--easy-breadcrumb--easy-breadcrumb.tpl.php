@@ -46,6 +46,6 @@
 ?>
 <ol class="breadcrumb">
   <?php
-    print drupal_render($menu_breadcrumb) . $content;
+    print $content;
   ?>
 </ol>

@@ -133,16 +133,12 @@ function enrd_lag_database_menu_alter(&$items) {
     ) + $items['leader-clld/clld-partner-search/active'];
 
     // Set "Active offers" search page as default tab.
-    $items['leader-clld/clld-partner-search/active']['title'] = t('Active offers');
     $items['leader-clld/clld-partner-search/active']['type'] = MENU_DEFAULT_LOCAL_TASK;
-    $items['leader-clld/clld-partner-search/active/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
   }
 
   if (isset($items['leader-clld/clld-partner-search/expired'])) {
     // Set "Expired offers" search page as additional tab.
-    $items['leader-clld/clld-partner-search/expired']['title'] = t('Expired offers');
     $items['leader-clld/clld-partner-search/expired']['type'] = MENU_LOCAL_TASK;
-    $items['leader-clld/clld-partner-search/expired/%']['type'] = MENU_VISIBLE_IN_BREADCRUMB;
   }
 
 }
@@ -206,6 +202,7 @@ function enrd_lag_database_menu_link_alter(&$item) {
           }
         }
         break;
+
     }
   }
 }
@@ -1193,10 +1190,11 @@ function enrd_lag_database_apachesolr_field_mappings_alter(&$mappings, $entity_t
  * Implements hook_page_alter().
  */
 function enrd_lag_database_page_alter(&$page) {
+  $is_lag_webform = isset($page['content']['system_main']['#node']->uuid) && ($page['content']['system_main']['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID);
+  $is_display_mode = isset($page['content']['system_main']['#mode']) && ($page['content']['system_main']['#mode'] == 'display');
+
   // Set custom theme to the "Contact this LAG" Webform Submission page.
-  if (isset($page['content']['system_main']['#node']->uuid)
-    && ($page['content']['system_main']['#node']->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID)
-    && ($page['content']['system_main']['#mode'] == 'display')) {
+  if ($is_lag_webform && $is_display_mode) {
     $page['content']['system_main']['#theme'] = 'enrd_lag_database_webform_submission_page';
   }
 }
@@ -1213,7 +1211,7 @@ function enrd_lag_database_process_enrd_lag_database_webform_submission_page(&$v
 }
 
 /**
- * Format a "Contact this LAG" Weform Submission page.
+ * Format a "Contact this LAG" Webform Submission page.
  *
  * @param mixed $variables
  *   An associative array containing:
@@ -1307,6 +1305,9 @@ function enrd_lag_database_apachesolr_search_page_alter(&$build, $search_page) {
         'table-enrd',
       ),
     );
+
+    // Force CLLD Partner Search solr page title.
+    drupal_set_title(t('CLLD Partner Search'));
   }
 
 }
@@ -1689,14 +1690,6 @@ function enrd_lag_database_form_webform_client_form_alter(&$form, &$form_state, 
 
     hide($form['submitted']['enrd_lag_database_contact_this_lag_coop_offer']);
     hide($form['submitted']['enrd_lag_database_contact_this_lag_lag']);
-
-    // Captcha for anonymous.
-    if (user_is_anonymous()) {
-      $form['captcha'] = array(
-        '#type' => 'captcha',
-        '#captcha_type' => 'image_captcha/Image',
-      );
-    }
   }
 }
 

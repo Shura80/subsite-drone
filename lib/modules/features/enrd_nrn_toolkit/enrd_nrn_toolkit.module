@@ -11,16 +11,6 @@ include_once 'enrd_nrn_toolkit.features.inc';
 define('ENRD_NRN_TOOLKIT_CONTACT_US_UUID', 'b1cd0e38-44ba-4455-aaec-34494bb77a85');
 
 /**
- * Implements hook_override_multisite_components().
- */
-function enrd_nrn_toolkit_override_multisite_components() {
-  // Adds CAPTCHA to the "Contact us" form component.
-  enrd_nrn_toolkit_post_features_revert('uuid_node');
-
-  watchdog('enrd_nrn_toolkit', 'Override multisite components');
-}
-
-/**
  * Implements hook_menu().
  */
 function enrd_nrn_toolkit_menu() {
@@ -825,49 +815,6 @@ function enrd_nrn_toolkit_form_webform_client_form_alter(&$form, &$form_state, $
     if ($form['actions']['submit']['#type'] == 'submit') {
       $form['actions']['submit']['#suffix'] = '<div class="webform-nrn-toolkit-contact-us-disclaimer">' .
         t('* The information you provide will be directly forwarded to the Networking team of the ENRD Contact Point.') . '</div>';
-    }
-
-    // Captcha for anonymous.
-    if (user_is_anonymous()) {
-      $form['captcha'] = array(
-        '#type' => 'captcha',
-        '#captcha_type' => 'image_captcha/Image',
-      );
-    }
-
-  }
-}
-
-/**
- * Implements hook_post_features_revert().
- */
-function enrd_nrn_toolkit_post_features_revert($component) {
-  // Set once captcha type to the "Contact us" form after feature revert.
-  if (!empty($component) && $component == 'uuid_node') {
-    module_load_include('inc', 'uuid', 'uuid.entity');
-    $ids = entity_get_id_by_uuid('node', array(ENRD_NRN_TOOLKIT_CONTACT_US_UUID));
-
-    if (!empty($ids)) {
-      $contact_us_form_id = reset($ids);
-
-      // Add validation ("Message" component: max length 800 chars).
-      $contact_us_node = node_load($contact_us_form_id);
-      $contact_us_message = webform_get_cid($contact_us_node, 'enrd_nrn_toolkit_contact_us_message', 0);
-
-      $values = array(
-        'action' => 'add',
-        'nid' => $contact_us_form_id,
-        'rulename' => 'Max length',
-        'validator' => 'max_length',
-        'data' => 800,
-        'rule_components' => array($contact_us_message => $contact_us_message),
-      );
-      // Check if the Webform already has some validation rules.
-      $contact_us_form = webform_validation_get_node_rules($contact_us_form_id);
-
-      if (empty($contact_us_form)) {
-        webform_validation_rule_save($values);
-      }
     }
   }
 }

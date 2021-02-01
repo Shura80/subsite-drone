@@ -1,7 +1,7 @@
 name = ENRD Publication Subscriptions forms
 description = ENRD Publication Subscriptions forms and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = double_field
 dependencies[] = ds
@@ -154,4 +154,4 @@ features_exclude[dependencies][i18n_field] = i18n_field
 features_exclude[dependencies][mimemail] = mimemail
 features_exclude[dependencies][rules] = rules
 features_exclude[dependencies][views_bootstrap] = views_bootstrap
-multisite_version = 2.5
+multisite_version = 2.6

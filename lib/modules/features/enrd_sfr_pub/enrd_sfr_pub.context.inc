@@ -155,7 +155,7 @@ function enrd_sfr_pub_context_default_contexts() {
           'module' => 'menu',
           'delta' => 'menu-enrd-sfr-pub-subscribe',
           'region' => 'sidebar_left',
-          'weight' => '-8',
+          'weight' => '-7',
         ),
       ),
     ),

@@ -40,7 +40,7 @@ Feature: ENRD LAG Database Contact form. Test the submissions related to webform
       | bdd-user1-contact | bdd-user1-con@example.com | test | authenticated user, LAG User | BDD Belgium            | BDD LAG Contact Form         |
       | bdd-user2-manager | bdd-user2-man@example.com | test | authenticated user, LAG User | BDD Belgium            | BDD LAG Another Contact Form |
 
-  @anonymous @privacy
+  @anonymous @contact-form @privacy
   Scenario: As Anonymous I want to contact the responsible LAG through the contact form
   available on the right in every Cooperation Offer.
     # As anonymous check that the form is visible and in the right place.
@@ -56,10 +56,9 @@ Feature: ENRD LAG Database Contact form. Test the submissions related to webform
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
     And I press the "Submit" button
-    # Check that CAPTCHA blocks submissions without image code.
-    Then I should see the following error messages:
-      | error messages                                |
-      | What code is in the image? field is required. |
+    Then I should see the following success messages:
+      | success messages|
+      | Thank you for your submission. Your email has been sent successfully. You will be contacted shortly by the LAG contact person in charge. |
 
   @emails @authenticated @lag-managers @lag-contacts @contact-form @privacy
   Scenario: As an authenticated user I should be able to contact the Manager via the contact form.
@@ -69,7 +68,6 @@ Feature: ENRD LAG Database Contact form. Test the submissions related to webform
     When I am at "lag/bdd-be-lag-contact/offer/bdd-coop-contact-form"
     And I fill in "edit-submitted-enrd-lag-database-contact-this-lag-your-organisation" with "BDD LAG Inc."
     And I fill in "edit-submitted-enrd-lag-database-contact-this-lag-message" with "BDD - Hello, This is BDD User!"
-    And the test email system is enabled
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
     And I press the "Submit" button
@@ -99,7 +97,6 @@ Feature: ENRD LAG Database Contact form. Test the submissions related to webform
     And I am at "lag/bdd-be-lag-another-contact/offer/bdd-coop-another-contact-form"
     When I fill in "edit-submitted-enrd-lag-database-contact-this-lag-your-organisation" with "BDD LAG S.p.a."
     And I fill in "edit-submitted-enrd-lag-database-contact-this-lag-message" with "BDD - Hello, This is BDD User2 Manager!"
-    And the test email system is enabled
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
     And I press the "Submit" button

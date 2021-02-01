@@ -173,7 +173,7 @@ Feature: ENRD Publication Subscriptions forms.
     But I should not see an "#form-item-field-enrd-sfr-pub-subcp-type-und-0-field-enrd-sfr-pub-subcp-lng-cop-und-1" element
 
   @anonymous @javascript @enrd-sfr @subscribe @cp
-  Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to CP publications.
+  Scenario: As Anonymous I get validation errors while filling in the form to subscribe to CP publications.
     Given I am an anonymous user
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-cp"
     And I check the box "Paper version"
@@ -193,7 +193,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Country field is required.                                 |
       | Address Line 1 field is required.                          |
       | City field is required.                                    |
-      | What code is in the image? field is required.              |
       | You must agree with the ENRD Privacy Statement to proceed. |
     And I should not see the following error messages:
       | error messages                    |
@@ -288,7 +287,6 @@ Feature: ENRD Publication Subscriptions forms.
       | mail            | james.bond@example.com |
       | field_firstname | James                      |
       | field_lastname  | Bond                       |
-    And the test email system is enabled
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-ehd"
     And I fill in "Email" with "another-email@example.com"
     And I select "Researcher" from "Type of organisation"
@@ -304,7 +302,7 @@ Feature: ENRD Publication Subscriptions forms.
     Then I should see the message "Your submission request has been forwarded correctly."
 
   @anonymous @enrd-sfr @subscribe @ehd
-  Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to EHD publications.
+  Scenario: As Anonymous I get validation errors while filling in the form to subscribe to EHD publications.
     Given I am an anonymous user
     When I am at "enrd-sfr/add/enrd-sfr-pub-subscribe-ehd"
     And I press the "Send request" button
@@ -313,7 +311,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Name field is required.                                    |
       | Surname field is required.                                 |
       | Email field is required.                                   |
-      | What code is in the image? field is required.              |
       | You must agree with the ENRD Privacy Statement to proceed. |
 
   @authenticated @javascript @enrd-sfr @contact @cp @privacy
@@ -399,7 +396,7 @@ Feature: ENRD Publication Subscriptions forms.
     And I should not see "jane.austen@example.com" in the "content" region
 
   @anonymous @javascript @enrd-sfr @contact @cp
-  Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to CP publications.
+  Scenario: As Anonymous I get validation errors while filling in the form to subscribe to CP publications.
     Given I am an anonymous user
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-cp"
     And I select "Unsubscribe" from "Reason"
@@ -411,7 +408,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Email field is required.                                              |
       | Type of publication(s) field is required.                             |
       | Are you subscribed for electronic or paper copies? field is required. |
-      | What code is in the image? field is required.                         |
       | You must agree with the ENRD Privacy Statement to proceed.            |
     And I should not see the following error messages:
       | error messages                                                                               |
@@ -428,7 +424,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Email field is required.                                                                     |
       | Type of publication(s) field is required.                                                    |
       | Are you subscribed for electronic or paper copies? field is required.                        |
-      | What code is in the image? field is required.                                                |
       | You must agree with the ENRD Privacy Statement to proceed.                                   |
       | Please specify how you would like to modify your subscription information field is required. |
     And I should not see the following error messages:
@@ -446,7 +441,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Email field is required.                                   |
       | Surname field is required.                                 |
       | Type of publication(s) field is required.                  |
-      | What code is in the image? field is required.              |
       | You must agree with the ENRD Privacy Statement to proceed. |
       | Country field is required.                                 |
       | Address Line 1 field is required.                          |
@@ -531,7 +525,7 @@ Feature: ENRD Publication Subscriptions forms.
     And I should not see "marie.curie@example.com" in the "content" region
 
   @anonymous @enrd-sfr @contact @ehd
-  Scenario: As Anonymous I get validation errors (also for the captcha) while filling in the form to subscribe to EHD publications.
+  Scenario: As Anonymous I get validation errors while filling in the form to subscribe to EHD publications.
     Given I am an anonymous user
     When I am at "enrd-sfr/add/enrd-sfr-pub-contact-ehd"
     And I select "Unsubscribe" from "Action"
@@ -541,7 +535,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Name field is required.                                    |
       | Surname field is required.                                 |
       | Email field is required.                                   |
-      | What code is in the image? field is required.              |
       | You must agree with the ENRD Privacy Statement to proceed. |
     And I should not see the following error messages:
       | error messages                                                                               |
@@ -556,7 +549,6 @@ Feature: ENRD Publication Subscriptions forms.
       | Name field is required.                                                                      |
       | Surname field is required.                                                                   |
       | Email field is required.                                                                     |
-      | What code is in the image? field is required.                                                |
       | You must agree with the ENRD Privacy Statement to proceed.                                   |
       | Please specify how you would like to modify your subscription information field is required. |
     And I should not see the following error messages:

@@ -27,6 +27,9 @@ To accept this invitation, please click on this one-time use link, valid for 30 
 
 After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your NRN profile where you can update the majority of the available fields. Find out how to do all this here: [site:base-url]/[site:public-folder-path]/
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Best Regards,
 
 The ENRD Contact Point team
@@ -48,6 +51,9 @@ To accept this invitation, please click on this one-time use link, valid for 30 
 
 After clicking the link above, you can proceed with setting up your account, after which you will be automatically redirected to your NRN profile where you can update the majority of the available fields. Find out how to do all this here: [site:base-url]/[site:public-folder-path]/
 
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
+
 Best Regards,
 
 The ENRD Contact Point team
@@ -59,7 +65,10 @@ define('ENRD_NRNP_INVITE_MAIL_CONFIRM_EDITOR_BODY', <<<TEXT
 Dear [user:name],
 
 You can now manage the NRN Profile: "[node:title_field]" located at: [node:url].
-Please click this link [site:base-url]/ecas to log in and proceed with setting up your account and updating your NRN Profile.
+Please click this link: [site:login-url] to log in and proceed with setting up your account and updating your NRN Profile.
+
+For more information on EU Login, please refer to the following documentation:
+[site:eu-login-tutorial].
 
 Best Regards,
 The ENRD Contact Point team.

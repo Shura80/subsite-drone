@@ -409,7 +409,7 @@ function enrd_mastermind_context_default_contexts() {
           'module' => 'menu',
           'delta' => 'menu-enrd-join-us',
           'region' => 'sidebar_left',
-          'weight' => '-7',
+          'weight' => '-6',
         ),
       ),
     ),
@@ -450,9 +450,9 @@ function enrd_mastermind_context_default_contexts() {
           'region' => 'header_top',
           'weight' => '0',
         ),
-        'enrd_mastermind-enrd_easy_breadcrumb' => array(
-          'module' => 'enrd_mastermind',
-          'delta' => 'enrd_easy_breadcrumb',
+        'easy_breadcrumb-easy_breadcrumb' => array(
+          'module' => 'easy_breadcrumb',
+          'delta' => 'easy_breadcrumb',
           'region' => 'featured',
           'weight' => '-10',
         ),

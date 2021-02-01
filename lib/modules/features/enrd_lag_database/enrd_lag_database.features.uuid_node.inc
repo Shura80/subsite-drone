@@ -102,7 +102,7 @@ function enrd_lag_database_uuid_features_default_content() {
     ),
     'webform' => array(
       'nid' => '41496fd1-6798-4c7c-8323-77a3ede96e17',
-      'confirmation' => '<p>Thank you for your submission. Your email has been sent successfully. You will be contacted shortly by the&nbsp;LAG contact person in charge.</p>
+      'confirmation' => '<p>Thank you for your submission. Your email has been sent successfully. You will be contacted shortly by the LAG contact person in charge.</p>
   ',
       'confirmation_format' => 'full_html',
       'redirect_url' => '<none>',
@@ -111,7 +111,6 @@ function enrd_lag_database_uuid_features_default_content() {
       'allow_draft' => 0,
       'auto_save' => 0,
       'submit_notice' => 1,
-      'confidential' => 0,
       'submit_text' => '',
       'submit_limit' => -1,
       'submit_interval' => -1,
@@ -121,7 +120,7 @@ function enrd_lag_database_uuid_features_default_content() {
       'progressbar_page_number' => 0,
       'progressbar_percent' => 0,
       'progressbar_pagebreak_labels' => 1,
-      'progressbar_include_confirmation' => 1,
+      'progressbar_include_confirmation' => 0,
       'progressbar_label_first' => 'Start',
       'progressbar_label_confirmation' => 'Complete',
       'preview' => 0,
@@ -131,6 +130,7 @@ function enrd_lag_database_uuid_features_default_content() {
       'preview_message' => '',
       'preview_message_format' => 'full_html',
       'preview_excluded_components' => array(),
+      'confidential' => 0,
       'record_exists' => TRUE,
       'roles' => array(
         0 => 1,
@@ -152,12 +152,12 @@ function enrd_lag_database_uuid_features_default_content() {
     
   Cooperation Offer: [current-page:url].
     
-  Manage your Cooperation offers: <a href="[site:base-url]/ecas">Log in page</a>.',
+  Manage your Cooperation offers: <a href="[site:login-url]">Log in page</a>.',
           'excluded_components' => array(),
           'html' => 1,
           'attachments' => 0,
-          'exclude_empty' => 0,
           'extra' => FALSE,
+          'exclude_empty' => 0,
           'status' => 1,
         ),
         2 => array(
@@ -179,8 +179,8 @@ function enrd_lag_database_uuid_features_default_content() {
           'excluded_components' => array(),
           'html' => 0,
           'attachments' => 0,
-          'exclude_empty' => 0,
           'extra' => FALSE,
+          'exclude_empty' => 0,
           'status' => 1,
         ),
       ),
@@ -417,6 +417,7 @@ function enrd_lag_database_uuid_features_default_content() {
       'path' => array(
         'source' => '41496fd1-6798-4c7c-8323-77a3ede96e17',
       ),
+      'validation' => array(),
     ),
     'comment_count' => 0,
     'print_html_display' => 1,
@@ -429,8 +430,8 @@ function enrd_lag_database_uuid_features_default_content() {
     'print_pdf_display_comment' => 0,
     'print_pdf_display_urllist' => 1,
     'subscriptions_notify' => TRUE,
-    'print_pdf_size' => NULL,
-    'print_pdf_orientation' => NULL,
+    'print_pdf_size' => '',
+    'print_pdf_orientation' => '',
     'pathauto_perform_alias' => FALSE,
   );
   return $nodes;

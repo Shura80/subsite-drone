@@ -1,7 +1,7 @@
 name = ENRD Publications
 description = ENRD Publications and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = context
 dependencies[] = ds
@@ -271,4 +271,4 @@ features_exclude[variable][xmlsitemap_settings_taxonomy_term_enrd_programming_pe
 features_exclude[variable][xmlsitemap_settings_node_publication] = xmlsitemap_settings_node_publication
 features_exclude[variable][pathauto_taxonomy_term_project_key_words_pattern] = pathauto_taxonomy_term_project_key_words_pattern
 features_exclude[variable][xmlsitemap_settings_taxonomy_term_enrd_rdps] = xmlsitemap_settings_taxonomy_term_enrd_rdps
-multisite_version = 2.5
+multisite_version = 2.6

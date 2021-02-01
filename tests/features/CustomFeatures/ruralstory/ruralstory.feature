@@ -12,7 +12,6 @@ Feature: ENRD Rural Story Form
       | name                  |
       | BDD Rural story Topic |
     And a document "bdd-file.pdf"
-    And the test email system is enabled
     And I create the following "enrd_sfr" entity of type "enrd_ruralstory":
       | field_enrd_ruralstory_subject     | BDD Rural Story                      |
       | field_enrd_ruralstory_topic       | BDD Rural story Topic                |
@@ -38,8 +37,7 @@ Feature: ENRD Rural Story Form
     And the email to "jdoe@example.com" should contain "You have submitted 1 relevant link(s)"
     And the email to "jdoe@example.com" should contain "You have submitted 1 attached file(s)"
 
-  Scenario: Check that anonymous are blocked by captcha and get validation errors and
-  authenticated users can submit Rural Story Form and get a visual and email confirmations.
+  Scenario: Check validation errors and check that authenticated users can submit Rural Story Form and get a visual and email confirmations.
     Given I am an anonymous user
     And I am at "enrd-sfr/add/enrd-ruralstory"
     Then I should see the heading "Share your Rural Story"
@@ -53,7 +51,6 @@ Feature: ENRD Rural Story Form
       | Subject field is required.                                          |
       | Surname field is required.                                          |
       | Theme / topic field is required.                                    |
-      | What code is in the image? field is required.                       |
       | You must agree with the ENRD CP Authorization Statement to proceed. |
       | You must agree with the ENRD Privacy Statement to proceed.          |
       | You must agree with the Collection of Data Statement to proceed.    |
@@ -174,10 +171,10 @@ Feature: ENRD Rural Story Form
     Then I should see "eligible" in the content
     And I should see the link "Remove status"
     # Remove status.
-    When I click "Remove status"
-    And I wait for AJAX to finish
-    Then I should not see "eligible" in the content
-    And I should see the link "Set status"
+    # When I click "Remove status"
+    # And I wait for AJAX to finish
+    # Then I should not see "eligible" in the content
+    # And I should see the link "Set status"
 
   @javascript @webmaster
   Scenario: Check that webmaster users can also delete submission items.

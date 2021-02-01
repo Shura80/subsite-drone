@@ -1,7 +1,7 @@
 name = ENRD Gallery
 description = ENRD Gallery and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = ctools
 dependencies[] = ds
@@ -96,4 +96,4 @@ features_exclude[variable][pathauto_node_gallery_fr_pattern] = pathauto_node_gal
 features_exclude[variable][pathauto_node_gallery_it_pattern] = pathauto_node_gallery_it_pattern
 features_exclude[variable][pathauto_node_gallery_pl_pattern] = pathauto_node_gallery_pl_pattern
 features_exclude[variable][pathauto_node_gallery_und_pattern] = pathauto_node_gallery_und_pattern
-multisite_version = 2.5
+multisite_version = 2.6

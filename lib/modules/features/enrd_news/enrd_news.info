@@ -1,7 +1,7 @@
 name = ENRD News & Events
 description = ENRD News & Events and related content feature.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = addressfield
 dependencies[] = better_exposed_filters
@@ -162,4 +162,4 @@ features_exclude[variable][pathauto_node_event_ro_pattern] = pathauto_node_event
 features_exclude[variable][pathauto_node_event_und_pattern] = pathauto_node_event_und_pattern
 features_exclude[variable][xmlsitemap_settings_node_event] = xmlsitemap_settings_node_event
 features_exclude[variable][xmlsitemap_settings_node_news] = xmlsitemap_settings_node_news
-multisite_version = 2.5
+multisite_version = 2.6

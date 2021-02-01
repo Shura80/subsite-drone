@@ -18,7 +18,11 @@ function enrd_lag_invite_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_enrd_lag_invitation_resend',
-    'indexes' => array(),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
     'locked' => 1,
     'module' => 'date',
     'settings' => array(

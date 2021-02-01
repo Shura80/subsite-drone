@@ -1,7 +1,7 @@
 name = ENRD NRN Toolkit
 description = ENRD NRN Toolkit and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = enrd_mastermind
 dependencies[] = enrd_taxonomies
@@ -150,4 +150,4 @@ features_exclude[variable][pathauto_node_nrn_resource_und_pattern] = pathauto_no
 features_exclude[variable][pathauto_taxonomy_term_enrd_networking_pattern] = pathauto_taxonomy_term_enrd_networking_pattern
 features_exclude[variable][xmlsitemap_settings_taxonomy_term_enrd_resource_type] = xmlsitemap_settings_taxonomy_term_enrd_resource_type
 files[] = plugins/facetapi/enrd_nrn_toolkit_widget_links.inc
-multisite_version = 2.5
+multisite_version = 2.6

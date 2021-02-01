@@ -342,11 +342,6 @@ function enrd_preprocess_block(&$variables) {
         $variables['content'] = theme('item_list', $data);
         break;
 
-      // Create menu_breadcrumb variable to be printed in breadcrumb block.
-      case 'enrd_mastermind-enrd_easy_breadcrumb':
-        $variables['menu_breadcrumb'] = menu_tree('menu-breadcrumb-menu');
-        break;
-
     }
   }
 }
@@ -519,17 +514,14 @@ function enrd_preprocess_html(&$variables) {
  * Implements hook_preprocess_easy_breadcrumb().
  */
 function enrd_preprocess_easy_breadcrumb(&$variables) {
-  // Fix easy breadcrumb items with formatted.
-  foreach ($variables['breadcrumb'] as &$crumb) {
-    $crumb['content'] = strip_tags($crumb['content']);
-  }
 
   $item = menu_get_item();
 
   // Change LAGs breacrumb in Edit (now Update).
   if ($item['path'] == 'node/%/edit' && $item['page_arguments'][1]->type == ENRD_LAG_DATABASE_LAG_GROUP_NODE
     && isset($item['page_arguments'][1]->nid)) {
-    $variables['breadcrumb'][2]['content'] = t('Update @type @title', [
+    unset($variables['breadcrumb'][0]);
+    $variables['breadcrumb'][2] = t('Update @type @title', [
       '@type' => node_type_get_name(ENRD_LAG_DATABASE_LAG_GROUP_NODE),
       '@title' => $item['page_arguments'][1]->title,
     ]);
@@ -539,24 +531,27 @@ function enrd_preprocess_easy_breadcrumb(&$variables) {
   if ((isset($item['page_arguments'][0]->uuid) && ($item['page_arguments'][0]->uuid == ENRD_LAG_DATABASE_LAG_CONTACT_UUID))
     && ($item['tab_root'] == 'node/%/submission/%')) {
     $submission = array_pop($variables['breadcrumb']);
-    unset($variables['breadcrumb']);
-    $variables['breadcrumb'][0] = array(
-      'content' => t('Manage my LAG: Replies to my Cooperation offers'),
-      'class' => $submission['class'],
-      'url' => 'my-lags/' . $item['page_arguments'][1]->data[7][0] . '/manage/contact-form',
-    );
+    $variables['breadcrumb'][0] = l(t('Manage my LAG: Replies to my Cooperation offers'), 'my-lags/' . $item['page_arguments'][1]->data[7][0] . '/manage/contact-form');
     $variables['breadcrumb'][1] = $submission;
     $variables['segments_quantity'] = count($variables['breadcrumb']);
   }
 
-  // Count and remove the last occurrence if present many time with same name.
-  $content = array_column($variables['breadcrumb'], 'content');
-  $occurrence = array_keys($content, end($content));
-  if (count($occurrence) > 1) {
-    array_pop($variables['breadcrumb']);
-    $variables['segments_quantity']--;
-  }
+  // Fix breadcrumb for CLLD Partner Search pages.
+  $clld_parent_paths = [
+    l(t('LEADER/CLLD'), 'leader-clld'),
+    l(t('CLLD Partner Search'), 'leader-clld/clld-partner-search'),
+  ];
 
+  // Custom breadcrumb for Expired CLLD paths.
+  if (preg_match('#^leader-clld/clld-partner-search/expired#', $item['path'])) {
+    $clld_parent_paths[] = t('Expired offers');
+    $variables['breadcrumb'] = $clld_parent_paths;
+  }
+  // Custom breadcrumb for Active CLLD paths.
+  elseif (preg_match('#^leader-clld/clld-partner-search#', $item['path'])) {
+    $clld_parent_paths[] = t('Active offers');
+    $variables['breadcrumb'] = $clld_parent_paths;
+  }
 }
 
 /**
@@ -773,37 +768,6 @@ function enrd_menu_link__menu_breadcrumb_menu(array $variables) {
   $element['#localized_options']['html'] = TRUE;
   $output = l($element['#title'], $element['#href'], $element['#localized_options']);
   return '<li>' . $output . $sub_menu . '</li>';
-}
-
-/**
- * Implements theme_easy_breadcrumb().
- */
-function enrd_easy_breadcrumb($variables) {
-  $breadcrumb = $variables['breadcrumb'];
-  $segments_quantity = $variables['segments_quantity'];
-
-  $html = '';
-
-  if ($segments_quantity > 0) {
-    for ($i = 0, $segments_quantity - 1; $i < $segments_quantity; ++$i) {
-      $it = $breadcrumb[$i];
-      $content = decode_entities($it['content']);
-      if (isset($it['url'])) {
-        $html .= '<li>' . l($content, $it['url'], [
-          'attributes' => [
-            'class' => $it['class'],
-            'title' => $content,
-          ],
-        ]) . '</li>';
-      }
-      else {
-        $class = implode(' ', $it['class']);
-        $html .= '<li class="' . $class . '" title="' . filter_xss($content) . '">' . $content . '</li>';
-      }
-    }
-  }
-
-  return $html;
 }
 
 /**

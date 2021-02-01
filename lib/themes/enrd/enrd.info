@@ -3,7 +3,7 @@ description = Sub theme of default theme, ec_resp for ENRD
 package = ENRD
 core = "7.x"
 base theme = ec_resp
-php = 5.5.9
+php = 7.3
 
 stylesheets[all][] = "css/enrd.min.css"
 
@@ -34,4 +34,4 @@ regions[footer] = "Footer"
 settings[shortcut_module_link] = 0
 
 ; Multisite versions
-multisite_version = 2.5
+multisite_version = 2.6

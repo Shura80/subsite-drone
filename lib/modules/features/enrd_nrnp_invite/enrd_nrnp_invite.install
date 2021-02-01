@@ -34,3 +34,13 @@ function enrd_nrnp_invite_uninstall() {
   variable_del('enrd_nrnp_invite_mail_confirm_cp_subject');
   variable_del('enrd_nrnp_invite_mail_confirm_cp_body');
 }
+
+/**
+ * ENRDPORTAL-542.
+ */
+function enrd_nrnp_invite_update_7201() {
+  // Update Invite mail bodies.
+  variable_del('enrd_nrnp_invite_mail_body');
+  variable_del('enrd_nrnp_invite_mail_renew_body');
+  variable_del('enrd_nrnp_invite_mail_confirm_editor_body');
+}

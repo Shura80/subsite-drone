@@ -49,7 +49,7 @@ function enrd_ehd_home_views_default_views() {
   $handler->display->display_options['relationships']['field_tax_origin_tid']['id'] = 'field_tax_origin_tid';
   $handler->display->display_options['relationships']['field_tax_origin_tid']['table'] = 'field_data_field_tax_origin';
   $handler->display->display_options['relationships']['field_tax_origin_tid']['field'] = 'field_tax_origin_tid';
-  /* Field: Content: Picture upload */
+  /* Field: Content: Images */
   $handler->display->display_options['fields']['field_picture_upload']['id'] = 'field_picture_upload';
   $handler->display->display_options['fields']['field_picture_upload']['table'] = 'field_data_field_picture_upload';
   $handler->display->display_options['fields']['field_picture_upload']['field'] = 'field_picture_upload';
@@ -132,7 +132,7 @@ function enrd_ehd_home_views_default_views() {
   $handler->display->display_options['sorts']['field_event_date_value']['table'] = 'field_data_field_event_date';
   $handler->display->display_options['sorts']['field_event_date_value']['field'] = 'field_event_date_value';
   $handler->display->display_options['sorts']['field_event_date_value']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -226,11 +226,11 @@ function enrd_ehd_home_views_default_views() {
     ),
     'trim_preserve_tags' => '',
   );
-  /* Sort criterion: Content: Sticky */
+  /* Sort criterion: Content: Sticky status */
   $handler->display->display_options['sorts']['sticky']['id'] = 'sticky';
   $handler->display->display_options['sorts']['sticky']['table'] = 'node';
   $handler->display->display_options['sorts']['sticky']['field'] = 'sticky';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -249,7 +249,7 @@ function enrd_ehd_home_views_default_views() {
   $handler = $view->new_display('block', 'Latest publications', 'latest_publ_block');
   $handler->display->display_options['display_description'] = 'Pinned and unpinned publications list, the newest first.';
   $handler->display->display_options['defaults']['sorts'] = FALSE;
-  /* Sort criterion: Content: Sticky */
+  /* Sort criterion: Content: Sticky status */
   $handler->display->display_options['sorts']['sticky']['id'] = 'sticky';
   $handler->display->display_options['sorts']['sticky']['table'] = 'node';
   $handler->display->display_options['sorts']['sticky']['field'] = 'sticky';
@@ -420,7 +420,7 @@ function enrd_ehd_home_views_default_views() {
   $handler->display->display_options['sorts']['created']['table'] = 'node';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';

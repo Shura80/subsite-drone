@@ -36,7 +36,7 @@ Feature: ENRD Tagging system
       | name           |
       | BDD Evaluation |
 
-  @javascript @editor
+  @javascript @editor @wip
   Scenario: I can create a new node and tag it.
     Given I am logged in as a user with the "editor" role
 

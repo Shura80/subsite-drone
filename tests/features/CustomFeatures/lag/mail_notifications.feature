@@ -36,7 +36,6 @@ Feature: ENRD LAG Database Notifications
       | field_enrd_lag_country | BDD Belgium                                              |
       | author                 | bdd-user-webmaster                                       |
       | language               | und                                                      |
-    Given the test email system is enabled
     And I am logged in as "bdd-user-webmaster"
     # I am in the "LAG profiles" > "Updates".
     When I am at "lag-dashboard?state=1"
@@ -80,7 +79,6 @@ Feature: ENRD LAG Database Notifications
     When I am at "lag-dashboard"
     And I click "Pending for publication"
     And I check the box "edit-views-bulk-operations-0"
-    And the test email system is enabled
     And I press "Reject publication" in the "content" region
     And I wait for the batch job to finish
     Then the email to "bdd-user-contact@example.com" should contain "ENRD LAG Database - your LAG's profile update has been rejected by the LAG webmaster"
@@ -108,7 +106,6 @@ Feature: ENRD LAG Database Notifications
     And I am logged in as "bdd-user-nat-manager"
     And I have the "National manager" role in the "European Agricultural Fund for Rural Development (EAFRD)" group
     And I am logged in as "bdd-user-webmaster"
-    And the test email system is enabled
     And I am at "lag-dashboard"
     And I click "Pending for publication"
     And I check the box "edit-views-bulk-operations-0"
@@ -150,7 +147,6 @@ Feature: ENRD LAG Database Notifications
     And I have the "LAG Contact" role in the "BDD LAG Archived" group
     Given I am logged in as "bdd-user-manager"
     And I have the "LAG Manager" role in the "BDD LAG Archived" group
-    Given the test email system is enabled
     And I am logged in as "bdd-user-webmaster"
     # I am in the "LAG profiles" > "Archived" section.
     When I am at "lag-dashboard?state=3"
@@ -200,7 +196,6 @@ Feature: ENRD LAG Database Notifications
       | bdd-user-contact | bdd-user-contact@example.com | test | authenticated user, LAG User | BDD LAG Published |
     And I am logged in as "bdd-user-contact"
     And I have the "LAG Contact" role in the "BDD LAG Published" group
-    And the test email system is enabled
     When I am at "my-lags"
     And I click "manage"
     And I click "Cooperation offers"
@@ -272,7 +267,6 @@ Feature: ENRD LAG Database Notifications
     And I click "Cooperation offers"
     And I click "Pending for publication"
     And I click "BDD COOP TO REPUBLISH"
-    And the test email system is enabled
     And I select "draft" from "state"
     And I press "Apply"
     Then the email to "bdd-user-contact@example.com" should contain "ENRD LAG Database - your LAG's Cooperation Offer has been rejected by the LAG webmaster"
@@ -302,7 +296,6 @@ Feature: ENRD LAG Database Notifications
     And I have the "LAG Manager" role in the "BDD LAG Published" group
     And I am logged in as "bdd-user-webmaster"
     When I am at "lag-dashboard"
-    And the test email system is enabled
     # I am in the "Coop. offers" > "Pending for publication" section.
     When I am at "lag-dashboard/cooperation-offers/pending"
     And I check the box "edit-views-bulk-operations-0"

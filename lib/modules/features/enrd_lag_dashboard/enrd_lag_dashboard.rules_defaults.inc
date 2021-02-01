@@ -110,7 +110,7 @@ function enrd_lag_dashboard_default_rules_configuration() {
         { "mail" : {
             "to" : "[national-manager:mail]",
             "subject" : "Thank you for joining the ENRD LAG Database!",
-            "message" : "Dear [national-manager:name],\\r\\n\\r\\nThank you for joining the ENRD LAG Database!\\r\\n\\r\\nYou are now the national manager of the following country: [national-manager:field-enrd-lag-country].\\r\\n\\r\\nPlease click this link http:\\/\\/enrd.ec.europa.eu\\/ecas to log in and proceed to manage and monitor the LAGs within your competence.\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "message" : "Dear [national-manager:name],\\r\\n\\r\\nThank you for joining the ENRD LAG Database!\\r\\n\\r\\nYou are now the national manager of the following country: [national-manager:field-enrd-lag-country].\\r\\n\\r\\nPlease click this link: [site:login-url] to log in and proceed to manage and monitor the LAGs within your competence.\\r\\nFor more information on EU Login, please refer to the following documentation: [site:eu-login-tutorial].\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
             "language" : [ "national-manager:language" ]
           }
         }

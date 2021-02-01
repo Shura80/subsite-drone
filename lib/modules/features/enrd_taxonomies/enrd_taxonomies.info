@@ -1,7 +1,7 @@
 name = ENRD Taxonomies
 description = Classification system
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = better_exposed_filters
 dependencies[] = enrd_file_formatter
@@ -163,4 +163,4 @@ features_exclude[variable][pathauto_taxonomy_term_enrd_rural_development_policy_
 features_exclude[variable][pathauto_taxonomy_term_enrd_translation_status_pattern] = pathauto_taxonomy_term_enrd_translation_status_pattern
 features_exclude[variable][pathauto_taxonomy_term_enrd_transversal_topics_pattern] = pathauto_taxonomy_term_enrd_transversal_topics_pattern
 features_exclude[variable][pathauto_taxonomy_term_enrd_update_status_pattern] = pathauto_taxonomy_term_enrd_update_status_pattern
-multisite_version = 2.5
+multisite_version = 2.6

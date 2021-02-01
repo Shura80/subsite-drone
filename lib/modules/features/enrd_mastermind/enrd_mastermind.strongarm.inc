@@ -449,6 +449,13 @@ function enrd_mastermind_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'ds_search_apachesolr_hide_current_filters';
+  $strongarm->value = 1;
+  $export['ds_search_apachesolr_hide_current_filters'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'ds_search_highlight';
   $strongarm->value = 1;
   $export['ds_search_highlight'] = $strongarm;
@@ -969,34 +976,6 @@ function enrd_mastermind_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'image_captcha_bilinear_interpolation';
-  $strongarm->value = 1;
-  $export['image_captcha_bilinear_interpolation'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'image_captcha_distortion_amplitude';
-  $strongarm->value = '0';
-  $export['image_captcha_distortion_amplitude'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'image_captcha_dot_noise';
-  $strongarm->value = 1;
-  $export['image_captcha_dot_noise'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'image_captcha_noise_level';
-  $strongarm->value = '1';
-  $export['image_captcha_noise_level'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
   $strongarm->name = 'language_content_type_page';
   $strongarm->value = 4;
   $export['language_content_type_page'] = $strongarm;
@@ -1074,13 +1053,6 @@ function enrd_mastermind_strongarm() {
   $strongarm->name = 'menu_parent_webform';
   $strongarm->value = 'main-menu:0';
   $export['menu_parent_webform'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'nexteuropa_webtools_smartloader_prurl';
-  $strongarm->value = '//europa.eu/webtools/load.js?globan=1110';
-  $export['nexteuropa_webtools_smartloader_prurl'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */

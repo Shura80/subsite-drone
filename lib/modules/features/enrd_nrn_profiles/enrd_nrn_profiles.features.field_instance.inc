@@ -1509,7 +1509,9 @@ function enrd_nrn_profiles_field_default_field_instances() {
       'full' => array(
         'label' => 'hidden',
         'module' => 'link',
-        'settings' => array(),
+        'settings' => array(
+          'custom_title' => '',
+        ),
         'type' => 'link_default',
         'weight' => 7,
       ),
@@ -1522,7 +1524,9 @@ function enrd_nrn_profiles_field_default_field_instances() {
       'print' => array(
         'label' => 'hidden',
         'module' => 'link',
-        'settings' => array(),
+        'settings' => array(
+          'custom_title' => '',
+        ),
         'type' => 'link_default',
         'weight' => 7,
       ),
@@ -2983,7 +2987,9 @@ function enrd_nrn_profiles_field_default_field_instances() {
       'full' => array(
         'label' => 'hidden',
         'module' => 'link',
-        'settings' => array(),
+        'settings' => array(
+          'custom_title' => '',
+        ),
         'type' => 'link_default',
         'weight' => 5,
       ),
@@ -2996,7 +3002,9 @@ function enrd_nrn_profiles_field_default_field_instances() {
       'print' => array(
         'label' => 'hidden',
         'module' => 'link',
-        'settings' => array(),
+        'settings' => array(
+          'custom_title' => '',
+        ),
         'type' => 'link_default',
         'weight' => 5,
       ),

@@ -14,8 +14,7 @@ Feature: ENRD Notifications
   # Rule: ENRD OG member subscribe (Active)
   @og @emails @notify_users @active
   Scenario: Notify new Community Member that he has been actively subscribed and Group admin about new membership.
-    Given the test email system is enabled
-    And I am logged in as a user with the "authenticated user" role and I have the following fields:
+    Given I am logged in as a user with the "authenticated user" role and I have the following fields:
       | field_firstname | User                    |
       | field_lastname  | Active                  |
       | mail            | user-active@example.com |
@@ -26,8 +25,7 @@ Feature: ENRD Notifications
   # Rule: ENRD OG member subscribe (Pending)
   @og @emails @notify_users @pending
   Scenario: Notify new Community Member that his subscription is pending for approval.
-    Given the test email system is enabled
-    And I am logged in as a user with the "authenticated user" role and I have the following fields:
+    Given I am logged in as a user with the "authenticated user" role and I have the following fields:
       | field_firstname | User                     |
       | field_lastname  | Pending                  |
       | mail            | user-pending@example.com |
@@ -43,7 +41,6 @@ Feature: ENRD Notifications
       | field_lastname  | Approved                  |
       | mail            | user-approved@example.com |
     And I have the "member" role in "pending" status in the "BDD Community Notify" group
-    And the test email system is enabled
     And I am logged in as "group-admin"
     When I am at "community/bdd-community-notify"
     And I click "Group"
@@ -63,7 +60,6 @@ Feature: ENRD Notifications
       | field_lastname  | Blocked                  |
       | mail            | user-blocked@example.com |
     And I have the "member" role in "pending" status in the "BDD Community Notify" group
-    And the test email system is enabled
     And I am logged in as "group-admin"
     When I am at "community/bdd-community-notify"
     And I click "Group"
@@ -84,7 +80,6 @@ Feature: ENRD Notifications
       | field_lastname  | Remove                  |
       | mail            | user-remove@example.com |
     And I have the "member" role in "pending" status in the "BDD Community Notify" group
-    And the test email system is enabled
     And I am logged in as "group-admin"
     When I am at "community/bdd-community-notify"
     And I click "Group"

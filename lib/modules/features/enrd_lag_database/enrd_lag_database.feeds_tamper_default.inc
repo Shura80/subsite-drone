@@ -328,7 +328,7 @@ function enrd_lag_database_feeds_tamper_default() {
   $export['enrd_lag_database-origin-required'] = $feeds_tamper;
 
   $feeds_tamper = new stdClass();
-  $feeds_tamper->disabled = FALSE; /* Edit this to true to make a default feeds_tamper disabled initially */
+  $feeds_tamper->disabled = TRUE; /* Edit this to true to make a default feeds_tamper disabled initially */
   $feeds_tamper->api_version = 2;
   $feeds_tamper->id = 'enrd_lag_database-published-default_value';
   $feeds_tamper->importer = 'enrd_lag_database';

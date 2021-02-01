@@ -1,7 +1,7 @@
 name = ENRD Rural Story Form
 description = ENRD Rural Story feature and its configurations.
 core = 7.x
-php = 5.6
+php = 7.3
 package = ENRD
 dependencies[] = bean
 dependencies[] = context
@@ -95,4 +95,4 @@ features_exclude[dependencies][ctools] = ctools
 features_exclude[dependencies][i18n_taxonomy] = i18n_taxonomy
 features_exclude[dependencies][taxonomy] = taxonomy
 features_exclude[variable][xmlsitemap_settings_taxonomy_term_enrd_ruralstory_topics] = xmlsitemap_settings_taxonomy_term_enrd_ruralstory_topics
-multisite_version = 2.5
+multisite_version = 2.6

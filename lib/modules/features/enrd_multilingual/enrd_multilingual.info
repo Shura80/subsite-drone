@@ -1,7 +1,7 @@
 name = ENRD Multilingual
 description = ENRD Multilingual Enviroment
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = enrd_mastermind
 dependencies[] = nexteuropa_multilingual
@@ -81,4 +81,4 @@ features_exclude[dependencies][text] = text
 features_exclude[dependencies][title] = title
 features_exclude[dependencies][entity] = entity
 features_exclude[field_base][tmgmt_translation_skills] = tmgmt_translation_skills
-multisite_version = 2.5
+multisite_version = 2.6

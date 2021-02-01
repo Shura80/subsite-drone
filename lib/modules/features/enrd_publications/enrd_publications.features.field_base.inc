@@ -282,7 +282,11 @@ function enrd_publications_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_enrd_publ_ehd_last_updated',
-    'indexes' => array(),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
     'locked' => 1,
     'module' => 'date',
     'settings' => array(
@@ -357,7 +361,11 @@ function enrd_publications_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_enrd_publ_ehd_public_date',
-    'indexes' => array(),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
     'locked' => 1,
     'module' => 'date',
     'settings' => array(
@@ -488,7 +496,11 @@ function enrd_publications_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_enrd_publication_date',
-    'indexes' => array(),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
     'locked' => 1,
     'module' => 'date',
     'settings' => array(

@@ -60,7 +60,7 @@ steps:
 
   # SOLR SERVER SECTION #
   - name: solr
-    image: fpfis/solr5
+    image: wodby/solr:7
     detach: true
 
   # INSTALL SECTION #
@@ -75,7 +75,7 @@ steps:
   # TEST SECTION #
   # SELENIUM #
   - name: selenium
-    image: selenium/standalone-chrome:3.141.59-oxygen
+    image: selenium/standalone-chrome:3.141.59
     environment:
       HUB_PORT_4444_TCP_ADDR: selenium
       HUB_PORT_4444_TCP_PORT: "4444"

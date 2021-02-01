@@ -28,7 +28,6 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
     And I click "Contact the Webmaster"
     And I fill in "Subject" with "<message> - This is the subject of my message"
     And I fill in "Message" with "<message> - This is my message."
-    And the test email system is enabled
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
     And I press the "Submit" button
@@ -54,7 +53,6 @@ Feature: ENRD LAG Dashboard: "Contact the Webmaster" contact form.
     And I fill in "Message" with "BDD NSU - This is my message."
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
-    And the test email system is enabled
     And I press the "Submit" button
     Then I should get a "200" HTTP response
     And the email to "bdd-at-nsu-user@example.com" should contain "BDD NSU - This is the subject of my message"

@@ -93,7 +93,6 @@ Feature: ENRD LAG Dashboard.
       | Email body field is required.    |
     When I fill in "Email subject" with "BDD send an email test"
     When I fill in "Email body" with "BDD lorem ipsum"
-    And the test email system is enabled
     And I press "Send email"
     And I press "Confirm"
     And I wait for the batch job to finish
@@ -244,9 +243,9 @@ Feature: ENRD LAG Dashboard.
     And I should see the link "bdd-user-active"
     And I should see "bdd-user-active@example.com"
 
-  @dashboards @nsu @javascript
+  @dashboards @nsu @emails @javascript
   Scenario: As NSU I should be able to add an active user as LAG Manager/contact, but not a blocked one.
-    Given users:
+    And users:
       | name             | mail                         | status |
       | bdd-user-active  | bdd-user-active@example.com  | 1      |
       | bdd-user-blocked | bdd-user-blocked@example.com | 0      |
@@ -281,14 +280,15 @@ Feature: ENRD LAG Dashboard.
     Then I should see the following success messages:
       | success messages                                                                                                   |
       | User bdd-user-active is now member of BDD LAG Published as LAG Contact. A notification email was sent to the user. |
+    And the email to "bdd-user-active@example.com" should contain "For more information on EU Login, please refer to the following documentation"
     When I click "LAG Contacts"
     Then I should see the link "bdd-user-active"
     And I should see "bdd-user-active@example.com"
     But I should not see the link "bdd-user-blocked"
 
-  @javascript @dashboards @nsu @invite
+  @javascript @dashboards @nsu @emails @invite
   Scenario: As NSU I want to invite unregistered users to join a LAG.
-    Given I am logged in as "bdd-user-nat-manager"
+    And I am logged in as "bdd-user-nat-manager"
     And I have the "National manager" role in the "European Agricultural Fund for Rural Development (EAFRD)" group
     When I am at "lag-dashboard"
     And I click "Contacts/Users"
@@ -312,10 +312,10 @@ Feature: ENRD LAG Dashboard.
       | You have accepted the invitation from bdd-user-nat-manager. |
     And I should see the heading "My LAGs"
     And I should see "BDD LAG Published" in the "BDD-BE-LAG-PUB" row
+    And the email to "johntest@bdd.test" should contain "For more information on EU Login, please refer to the following documentation"
 
   @dashboards @webmaster @nsu @emails
   Scenario: As Webmaster I want to add a new National manager to more than one funds and a country.
-    Given the test email system is enabled
     And users:
       | name                 | mail                             | status |
       | bdd-john-doe-active  | bdd-john-doe-active@example.com  | 1      |
@@ -365,3 +365,4 @@ Feature: ENRD LAG Dashboard.
 
     And the email to "bdd-john-doe-active@example.com" should contain "You are now the national manager of the following country: BDD Italy"
     And the email to "bdd-john-doe-blocked@example.com" should contain "You are now the national manager of the following country: BDD France"
+    And the email to "bdd-john-doe-blocked@example.com" should contain "For more information on EU Login, please refer to the following documentation"

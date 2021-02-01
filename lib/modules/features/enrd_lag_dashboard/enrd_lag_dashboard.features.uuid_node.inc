@@ -102,7 +102,7 @@ function enrd_lag_dashboard_uuid_features_default_content() {
     ),
     'webform' => array(
       'nid' => '420e5009-ae60-48de-b46c-166ef46627d7',
-      'confirmation' => '<p>Thank you for your submission. You will be contacted shortly by the&nbsp;Webmaster of the ENRD LAG Database.</p>
+      'confirmation' => '<p>Thank you for your submission. You will be contacted shortly by the Webmaster of the ENRD LAG Database.</p>
 ',
       'confirmation_format' => 'full_html',
       'redirect_url' => '<none>',
@@ -111,7 +111,6 @@ function enrd_lag_dashboard_uuid_features_default_content() {
       'allow_draft' => 0,
       'auto_save' => 0,
       'submit_notice' => 1,
-      'confidential' => 0,
       'submit_text' => '',
       'submit_limit' => -1,
       'submit_interval' => -1,
@@ -121,7 +120,7 @@ function enrd_lag_dashboard_uuid_features_default_content() {
       'progressbar_page_number' => 0,
       'progressbar_percent' => 0,
       'progressbar_pagebreak_labels' => 1,
-      'progressbar_include_confirmation' => 1,
+      'progressbar_include_confirmation' => 0,
       'progressbar_label_first' => 'Start',
       'progressbar_label_confirmation' => 'Complete',
       'preview' => 0,
@@ -131,6 +130,7 @@ function enrd_lag_dashboard_uuid_features_default_content() {
       'preview_message' => '',
       'preview_message_format' => 'full_html',
       'preview_excluded_components' => array(),
+      'confidential' => 0,
       'record_exists' => TRUE,
       'roles' => array(
         0 => 2,
@@ -149,8 +149,8 @@ Message: [submission:values:enrd_lag_dashboard_contact_webmaster_message]',
           'excluded_components' => array(),
           'html' => 1,
           'attachments' => 0,
-          'exclude_empty' => 0,
           'extra' => FALSE,
+          'exclude_empty' => 0,
           'status' => 1,
         ),
         2 => array(
@@ -170,8 +170,8 @@ The information you provided has been directly forwarded to the Webmaster of the
           'excluded_components' => array(),
           'html' => 1,
           'attachments' => 0,
-          'exclude_empty' => 0,
           'extra' => FALSE,
+          'exclude_empty' => 0,
           'status' => 1,
         ),
       ),
@@ -306,6 +306,7 @@ The information you provided has been directly forwarded to the Webmaster of the
       'path' => array(
         'source' => '420e5009-ae60-48de-b46c-166ef46627d7',
       ),
+      'validation' => array(),
     ),
     'comment_count' => 0,
     'print_html_display' => 1,
@@ -318,8 +319,8 @@ The information you provided has been directly forwarded to the Webmaster of the
     'print_pdf_display_comment' => 0,
     'print_pdf_display_urllist' => 1,
     'subscriptions_notify' => TRUE,
-    'print_pdf_size' => NULL,
-    'print_pdf_orientation' => NULL,
+    'print_pdf_size' => '',
+    'print_pdf_orientation' => '',
     'pathauto_perform_alias' => FALSE,
   );
   return $nodes;

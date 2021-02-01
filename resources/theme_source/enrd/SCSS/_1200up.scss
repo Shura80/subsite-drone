@@ -85,32 +85,6 @@ table.table-enrd {
 	}
 }
 
-section#block-enrd-nrn-toolkit-contact-us-nrn-webform,
-.node-type-cooperation-offer {
-	.captcha {
-		margin-top: 15px;
-        .fieldset-wrapper {
-            img {
-                width: 50%;
-                height: auto;
-                display: inline;
-				margin-top: 0px;
-            }
-            .form-item-captcha-response {
-                width: 40%;
-                margin-left: 5%;
-                display: inline-block;
-                label {
-                    position: relative;
-                    left: -110px;
-                    width: 220%;
-                    max-width: none;
-                }
-            }
-        }
-    }
-}
-
 // NRN Toolkit: ENRD NRN Classification facet.
 .facetapi-facet-im-field-tax-networking div.dropdown {
     &:nth-child(2n+2) {

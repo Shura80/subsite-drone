@@ -28,6 +28,7 @@ function enrd_lag_database_feeds_importer_default() {
           'public' => 'public',
           'private' => 'private',
         ),
+        'delete_uploaded_file' => FALSE,
       ),
     ),
     'parser' => array(
@@ -35,6 +36,7 @@ function enrd_lag_database_feeds_importer_default() {
       'config' => array(
         'delimiter' => ';',
         'no_headers' => 0,
+        'encoding' => 'UTF-8',
       ),
     ),
     'processor' => array(
@@ -48,108 +50,135 @@ function enrd_lag_database_feeds_importer_default() {
             'source' => 'LAG code',
             'target' => 'guid',
             'unique' => 1,
+            'language' => 'und',
           ),
           1 => array(
             'source' => 'LAG code',
             'target' => 'field_enrd_lag_code',
             'unique' => FALSE,
+            'language' => 'und',
           ),
           2 => array(
             'source' => 'LAG name',
             'target' => 'title',
             'unique' => FALSE,
+            'language' => 'und',
           ),
           3 => array(
+            'source' => 'LAG name',
+            'target' => 'title_field',
+            'unique' => FALSE,
+            'language' => 'und',
+          ),
+          4 => array(
             'source' => 'Origin',
             'target' => 'field_enrd_lag_country',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          4 => array(
+          5 => array(
             'source' => 'Country (classification)',
             'target' => 'field_tax_country',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          5 => array(
+          6 => array(
             'source' => 'ESIF Country',
             'target' => 'field_enrd_lag_country',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          6 => array(
+          7 => array(
             'source' => 'Main ESI Fund',
             'target' => 'field_enrd_main_esi_fund',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          7 => array(
+          8 => array(
             'source' => 'ESI Funds OG',
             'target' => 'og_group_ref:label',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          8 => array(
+          9 => array(
             'source' => 'ESIF Programme',
             'target' => 'field_enrd_esif_programme_hierarchical',
             'hierarchy_separator' => '>',
             'auto_create_terms' => 0,
             'save_term_lineage' => 0,
+            'language' => 'und',
           ),
-          9 => array(
+          10 => array(
             'source' => 'Street 1',
             'target' => 'field_enrd_lag_manager_address:thoroughfare',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          10 => array(
+          11 => array(
             'source' => 'Street 2',
             'target' => 'field_enrd_lag_manager_address:premise',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          11 => array(
+          12 => array(
             'source' => 'Zip code',
             'target' => 'field_enrd_lag_manager_address:postal_code',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          12 => array(
+          13 => array(
             'source' => 'City',
             'target' => 'field_enrd_lag_manager_address:locality',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          13 => array(
+          14 => array(
             'source' => 'Country',
             'target' => 'field_enrd_lag_manager_address:country',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          14 => array(
+          15 => array(
             'source' => 'Municipalities covered',
             'target' => 'field_enrd_lag_geo_coverage',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          15 => array(
+          16 => array(
             'source' => 'LAG email address',
             'target' => 'field_enrd_lag_email',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          16 => array(
+          17 => array(
             'source' => 'First name',
             'target' => 'field_enrd_lag_manager_name',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          17 => array(
+          18 => array(
             'source' => 'Last name',
             'target' => 'field_enrd_lag_manager_name',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          18 => array(
+          19 => array(
             'source' => 'Email address',
             'target' => 'field_enrd_lag_manager_email',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          19 => array(
+          20 => array(
             'source' => 'LAG website',
             'target' => 'field_enrd_lag_website:url',
             'unique' => FALSE,
+            'language' => 'und',
           ),
-          20 => array(
+          21 => array(
             'source' => 'Extended profile',
             'target' => 'field_enrd_lag_extended_profile:url',
             'unique' => FALSE,
+            'language' => 'und',
           ),
         ),
         'update_existing' => '2',
@@ -157,6 +186,9 @@ function enrd_lag_database_feeds_importer_default() {
         'input_format' => 'filtered_html',
         'skip_hash_check' => 0,
         'bundle' => 'lag',
+        'insert_new' => 1,
+        'delete_if_empty' => FALSE,
+        'language' => 'und',
       ),
     ),
     'content_type' => '',

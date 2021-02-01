@@ -51,10 +51,18 @@ function enrd_file_formatter_field_formatter_settings_form($field, $instance, $v
     );
     $element['token_file_language'] = array(
       '#type' => 'textfield',
-      '#required' => TRUE,
       '#title' => t('File language token'),
       '#description' => t('Define a token to retrieve the ISO code of the file language.'),
       '#default_value' => $settings['token_file_language'],
+      // Required if "ENRD file formatter" is checked.
+      '#states' => array(
+        'required' => array(
+          ':input[name="displays[file_field_enrd_file_formatter][status]"]' => array(
+            'checked' => TRUE,
+          ),
+        ),
+      ),
+      '#element_validate' => array('_enrd_file_formatter_validate_file_lang_token'),
       '#weight' => 90,
     );
     $element['token_tree_help'] = array(
@@ -67,6 +75,20 @@ function enrd_file_formatter_field_formatter_settings_form($field, $instance, $v
   }
 
   return $element;
+}
+
+/**
+ * Validate function for the File language token textfield.
+ *
+ * @param array $element
+ *   Drupal form array element.
+ * @param array $form_state
+ *   Drupal form state array.
+ */
+function _enrd_file_formatter_validate_file_lang_token(array $element, array &$form_state) {
+  if (!empty($form_state['values']['displays']['file_field_enrd_file_formatter']['status']) && empty($element['#value'])) {
+    form_error($element, t('"!name" field is required.', array('!name' => $element['#title'])));
+  }
 }
 
 /**

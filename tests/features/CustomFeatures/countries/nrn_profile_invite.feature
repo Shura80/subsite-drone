@@ -30,9 +30,9 @@ Feature: ENRD NRN Profiles Invite
       | Name and Surname field is required. |
       | NRN Profile field is required.      |
 
-  @webmaster
+  @webmaster @emails
   Scenario: As Webmaster I want to add both an active and a blocked user as NRN Editor.
-    Given I am viewing an "nrn_profile" content in "published" status:
+    And I am viewing an "nrn_profile" content in "published" status:
       | title | BDD NRN Profile |
     And users:
       | name             | mail                         | status |
@@ -57,10 +57,11 @@ Feature: ENRD NRN Profiles Invite
     When I am at "admin/enrd/nrn-profiles/editors"
     Then I should see the link "bdd-user-blocked"
     And I should see the link "bdd-user-active"
+    And the email to "bdd-user-active@example.com" should contain "For more information on EU Login, please refer to the following documentation"
 
-  @webmaster @invite
+  @webmaster @invite @emails
   Scenario: As Webmaster I want to invite an unregistered user to become NRN Editor.
-    Given I am viewing an "nrn_profile" content in "published" status:
+    And I am viewing an "nrn_profile" content in "published" status:
       | title | BDD NRN Profile |
     And I am logged in as a user with the "webmaster" role
     And I am at "admin/enrd/nrn-profiles/editors"
@@ -79,3 +80,4 @@ Feature: ENRD NRN Profiles Invite
     And I accept the invite
     Then I should see the heading "BDD NRN Profile"
     And I should see the link "New draft"
+    And the email to "johndoe@bdd.test" should contain "For more information on EU Login, please refer to the following documentation"

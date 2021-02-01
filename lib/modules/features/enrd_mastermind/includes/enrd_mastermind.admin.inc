@@ -62,9 +62,9 @@ function enrd_mastermind_lastupdate_info_paths_form_submit($form, &$form_state) 
 }
 
 /**
- * Form to configure a centralized privacy statement URL.
+ * Form to configure custom URLs.
  */
-function enrd_mastermind_privacy_statement_form($form, &$form_state) {
+function enrd_mastermind_custom_urls_form($form, &$form_state) {
 
   $form['enrd_privacy_fieldset'] = [
     '#type' => 'fieldset',
@@ -75,11 +75,27 @@ function enrd_mastermind_privacy_statement_form($form, &$form_state) {
 
   $form['enrd_privacy_fieldset']['enrd_mastermind_privacy_statement'] = [
     '#type' => 'textfield',
-    '#size' => 100,
-    '#title' => t('Configure ENRD Privacy Statement URL'),
+    '#title' => t('ENRD Privacy Statement URL'),
     '#description' => t('This field allows to set a custom privacy statement definition. It could be either an existing path (like "legal-notice/privacy-statement" or "node/123") or a filename (like "enrd-privacy-statement-policy.pdf"). If not set, the default EU commission privacy statement URL is used.'),
     '#default_value' => variable_get('enrd_mastermind_privacy_statement', ENRD_MASTERMIND_EU_LEGAL_NOTICE_URL),
     '#element_validate' => array('_enrd_mastermind_privacy_statement'),
+    '#required' => TRUE,
+  ];
+
+  $form['enrd_eu_login_tutorial_fieldset'] = [
+    '#type' => 'fieldset',
+    '#title' => t('ENRD EU Login Tutorial'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  ];
+
+  $form['enrd_eu_login_tutorial_fieldset']['enrd_mastermind_eu_login_tutorial'] = [
+    '#type' => 'textfield',
+    '#title' => t('EU Login Tutorial URL'),
+    '#description' => t('This field allows to set a URL to the EU Login Tutorial (e.g. "https://ecas.ec.europa.eu/cas/manuals/EU_Login_Tutorial.pdf"), to be printed in the mail templates.'),
+    '#default_value' => variable_get('enrd_mastermind_eu_login_tutorial', ENRD_MASTERMIND_EU_LOGIN_TUTORIAL_URL),
+    '#element_validate' => array('_enrd_mastermind_eu_login_tutorial'),
+    '#required' => TRUE,
   ];
 
   return system_settings_form($form);
@@ -108,8 +124,27 @@ function _enrd_mastermind_privacy_statement(array $element, array &$form_state) 
     $form_state['values']['enrd_mastermind_privacy_statement'] = $element['#value'] = drupal_get_path_alias($element['#value']);
     drupal_set_message(t('Set a local path as privacy statement.'));
   }
+  // Check if an absolute url is given.
+  elseif (valid_url($element['#value'], TRUE)) {
+    $form_state['values']['enrd_mastermind_privacy_statement'] = $element['#value'];
+  }
   // For all other cases return a form error.
   else {
     form_error($element, t('You must enter a valid existing path or filename'));
+  }
+}
+
+/**
+ * Validate function for the EU Login Tutorial field.
+ *
+ * @param array $element
+ *   Drupal form element array.
+ * @param array $form_state
+ *   Drupal form_state array.
+ */
+function _enrd_mastermind_eu_login_tutorial(array $element, array $form_state) {
+  // Check if it's a valid absolute url.
+  if (!valid_url($element['#value'], TRUE)) {
+    form_error($element, t('The URL %url is empty or invalid. Please enter a fully-qualified URL, starting with: http://.', array('%url' => $element['#value'])));
   }
 }

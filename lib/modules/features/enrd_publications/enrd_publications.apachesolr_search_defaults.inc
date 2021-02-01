@@ -49,7 +49,7 @@ function enrd_publications_apachesolr_search_default_searchers() {
   $searcher->label = 'Publications eLibrary';
   $searcher->description = 'ENRD Publications eLibrary';
   $searcher->search_path = 'publications/search';
-  $searcher->page_title = 'Publications';
+  $searcher->page_title = 'Search Publications';
   $searcher->env_id = 'solr';
   $searcher->settings = array(
     'fq' => array(

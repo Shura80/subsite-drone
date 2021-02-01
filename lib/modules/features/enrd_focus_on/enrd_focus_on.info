@@ -1,7 +1,7 @@
 name = ENRD Focus on
 description = ENRD Focus on
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = enrd_mastermind
 dependencies[] = enrd_multilingual
@@ -70,4 +70,4 @@ features_exclude[variable][pathauto_node_focus_on_it_pattern] = pathauto_node_fo
 features_exclude[variable][pathauto_node_focus_on_pl_pattern] = pathauto_node_focus_on_pl_pattern
 features_exclude[variable][pathauto_node_focus_on_en_pattern] = pathauto_node_focus_on_en_pattern
 features_exclude[variable][pathauto_node_focus_on_und_pattern] = pathauto_node_focus_on_und_pattern
-multisite_version = 2.5
+multisite_version = 2.6

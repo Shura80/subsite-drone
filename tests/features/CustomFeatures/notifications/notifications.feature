@@ -103,7 +103,6 @@ Feature: ENRD Notifications.
       | mail            | user_webmaster@example.com |
       | field_firstname | User                       |
       | field_lastname  | Webmaster                  |
-    Given the test email system is enabled
     When I click "Latest Notifications" in the "tools buttons" region
     And I wait for AJAX to finish
     And I click "Settings" in the "tools buttons" region

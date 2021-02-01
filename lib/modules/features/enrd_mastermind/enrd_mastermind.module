@@ -6,18 +6,18 @@
  */
 
 include_once 'enrd_mastermind.features.inc';
+include_once 'includes/enrd_mastermind.facetapi_taxonomy_sort.inc';
 
 define('ENRD_MASTERMIND_RSS_PAGE_PATH', 'rss');
 define('ENRD_MASTERMIND_AGRI_PATH', 'https://ec.europa.eu/eip/agriculture');
 define('ENRD_MASTERMIND_ADMIN_MENU_LINK', 'admin/enrd');
 define('ENRD_MASTERMIND_ADMIN_MENU_PERMISSION', 'access administration pages');
 define('ENRD_MASTERMIND_EU_LEGAL_NOTICE_URL', 'https://ec.europa.eu/info/legal-notice');
+define('ENRD_MASTERMIND_EU_LOGIN_TUTORIAL_URL', 'https://ecas.ec.europa.eu/cas/manuals/EU_Login_Tutorial.pdf');
 define('ENRD_MASTERMIND_PRIVACY_POLICY_EMAIL', 'privacy@enrd.eu');
 define('ENRD_MASTERMIND_GLYPHICONS_ICONS', 'Glyphicons');
 define('ENRD_MASTERMIND_ENRD_ICONS', 'ENRD Icons');
 define('ENRD_MASTERMIND_COMPOSER_AUTOLOADER', DRUPAL_ROOT . '/' . conf_path() . '/vendor/autoload.php');
-
-module_load_include('inc', 'enrd_mastermind', 'includes/enrd_mastermind.facetapi_taxonomy_sort');
 
 /**
  * Implements hook_boot().
@@ -36,10 +36,6 @@ function enrd_mastermind_block_info() {
   $blocks['header_enrd_ipg'] = array('info' => t('Header ENRD - IPG'));
   $blocks['agri_block'] = array('info' => t('EIP-AGRI link'));
   $blocks['enrd_rss_button'] = array('info' => t('ENRD RSS Feed button'));
-  $blocks['enrd_easy_breadcrumb'] = array(
-    'info' => t('ENRD Easy Breadcrumb'),
-    'cache' => DRUPAL_CACHE_PER_PAGE,
-  );
   return $blocks;
 }
 
@@ -95,11 +91,6 @@ function enrd_mastermind_block_view($delta = '') {
       );
       break;
 
-    case 'enrd_easy_breadcrumb':
-      module_load_include('inc', 'enrd_mastermind', 'includes/enrd_mastermind.easy_breadcrumb.blocks');
-      $block['subject'] = NULL;
-      $block['content'] = _enrd_mastermind_easy_breadcrumb_block();
-      break;
   }
 
   return $block;
@@ -782,12 +773,14 @@ function enrd_mastermind_menu_alter(&$items) {
     $items['sitemap'] = array(
       'type' => MENU_NORMAL_ITEM,
       'menu_name' => 'menu-service-tools',
-      'weight' => -55,
+      'weight' => -50,
     ) + $items['sitemap'];
   }
   // Allow access to reports page and cron running to privileged users.
   $items['admin/reports/status']['access arguments'] = array('administer enrd configuration');
   $items['admin/reports/status/run-cron']['access arguments'] = array('administer enrd configuration');
+  // Allow access to "Webtools" settings page.
+  $items['admin/config/services/webtools']['access arguments'] = array('administer enrd configuration');
 
 }
 
@@ -993,12 +986,12 @@ function enrd_mastermind_menu() {
     'file path' => drupal_get_path('module', 'system'),
   );
 
-  $items['admin/config/enrd/privacy-statement'] = array(
-    'title' => 'ENRD Privacy Statement',
-    'description' => 'Configure the privacy statement URL.',
+  $items['admin/config/enrd/urls'] = array(
+    'title' => 'Custom URLs',
+    'description' => 'Configure the custom ENRD URLs.',
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('enrd_mastermind_privacy_statement_form'),
+    'page arguments' => array('enrd_mastermind_custom_urls_form'),
     'access arguments' => array('administer enrd configuration'),
     'file' => 'includes/enrd_mastermind.admin.inc',
     'file path' => drupal_get_path('module', 'enrd_mastermind'),
@@ -1054,6 +1047,10 @@ function enrd_mastermind_menu_link_alter(&$item) {
 
       }
     }
+  }
+  // Force sitemap item link title.
+  if ($item['link_path'] == 'sitemap') {
+    $item['link_title'] = 'Site Map';
   }
 
   if (isset($item['menu_name']) && $item['menu_name'] == 'main-menu') {
@@ -2162,56 +2159,6 @@ function _enrd_mastermind_menu_prepopulate(array $items, $plid = 0) {
 }
 
 /**
- * Set default CAPTCHA skipped forms and default fonts.
- *
- * @throws Exception
- */
-function _enrd_mastermind_default_captcha_settings() {
-
-  // List of forms with no CAPTCHA set.
-  $captcha_forms = [
-    'forum_node_form',
-    'user_login',
-    'user_login_block',
-    'user_pass',
-  ];
-
-  foreach ($captcha_forms as $captcha_form) {
-    if (db_table_exists('captcha_points')) {
-      // Disable CAPTCHA on every listed form or return an error message.
-      try {
-        db_merge('captcha_points')
-          ->key(array('form_id' => $captcha_form))
-          ->fields(['captcha_type' => NULL, 'form_id' => $captcha_form])
-          ->execute();
-      }
-      catch (Exception $e) {
-        drupal_set_message(t('Could not remove captcha from @form_name. Caught exception: @message',
-          [
-            '@message' => $e->getMessage(),
-            '@form_name' => $captcha_form,
-          ]
-        ), 'error');
-      }
-    }
-  }
-
-  // Dynamically set the 'image_captcha_fonts' variable. It cannot be exported
-  // in a regular feature since it hard codes the paths to where the fonts are
-  // installed that are used for the image captchas.  These are different
-  // depending on the installation profile that is used.
-  $dynamic_variables['image_captcha_fonts'] = [
-    drupal_get_path('module', 'image_captcha') . '/fonts/Tuffy/Tuffy_Bold.ttf',
-    drupal_get_path('module', 'image_captcha') . '/fonts/Tuffy/Tuffy.ttf',
-  ];
-
-  // Add the dynamic variables to the exported component.
-  foreach ($dynamic_variables as $variable => $value) {
-    variable_set($variable, $value);
-  }
-}
-
-/**
  * Implements hook_views_data_alter().
  */
 function enrd_mastermind_views_data_alter(&$data) {
@@ -2578,6 +2525,12 @@ function enrd_mastermind_token_info() {
     'description' => t('Prints the path of public files folder.'),
   ];
 
+  // Token for the EU Login Tutorial URL.
+  $info['tokens']['site']['eu-login-tutorial'] = [
+    'name' => t('EU Login Tutorial URL'),
+    'description' => t('Prints the URL of the EU Login Tutorial.'),
+  ];
+
   // Token for the node revision log.
   $info['tokens']['node']['revision-log'] = [
     'name' => t('Log message of the last revision'),
@@ -2634,9 +2587,18 @@ function enrd_mastermind_tokens($type, $tokens, array $data = [], array $options
   switch ($type) {
     case 'site':
       foreach ($tokens as $name => $original) {
-        // Add a token to get public file folder path.
-        if ($name == 'public-folder-path') {
-          $replacements[$original] = variable_get('file_public_path');
+        switch ($name) {
+          // Add a token to get public file folder path.
+          case 'public-folder-path':
+            $replacements[$original] = variable_get('file_public_path');
+
+            break;
+
+          // Add a token to get the EU Login Tutorial URL.
+          case 'eu-login-tutorial':
+            $replacements[$original] = variable_get('enrd_mastermind_eu_login_tutorial', ENRD_MASTERMIND_EU_LOGIN_TUTORIAL_URL);
+
+            break;
         }
       }
       break;
@@ -3191,6 +3153,16 @@ function _enrd_mastermind_form__easy_breadcrumb_general_settings_submit($form, &
 }
 
 /**
+ * Implements hook_tokens_alter().
+ */
+function enrd_mastermind_tokens_alter(array &$replacements, array $context) {
+  // Alter the System's ['site:login-url'] token.
+  if (isset($context['tokens']['login-url']) && $context['type'] == 'site') {
+    $replacements['[site:login-url]'] = url('ecas', ['absolute' => TRUE]);
+  }
+}
+
+/**
  * Returns Composer's class loader.
  *
  * @return \Composer\Autoload\ClassLoader|null
@@ -3210,4 +3182,73 @@ function _enrd_mastermind_composer_autoloader() {
   }
 
   return $autoloader;
+}
+
+/**
+ * Implements hook_easy_breadcrumb_breadcrumb_alter().
+ */
+function enrd_mastermind_easy_breadcrumb_breadcrumb_alter(array &$breadcrumb) {
+
+  // Remove duplicated breadcrumbs item at the end.
+  $content = array_column($breadcrumb, 'content');
+  $occurrence = array_keys($content, end($content));
+  if (count($occurrence) > 1) {
+    array_pop($breadcrumb);
+  }
+
+  // Ensure that there is always an url to get info about shorter menu title.
+  foreach ($breadcrumb as &$item) {
+    if (isset($item['url'])) {
+      // Get path directly from item url in breadcrumbs.
+      $path = drupal_get_normal_path($item['url']);
+    }
+    else {
+      // Get path from item context if item has no url (last segment).
+      $context = menu_get_item();
+      $path = $context['href'];
+    }
+    // Get the menu short title if exists.
+    $item['content'] = _enrd_mastermind_easy_breadcrumb_get_title($item['content'], $path);
+  }
+}
+
+/**
+ * Helper function to get menu item title from current page.
+ *
+ * @param string $default_title
+ *   The page title to check against menu_title (if available).
+ * @param string $path
+ *   The path to check for menu link.
+ *
+ * @return string
+ *   Returns either a page title or menu title.
+ */
+function _enrd_mastermind_easy_breadcrumb_get_title($default_title, $path) {
+
+  // Do not search for shorter titles on some paths.
+  $skip_menu_title_search = variable_get('easy_breadcrumb-fixed_title', []);
+  if (in_array(drupal_get_path_alias($path), $skip_menu_title_search)) {
+    $title = $default_title;
+  }
+  else {
+    // Get menu link title from path.
+    $mlid = db_select('menu_links', 'ml')
+      ->fields('ml', ['mlid'])
+      ->orderBy('menu_name')
+      ->condition('link_path', $path)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+
+    if ($mlid) {
+      $item = menu_link_load($mlid);
+      // Use menu title or default page title.
+      $title = ($item['title'] && $item['title'] != $default_title) ? $item['title'] : $default_title;
+    }
+    else {
+      $title = $default_title;
+    }
+  }
+
+  return $title;
 }

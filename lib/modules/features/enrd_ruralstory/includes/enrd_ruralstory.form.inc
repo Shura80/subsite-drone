@@ -44,16 +44,6 @@ function _enrd_ruralstory_form_customizations(&$form, &$form_state) {
 
   // Override "Submit" message.
   $form['actions']['submit']['#value'] = t('Send your story');
-
-  // Image captcha for Anonymous.
-  if (user_is_anonymous()) {
-    $form['actions'] = [
-      'captcha' => [
-        '#type' => 'captcha',
-        '#captcha_type' => 'image_captcha/Image',
-      ],
-    ] + $form['actions'];
-  }
 }
 
 /**
@@ -143,7 +133,7 @@ function _enrd_ruralstory_prefill(&$form, $field_name, $param) {
       $params[$param] = [($params[$param])];
     }
 
-    $options = array_map('strtolower', $form[$field_name][LANGUAGE_NONE]['#options']);
+    $options = array_map('drupal_strtolower', $form[$field_name][LANGUAGE_NONE]['#options']);
 
     foreach ($params[$param] as $option) {
       // Build an array with options tids if term exists.

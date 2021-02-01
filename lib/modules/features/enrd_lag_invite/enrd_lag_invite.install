@@ -31,3 +31,12 @@ function enrd_lag_invite_uninstall() {
   variable_del('enrd_lag_invite_mail_renew_body');
   variable_del('enrd_lag_invite_send_invitation_on_lag_create');
 }
+
+/**
+ * ENRDPORTAL-542.
+ */
+function enrd_lag_invite_update_7201() {
+  // Update Invite mail bodies.
+  variable_del('enrd_lag_invite_mail_body');
+  variable_del('enrd_lag_invite_mail_renew_body');
+}

@@ -534,28 +534,6 @@ div.node-cooperation-offer-expired.node-full {
 
 .node-type-cooperation-offer {
 
-  .captcha {
-    legend {
-      margin-bottom: 0px;
-      border: none;
-      .fieldset-legend {
-        font-size: 15px;
-      }
-    }
-    margin-top: 15px;
-    .fieldset-description {
-      font-size: 13px;
-    }
-    .fieldset-wrapper {
-      img {
-        width: 50%;
-        height: auto;
-        display: inline;
-        margin-top: 10px;
-      }
-    }
-  }
-
   .webform-client-form {
     .form-actions {
       .webform-contact-this-lag-disclaimer {
@@ -705,8 +683,12 @@ div.node-cooperation-offer-expired.node-full {
 
 /* Contact this LAG submission */
 .page-node-submission {
+  div.panel-heading h2.panel-title {
+    line-height: inherit;
+  }
+
   .webform-submission {
-    .webform-component--enrd-lag-database-contact-this-lag-lag{
+    .webform-component--enrd-lag-database-contact-this-lag-lag {
       margin-bottom: 0;
     }
   }

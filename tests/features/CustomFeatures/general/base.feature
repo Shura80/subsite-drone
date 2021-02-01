@@ -283,3 +283,9 @@ Feature: ENRD Basic functionalities
     And I select "Published" from "Moderation state"
     And I press "Save"
     Then I should see "BDD my page" in the "featured" region
+
+  @editor @honeypot
+  Scenario: check that Honeypot is active while an Editor is creating a basic page.
+    Given I am logged in as a user with the "editor" role
+    And I am at "node/add/page"
+    Then the "div.url-textfield" element should contain "Leave this field blank"

@@ -168,7 +168,7 @@ Feature: ENRD NRN Profiles
   Scenario: As webmaster and NRN Editor I want to be notified: if an nrn editor creates a new draft from a published
   NRN Profile and requests its publication, if an NRN Editor creates a new draft and asks for its publication
   and if a webmaster rejects the NRN Profile for which I requested publication.
-    And 'enrd_countries' terms:
+    Given 'enrd_countries' terms:
       | name           | parent         |
       | European Union | Europe         |
       | BDD Ireland    | European Union |
@@ -192,8 +192,7 @@ Feature: ENRD NRN Profiles
       | field_enrd_nrnp_contact_name        | John Doe         |
       | field_enrd_nrnp_contact_email:email | john.doe@bdd.com |
 
-    Given the test email system is enabled
-    Given I am logged in as a user with the "NRN Editor" role and I have the following fields:
+    And I am logged in as a user with the "NRN Editor" role and I have the following fields:
       | mail                        | bdd-nrn-editor@example.com |
       | field_enrd_nrnp_access_node | BDD Irish NRN Profile      |
     # Published -> Ready to be published.
@@ -258,7 +257,6 @@ Feature: ENRD NRN Profiles
     And I am logged in as a user with the "NRN Editor" role and I have the following fields:
       | mail                        | bdd-user-nrn-editor@example.com |
       | field_enrd_nrnp_access_node | BDD Ready published NRN Profile |
-    And the test email system is enabled
       # Ready to be published -> Published.
     And I am logged in as a user with the "webmaster" role
     And I am at "admin/workbench/moderate-all"

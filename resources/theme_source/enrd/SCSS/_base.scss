@@ -465,6 +465,7 @@ body {
     z-index: 11;
     right: 0;
     height: 20px;
+    margin-top: 28px; // avoid Globan overlapping.
     margin-bottom: 20px;
 
     & > section {
@@ -712,7 +713,7 @@ div.view-display-id-news_rolling_block .carousel {
     }
 
     .views-field.views-field-field-news-image {
-        float:right;
+        float: right;
 
         img {
             padding: 0 0 15px 0;
@@ -1343,6 +1344,10 @@ div.view-display-id-news_rolling_block .carousel {
         ul > li > a {
             white-space: normal;
         }
+    }
+    // Clear float from other blocks.
+    .block {
+        clear: left;
     }
 
     /* Menus that use icons */
@@ -4546,31 +4551,6 @@ html:not(.js) div.modal-message.modal.fade {
     }
 }
 
-/* Contact us NRN Toolkit webform */
-section#block-enrd-nrn-toolkit-contact-us-nrn-webform {
-    .captcha {
-        legend {
-            margin-bottom: 0px;
-            border: none;
-            .fieldset-legend {
-                font-size: 15px;
-            }
-        }
-        margin-top: 15px;
-        .fieldset-description {
-            font-size: 13px;
-        }
-        .fieldset-wrapper {
-            img {
-                width: 50%;
-                height: auto;
-                display: inline;
-                margin-top: 10px;
-            }
-        }
-    }
-
-}
 section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-nrn-toolkit-contact-us-help-text p,
 .page-networking-nrn-toolkit .webform-client-form .form-actions .webform-nrn-toolkit-contact-us-disclaimer {
     font-size: 12px;
@@ -4645,18 +4625,19 @@ section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-n
             }
 
             @media only screen and (min-width: 481px) {
-                // Tweeners, Tablet & Desktop.
-                max-height: 74px;
-                // Tweeners.
                 &:nth-child(-n+2) {
                     border-top: 1px solid;
                 }
             }
-            // Tablet & Desktop.
+            // Tablet & Smaller Laptops.
             @media only screen and (min-width: 768px) {
                 &:nth-child(-n+3) {
                     border-top: 1px solid;
                 }
+            }
+            // Desktop.
+            @media only screen and (min-width: 1200px) {
+                max-height: 74px;
             }
 
             &:before {
@@ -4672,7 +4653,7 @@ section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-n
                 min-height: 60px;
                 font-size: 0.9em;
                 font-weight: bold;
-                padding: 10px 35px 10px 15px;
+                padding: 12px 35px 12px 10px;
                 color: #5a5a5a;
                 line-height: 1.5em;
                 border-right: 1px solid;
@@ -4692,21 +4673,17 @@ section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-n
 
                 // Tweeners, Tablet & Desktop.
                 @media only screen and (min-width: 481px) {
-                    padding: 26px 35px 26px 15px;
+                    padding-left: 8px;
                 }
 
                 span {
+                    position: relative;
+                    align-items: center;
                     font-size: 3.5em;
-                    height: 80%;
-
-                    // Tweeners, Tablet & Desktop.
-                    @media only screen and (min-width: 481px) {
-                        height: 100%;
-                    }
 
                     &.glyphicon {
-                        margin: 0 16px 0 0;
-                        padding: 0 0 10px 10px;
+                        margin-right: 16px;
+                        padding-left: 10px;
 
                         // Remove text decoration.
                         text-decoration: inherit;
@@ -4716,18 +4693,17 @@ section#block-enrd-nrn-toolkit-contact-us-nrn-webform .webform-component--enrd-n
 
                         // Tweeners, Tablet & Desktop.
                         @media only screen and (min-width: 481px) {
-                            margin: 0 10px 25px 0;
+                            margin-right: 1px;
                             padding: 0 13px 0 10px;
                         }
                     }
 
                     &.icon {
                         padding-right: 8px;
-                        padding-bottom: 9px;
 
                         // Tweeners, Tablet & Desktop.
                         @media only screen and (min-width: 481px) {
-                            margin: 0 8px 21px 0;
+                            padding-right: 7px;
                             padding-top: 0;
                         }
                     }

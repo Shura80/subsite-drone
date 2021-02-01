@@ -232,12 +232,12 @@ Feature: ENRD NRN Toolkit.
     And I hover over the element "div.nrn-objectives"
     And I click "BDD Fostering innovation" in the "content" region
     Then I should see the heading "Contact us *" in the "right sidebar" region
+    And I should see the text "Content limited to 800 characters, remaining: 800" in the "right sidebar" region
     And I fill in "Your organisation" with "BDD Organisation"
     And I fill in "Email" with "bdd-email@bdd-example.com"
     And I fill in "Message" with "Hello, this is a message from BDD Organisation!"
     And I check the box "eu_legal_notice"
     And I check the box "privacy_policy"
-    And the test email system is enabled
     And I press "Submit" in the "right sidebar" region
     Then the email to "nrn-meeting@enrd.eu" should contain "Hello, this is a message from BDD Organisation!"
     And I should see the following success messages:

@@ -1,7 +1,7 @@
 name = ENRD Country Pages
 description = ENRD Country Pages and its related configuration.
 core = 7.x
-php = 5.5.9
+php = 7.3
 package = ENRD
 dependencies[] = cce_basic_config
 dependencies[] = ctools
@@ -131,4 +131,4 @@ features_exclude[dependencies][bean] = bean
 features_exclude[field_base][body] = body
 features_exclude[variable][xmlsitemap_settings_node_rdp_information] = xmlsitemap_settings_node_rdp_information
 features_exclude[variable][xmlsitemap_settings_taxonomy_term_enrd_rdps] = xmlsitemap_settings_taxonomy_term_enrd_rdps
-multisite_version = 2.5
+multisite_version = 2.6

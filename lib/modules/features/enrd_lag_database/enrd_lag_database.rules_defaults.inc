@@ -36,7 +36,7 @@ function enrd_lag_database_default_rules_configuration() {
         { "mail" : {
             "to" : "[account:mail]",
             "subject" : "Thank you for joining the ENRD LAG Database!",
-            "message" : "Dear [account:name],\\r\\n\\r\\nThank you for joining the ENRD LAG Database!\\r\\n\\r\\nYou are now a member of Local Action Group:\\r\\n[group:title_field] located at: [group:url] .\\r\\n\\r\\nPlease click this link [site:base-url]\\/ecas to log in and proceed with setting up your account, updating your LAG profile, and creating cooperation offers.\\r\\nFind out how to do all this here: [site:base-url]\\/leader-clld\\/lag-database\\/guide-lags_en\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+            "message" : "Dear [account:name],\\r\\n\\r\\nThank you for joining the ENRD LAG Database!\\r\\n\\r\\nYou are now a member of Local Action Group:\\r\\n[group:title_field] located at: [group:url].\\r\\n\\r\\nPlease click this link: [site:login-url] to log in and proceed with setting up your account.\\r\\nFor more information on EU Login, please refer to the following documentation: [site:eu-login-tutorial].\\r\\n\\r\\nFind out how to update your LAG profile, and create cooperation offers here: [site:base-url]\\/leader-clld\\/lag-database\\/guide-lags_en.\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
             "language" : [ "" ]
           }
         },
@@ -461,7 +461,7 @@ function enrd_lag_database_default_rules_configuration() {
               { "mail" : {
                   "to" : "[list-item:mail]",
                   "subject" : "ENRD LAG Database - invitation to update your LAG profile",
-                  "message" : "Dear [list-item:field-firstname] [list-item:field-lastname],\\r\\n\\r\\nWe would like to kindly invite you - as LAG manager of [node:title] - to review and update your LAG profile by clicking this link: [node:url] and logging in with your ECAS account.\\r\\n\\r\\nForgotten your ECAS account?\\r\\nhttps:\\/\\/ecas.ec.europa.eu\\/cas\\/login\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+                  "message" : "Dear [list-item:field-firstname] [list-item:field-lastname],\\r\\n\\r\\nWe would like to kindly invite you - as LAG manager of [node:title] - to review and update your LAG profile by clicking this link: [node:url] and logging in with your ECAS account.\\r\\n\\r\\nForgotten your ECAS account?\\r\\nhttps:\\/\\/ecas.ec.europa.eu\\/cas\\/login\\r\\n\\r\\nFor more information on EU Login, please refer to the following documentation: [site:eu-login-tutorial]\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
                   "from" : "no-reply@enrd.ec.europa.eu",
                   "language" : [ "" ]
                 }
@@ -507,7 +507,7 @@ function enrd_lag_database_default_rules_configuration() {
               { "mail" : {
                   "to" : "[list-item:mail]",
                   "subject" : "ENRD LAG Database - invitation to update your LAG profiles list",
-                  "message" : "Dear [list-item:field-firstname] [list-item:field-lastname],\\r\\n\\r\\nWe would like to kindly invite you to review and update your LAG profiles list in your capacity of national manager of LAGs from [list-item:field-enrd-lag-country].\\r\\n\\r\\nPlease click the following link to access your LAG profiles list [site:base-url]\\/lag-dashboard and log in with your ECAS account.\\r\\n\\r\\nForgotten your ECAS account?\\r\\nhttps:\\/\\/ecas.ec.europa.eu\\/cas\\/login\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
+                  "message" : "Dear [list-item:field-firstname] [list-item:field-lastname],\\r\\n\\r\\nWe would like to kindly invite you to review and update your LAG profiles list in your capacity of national manager of LAGs from [list-item:field-enrd-lag-country].\\r\\n\\r\\nPlease click the following link to access your LAG profiles list [site:base-url]\\/lag-dashboard and log in with your ECAS account.\\r\\n\\r\\nForgotten your ECAS account?\\r\\nhttps:\\/\\/ecas.ec.europa.eu\\/cas\\/login\\r\\n\\r\\nFor more information on EU Login, please refer to the following documentation: [site:eu-login-tutorial]\\r\\n\\r\\nBest Regards,\\r\\n\\r\\nThe ENRD Contact Point team",
                   "from" : "no-reply@enrd.ec.europa.eu",
                   "language" : [ "" ]
                 }

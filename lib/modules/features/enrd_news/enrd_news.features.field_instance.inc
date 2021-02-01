@@ -358,6 +358,7 @@ function enrd_news_field_default_field_instances() {
         'label' => 'inline',
         'module' => 'date',
         'settings' => array(
+          'custom_date_format' => '',
           'format_type' => 'enrd_nrn_toolkit_m_y',
           'fromto' => 'both',
           'multiple_from' => '',

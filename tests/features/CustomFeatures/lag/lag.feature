@@ -257,7 +257,6 @@ Feature: ENRD LAG Database.
     And I should see "Your organisation *" in the "right sidebar" region
     And I should see "Message *" in the "right sidebar" region
     And I should see "Your email *" in the "right sidebar" region
-    And I should see "What code is in the image? *" in the "right sidebar" region
 
   @feeds
   Scenario: Check that feeds importer is correctly set up.
@@ -539,6 +538,27 @@ Feature: ENRD LAG Database.
     But I should not see the link "BDD LAG Solr BE" in the "content" region
     And I should not see the link "BDD LAG Solr FR" in the "content" region
 
+  @anonymous
+  Scenario: As Anonymous user I should always see both active and expired cooperation offers in different tabs
+  on the CLLD Partner Search pages.
+
+    Given I am an anonymous user
+    And I am at "leader-clld/clld-partner-search"
+    Then I should see the heading "CLLD Partner Search"
+    And I should see the link "Active offers" in the "tabs" region
+    And I should see the link "Expired offers" in the "tabs" region
+    And I should see "Active offers" in the "featured" region
+    When I click "Active offers"
+    Then I should see the heading "CLLD Partner Search"
+    And I should see the link "Active offers" in the "tabs" region
+    And I should see the link "Expired offers" in the "tabs" region
+    And I should see "Active offers" in the "featured" region
+    When I click "Expired offers"
+    Then I should see the heading "CLLD Partner Search"
+    And I should see the link "Expired offers" in the "tabs" region
+    And I should see the link "Active offers" in the "tabs" region
+    And I should see "Expired offers" in the "featured" region
+
   @anonymous @filters @solr @clean
   Scenario: As Anonymous user I want to visualize the active and expired cooperation offers in different tabs
   on the CLLD Partner Search pages, even when selecting filters and running free-text search. I want to see
@@ -568,13 +588,13 @@ Feature: ENRD LAG Database.
     When I send the "cooperation_offer" to the Solr search index
 
     And I am at "leader-clld/clld-partner-search"
-    Then I should see the link "Active offers"
     And I should see "BDD Solr Active Cooperation offer" in the "content" region
     But I should not see "BDD Solr Expired Cooperation offer" in the "content" region
 
     # The "Active offers" tab should be visible even when selecting a filter or running a free-text search.
     And I follow "BDD Belgium"
     Then I should see the link "Active offers"
+    And I should see the heading "CLLD Partner Search"
     And I should see "BDD Solr Active Cooperation offer" in the "content" region
     But I should not see "BDD Solr Expired Cooperation offer" in the "content" region
 
@@ -589,13 +609,13 @@ Feature: ENRD LAG Database.
     But I should not see "BDD Solr Expired Cooperation offer" in the "content" region
 
     When I am at "leader-clld/clld-partner-search/expired"
-    Then I should see the link "Expired offers"
     And I should see "BDD Solr Expired Cooperation offer" in the "content" region
     But I should not see "BDD Solr Active Cooperation offer" in the "content" region
 
     # The "Expired offers" tab should be visible even when selecting a filter or running a free-text search.
     And I follow "BDD Belgium"
     Then I should see the link "Expired offers"
+    And I should see the heading "CLLD Partner Search"
     And I should see "BDD Solr Expired Cooperation offer" in the "content" region
     But I should not see "BDD Solr Active Cooperation offer" in the "content" region
 

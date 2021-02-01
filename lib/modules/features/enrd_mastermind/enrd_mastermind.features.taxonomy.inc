@@ -19,6 +19,8 @@ function enrd_mastermind_taxonomy_default_vocabularies() {
       'weight' => 0,
       'language' => 'und',
       'i18n_mode' => 4,
+      'base_i18n_mode' => 4,
+      'base_language' => 'und',
       'entity_type' => 'taxonomy_vocabulary',
       'rdf_mapping' => array(
         'rdftype' => array(

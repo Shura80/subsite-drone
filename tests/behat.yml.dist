@@ -15,6 +15,7 @@ default:
         - Drupal\enrd\Context\FieldCollectionContext
         - Drupal\enrd\Context\InviteContext
         - Drupal\enrd\Context\MediaContext
+        - Drupal\enrd\Context\FormContext
         - Drupal\nexteuropa\Context\MultilingualContext
         - Drupal\nexteuropa\Context\MinkContext
         - Drupal\DrupalExtension\Context\MessageContext
@@ -48,6 +49,7 @@ default:
         drupal_root: '{{ build.platform.dir }}'
       region_map:
         title: "#page-title"
+        tabs: ".tabs"
         content: ".region-content"
         right content: ".region-content-right"
         bottom content: ".region-content-bottom"
