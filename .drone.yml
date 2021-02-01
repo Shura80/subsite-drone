@@ -25,7 +25,7 @@ services:
       PORT: 8080
 
   - name: mysql
-    image: fpfis/mysql56
+    image: percona/percona-server:5.7
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_MAX_ALLOWED_PACKET: 128M
@@ -61,6 +61,11 @@ steps:
   # SOLR SERVER SECTION #
   - name: solr
     image: wodby/solr:7
+      environment:
+        SOLR_DEFAULT_CONFIG_SET: "search_api_solr_7.x-1.14"
+        SOLR_HEAP: 1024m
+      ports:
+        - "8983:8983"
     detach: true
 
   # INSTALL SECTION #
