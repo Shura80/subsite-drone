@@ -64,8 +64,6 @@ steps:
     environment:
       SOLR_DEFAULT_CONFIG_SET: "search_api_solr_7.x-1.14"
       SOLR_HEAP: 1024m
-    ports:
-      - "8983:8983"
     detach: true
 
   # INSTALL SECTION #
