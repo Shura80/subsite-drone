@@ -3252,3 +3252,15 @@ function _enrd_mastermind_easy_breadcrumb_get_title($default_title, $path) {
 
   return $title;
 }
+
+/**
+ * Implements hook_honeypot_form_protections_alter().
+ */
+function enrd_mastermind_honeypot_form_protections_alter(&$options, $form) {
+  if ($form['#form_id'] == 'ctools_export_ui_list_form') {
+    // Avoid honeypot warning on ctools autosubmit form type.
+    if (($key = array_search('time_restriction', $options)) !== FALSE) {
+      unset($options[$key]);
+    }
+  }
+}

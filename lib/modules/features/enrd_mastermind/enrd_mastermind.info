@@ -1,7 +1,7 @@
 name = ENRD Mastermind
 description = A module used as a controller for the ENRD installation process.
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = admin_menu
 dependencies[] = admin_views

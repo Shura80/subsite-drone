@@ -1,7 +1,7 @@
 name = ENRD News & Events
 description = ENRD News & Events and related content feature.
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = addressfield
 dependencies[] = better_exposed_filters

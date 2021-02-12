@@ -4,5 +4,5 @@ package = Feeds
 core = 7.x
 dependencies[] = feeds
 dependencies[] = taxonomy
-php = 7.3
+php = 5.6
 multisite_version = 2.6

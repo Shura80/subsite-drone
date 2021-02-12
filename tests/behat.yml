@@ -48,6 +48,7 @@ default:
         drupal_root: '/Users/alessiodepisi/Sites/enrd_clone/build'
       region_map:
         title: "#page-title"
+        banners: ".region-banners"
         content: ".region-content"
         right content: ".region-content-right"
         bottom content: ".region-content-bottom"

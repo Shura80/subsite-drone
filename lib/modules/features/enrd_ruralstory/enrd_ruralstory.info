@@ -1,7 +1,7 @@
 name = ENRD Rural Story Form
 description = ENRD Rural Story feature and its configurations.
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = bean
 dependencies[] = context

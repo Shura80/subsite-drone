@@ -3,7 +3,7 @@ description = Sub theme of default theme, ec_resp for ENRD
 package = ENRD
 core = "7.x"
 base theme = ec_resp
-php = 7.3
+php = 5.6
 
 stylesheets[all][] = "css/enrd.min.css"
 

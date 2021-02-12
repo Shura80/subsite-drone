@@ -1,7 +1,7 @@
 name = ENRD NRN Profiles invitation
 description = ENRD NRN Profile invitation management.
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = ctools
 dependencies[] = email

@@ -1,7 +1,7 @@
 name = ENRD Taxonomies
 description = Classification system
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = better_exposed_filters
 dependencies[] = enrd_file_formatter

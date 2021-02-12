@@ -1,7 +1,7 @@
 name = ENRD Multilingual
 description = ENRD Multilingual Enviroment
 core = 7.x
-php = 7.3
+php = 5.6
 package = ENRD
 dependencies[] = enrd_mastermind
 dependencies[] = nexteuropa_multilingual
