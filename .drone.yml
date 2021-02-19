@@ -28,7 +28,7 @@ services:
     image: percona/percona-server:5.7
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
-      MYSQL_MAX_ALLOWED_PACKET: 128M
+      MYSQL_MAX_ALLOWED_PACKET: 512M
 
 # BUILD SECTION #
 steps:
@@ -103,9 +103,9 @@ steps:
         from_secret: telegram_to
       message: >
         {{#success build.status}}
-          ✅ Build succeeded #{{build.number}} of '{{repo.name}}' - Good job!
+          ✅ Build #{{build.number}} of '{{repo.name}}' succeeded - Good job!
           Commit by {{commit.author}} on {{commit.branch}}
         {{else}}
-          ❌ Build failed #{{build.number}} of '{{repo.name}}' - Fix it please.
+          ❌ Build #{{build.number}} of '{{repo.name}}' failed - Fix it please.
           Commit by {{commit.author}} on {{commit.branch}}
         {{/success}}
