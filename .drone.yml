@@ -25,7 +25,7 @@ services:
       PORT: 8080
 
   - name: mysql
-    image: percona/percona-server:5.7
+    image: fpfis/mysql56
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_MAX_ALLOWED_PACKET: 512M
