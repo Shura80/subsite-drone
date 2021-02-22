@@ -10,3 +10,5 @@ devel.mdls.en = maillog dblog
 drush.verbose = TRUE
 behat.tags = ~@wip&&~@online
 behat.formatter.name = progress
+devel.mdls.en = dblog maillog context_ui feeds_tamper_ui views_ui
+solr.type = d7_apachesolr
